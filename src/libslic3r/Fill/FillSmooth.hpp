@@ -10,6 +10,10 @@ namespace Slic3r {
 class FillSmooth : public Fill
 {
 public:
+
+    float       top_infill_flow_ratio = config().top_infill_flow_ratio;
+    float       ironing_flow_ratio = config().ironing_flow_ratio;
+
     FillSmooth() {
         nbPass = 2;
         anglePass[0] = 0;
@@ -28,8 +32,8 @@ public:
         percentFlow[1] = 1.0;
         percentFlow[2] = 0.0;
         double extrusionMult = 1.0;
-        percentFlow[0] *= extrusionMult;
-        percentFlow[1] *= extrusionMult;
+        percentFlow[0] *= top_infill_flow_ratio;
+        percentFlow[1] *= ironing_flow_ratio;
         percentFlow[2] *= extrusionMult;
         has_overlap[0] = false;
         has_overlap[1] = true;
