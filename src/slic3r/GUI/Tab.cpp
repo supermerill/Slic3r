@@ -1221,6 +1221,8 @@ void TabPrint::build()
         line = { _(L("Flow ratio")), "" };
         line.append_option(optgroup->get_option("bridge_flow_ratio"));
         line.append_option(optgroup->get_option("over_bridge_flow_ratio"));
+        line.append_option(optgroup->get_option("top_infill_flow_ratio"));
+        line.append_option(optgroup->get_option("ironing_flow_ratio"));
         optgroup->append_line(line);
 
     page = add_options_page(_(L("Multiple extruders")), "funnel");
