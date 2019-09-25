@@ -229,6 +229,26 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(1));
 
+    def = this->add("top_infill_flow_ratio", coFloat);
+    def->label = L("Top solid infill");
+    def->full_label = L("Top solid infill flow ratio");
+    def->category = L("Advanced");
+    def->tooltip = L("Flow ratio for the top solid infill layer. You can decrease this to allow space for ironing flow if it is being used.");
+    def->min = 0;
+    def->max = 2;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(1));
+
+    def = this->add("ironing_flow_ratio", coFloat);
+    def->label = L("Ironing");
+    def->full_label = L("Ironing flow ratio");
+    def->category = L("Advanced");
+    def->tooltip = L("Flow ratio for the ironing layer if enabled. Recommended value is zero, but you can increase this if you are experiencing gaps in your ironing layer.");
+    def->min = 0;
+    def->max = 1;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0));
+
     def = this->add("bridge_speed", coFloat);
     def->label = L("Bridges");
     def->full_label = L("Bridge speed");
@@ -3631,6 +3651,14 @@ std::string FullPrintConfig::validate()
     // --over-bridge-flow-ratio
     if (this->over_bridge_flow_ratio <= 0)
         return "Invalid value for --over-bridge-flow-ratio";
+
+    // --over-bridge-flow-ratio
+    if (this->top_infill_flow_ratio <= 0)
+        return "Invalid value for --top-infill-flow-ratio";
+
+    // --over-bridge-flow-ratio
+    if (this->ironing_flow_ratio <= 0)
+        return "Invalid value for --ironing-flow-ratio";
     
     // extruder clearance
     if (this->extruder_clearance_radius <= 0)
