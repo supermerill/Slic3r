@@ -562,6 +562,8 @@ public:
     ConfigOptionInt                 bottom_solid_layers;
     ConfigOptionFloat               bridge_flow_ratio;
     ConfigOptionFloat               over_bridge_flow_ratio;
+    ConfigOptionFloat               top_infill_flow_ratio;
+    ConfigOptionFloat               ironing_flow_ratio;
     ConfigOptionEnum<InfillPattern> bottom_fill_pattern;
     ConfigOptionFloatOrPercent      bridged_infill_margin;
     ConfigOptionFloat               bridge_speed;
@@ -625,6 +627,8 @@ protected:
         OPT_PTR(bottom_solid_layers);
         OPT_PTR(bridge_flow_ratio);
         OPT_PTR(over_bridge_flow_ratio);
+        OPT_PTR(top_infill_flow_ratio);
+        OPT_PTR(ironing_flow_ratio);
         OPT_PTR(bottom_fill_pattern);
         OPT_PTR(bridged_infill_margin);
         OPT_PTR(bridge_speed);
