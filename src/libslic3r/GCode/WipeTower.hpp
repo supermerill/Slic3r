@@ -1,22 +1,14 @@
 #ifndef WipeTower_
 #define WipeTower_
-
 #include <cmath>
 #include <string>
 #include <sstream>
 #include <utility>
 #include <algorithm>
-
 #include "libslic3r/PrintConfig.hpp"
-
-
 namespace Slic3r
 {
-
 class WipeTowerWriter;
-
-
-
 class WipeTower
 {
 public:
@@ -31,7 +23,6 @@ public:
 		// Current extruder index.
 		unsigned int    tool;
 	};
-
 	struct ToolChangeResult
 	{
 		// Print heigh of this tool change.
@@ -50,16 +41,12 @@ public:
 		// Time elapsed over this tool change.
 		// This is useful not only for the print time estimation, but also for the control of layer cooling.
 		float  				    elapsed_time;
-
         // Is this a priming extrusion? (If so, the wipe tower rotation & translation will not be applied later)
         bool                    priming;
-
         // Initial tool
         int initial_tool;
-
         // New tool
         int new_tool;
-
 		// Sum the total length of the extrusion.
 		float total_extrusion_length_in_plane() {
 			float e_length = 0.f;
@@ -73,7 +60,6 @@ public:
 			return e_length;
 		}
 	};
-
 	// x			-- x coordinates of wipe tower in mm ( left bottom corner )
 	// y			-- y coordinates of wipe tower in mm ( left bottom corner )
 	// width		-- width of wipe tower in mm ( default 60 mm - leave as it is )
@@ -104,7 +90,6 @@ public:
  //               m_set_extruder_trimpot = set_extruder_trimpot;
  //           }
  //       }
-
     WipeTower(PrintConfig &config, const std::vector<std::vector<float>>& wiping_matrix, unsigned int initial_tool, float first_layer_width) :
         m_semm(config.single_extruder_multi_material.value),
         m_wipe_tower_pos(float(config.wipe_tower_x.value), float(config.wipe_tower_y.value)),
@@ -130,19 +115,15 @@ public:
             m_set_extruder_trimpot = (config.high_current_on_filament_swap.value);
         }
     }
-
 	virtual ~WipeTower() {}
-
 	// Set the extruder properties.
 	void set_extruder(size_t idx)
 	{
         //while (m_filpar.size() < idx+1)   // makes sure the required element is in the vector
         m_filpar.push_back(FilamentParameters());
-
         m_filpar[idx].material = m_config->filament_type.get_at(idx);
         m_filpar[idx].temperature = (float)m_config->temperature.get_at(idx);
         m_filpar[idx].first_layer_temperature = m_config->first_layer_temperature.get_at(idx);
-
         // If this is a single extruder MM printer, we will use all the SE-specific config values.
         // Otherwise, the defaults will be used to turn off the SE stuff.
         if (m_semm) {
@@ -154,16 +135,25 @@ public:
             m_filpar[idx].cooling_moves = (float)m_config->filament_cooling_moves.get_at(idx);
             m_filpar[idx].cooling_initial_speed = (float)m_config->filament_cooling_initial_speed.get_at(idx);
             m_filpar[idx].cooling_final_speed = (float)m_config->filament_cooling_final_speed.get_at(idx);
+			// start skinnydip        
+			m_filpar[idx].filament_enable_toolchange_temp 		= config.filament_enable_toolchange_temp.get_at(idx); 		// skinnydip
+			m_filpar[idx].filament_toolchange_temp 						= config.filament_toolchange_temp.get_at(idx); 	   	// skinnydip
+			m_filpar[idx].filament_enable_toolchange_part_fan = config.filament_enable_toolchange_part_fan.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_toolchange_part_fan_speed 	= config.filament_toolchange_part_fan_speed.get_at(idx);	// skinnydip
+			m_filpar[idx].filament_use_skinnydip 							= config.filament_use_skinnydip.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_use_fast_skinnydip 							= config.filament_use_fast_skinnydip.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_skinnydip_distance 				= config.filament_skinnydip_distance.get_at(idx); 		// skinnydip
+			m_filpar[idx].filament_melt_zone_pause 						= config.filament_melt_zone_pause.get_at(idx);	    // skinnydip
+			m_filpar[idx].filament_cooling_zone_pause 				= config.filament_cooling_zone_pause.get_at(idx);		// skinnydip
+			m_filpar[idx].filament_dip_insertion_speed 				= config.filament_dip_insertion_speed.get_at(idx);		// skinnydip
+			m_filpar[idx].filament_dip_extraction_speed 			= config.filament_dip_extraction_speed.get_at(idx);	     // skinnydip          
+			// end skinnydip	
         }
-
         m_filpar[idx].filament_area = (M_PI/4.f) * pow((float)m_config->filament_diameter.get_at(idx), 2); // all extruders are assumed to have the same filament diameter at this point
         m_filpar[idx].nozzle_diameter = (float)m_config->nozzle_diameter.get_at(idx); // to be used in future with (non-single) multiextruder MM
-
         if ((float)m_config->filament_max_volumetric_speed.get_at(idx) != 0.f)
             m_filpar[idx].max_e_speed = ((float)m_config->filament_max_volumetric_speed.get_at(idx) / filament_area());
-
         m_perimeter_width = m_filpar[idx].nozzle_diameter * Width_To_Nozzle_Ratio; // all extruders are now assumed to have the same diameter
-
         if (m_semm) {
             std::stringstream stream{ m_config->filament_ramming_parameters.get_at(idx) };
             float speed = 0.f;
@@ -173,22 +163,14 @@ public:
             while (stream >> speed)
                 m_filpar[idx].ramming_speed.push_back(speed);
         }
-
         m_used_filament_length.resize(std::max(m_used_filament_length.size(), idx + 1)); // makes sure that the vector is big enough so we don't have to check later
 	}
-
-
 	// Appends into internal structure m_plan containing info about the future wipe tower
 	// to be used before building begins. The entries must be added ordered in z.
 	void plan_toolchange(float z_par, float layer_height_par, unsigned int old_tool, unsigned int new_tool, bool brim, float wipe_volume = 0.f);
-
 	// Iterates through prepared m_plan, generates ToolChangeResults and appends them to "result"
 	void generate(std::vector<std::vector<ToolChangeResult>> &result);
-
     float get_depth() const { return m_wipe_tower_depth; }
-
-
-
 	// Switch to a next layer.
 	void set_layer(
 		// Print height of this layer.
@@ -217,19 +199,16 @@ public:
 		
 		// Calculate extrusion flow from desired line width, nozzle diameter, filament diameter and layer_height:
 		m_extrusion_flow = extrusion_flow(layer_height);
-
         // Advance m_layer_info iterator, making sure we got it right
 		while (!m_plan.empty() && m_layer_info->z < print_z - WT_EPSILON && m_layer_info+1 != m_plan.end())
 			++m_layer_info;
 	}
-
 	// Return the wipe tower position.
 	const Vec2f& 		 position() const { return m_wipe_tower_pos; }
 	// Return the wipe tower width.
 	float     		 width()    const { return m_wipe_tower_width; }
 	// The wipe tower is finished, there should be no more tool changes or wipe tower prints.
 	bool 	  		 finished() const { return m_max_color_changes == 0; }
-
 	// Returns gcode to prime the nozzles at the front edge of the print bed.
 	std::vector<ToolChangeResult> prime(
 		// print_z of the first layer.
@@ -239,23 +218,18 @@ public:
 		// If true, the last priming are will be the same as the other priming areas, and the rest of the wipe will be performed inside the wipe tower.
 		// If false, the last priming are will be large enough to wipe the last extruder sufficiently.
 		bool 						last_wipe_inside_wipe_tower);
-
 	// Returns gcode for a toolchange and a final print head position.
 	// On the first layer, extrude a brim around the future wipe tower first.
 	ToolChangeResult tool_change(unsigned int new_tool, bool last_in_layer);
-
 	// Fill the unfilled space with a sparse infill.
 	// Call this method only if layer_finished() is false.
 	ToolChangeResult finish_layer();
-
 	// Is the current layer finished?
 	bool 			 layer_finished() const {
 		return ( (m_is_first_layer ? m_wipe_tower_depth - m_perimeter_width : m_layer_info->depth) - WT_EPSILON < m_depth_traversed);
 	}
-
     std::vector<float> get_used_filament() const { return m_used_filament_length; }
     int get_number_of_toolchanges() const { return m_num_tool_changes; }
-
     struct FilamentParameters {
         std::string 	    material = "PLA";
         int  			    temperature = 0;
@@ -268,6 +242,19 @@ public:
         int                 cooling_moves = 0;
         float               cooling_initial_speed = 0.f;
         float               cooling_final_speed = 0.f;
+		// start skinnydip
+        bool                filament_enable_toolchange_temp = false;
+        int                 filament_toolchange_temp = 222.f;
+        bool                filament_enable_toolchange_part_fan = false;
+        int                 filament_toolchange_part_fan_speed = 0;
+        bool                filament_use_skinnydip = true;
+        bool                filament_use_fast_skinnydip = false;
+        float               filament_skinnydip_distance = 10.f;
+        int                 filament_melt_zone_pause = 0;
+        int                 filament_cooling_zone_pause = 0;
+        float               filament_dip_insertion_speed = 0.f;
+        float               filament_dip_extraction_speed = 0.f;		
+		// end skinnydip		
         float               ramming_line_width_multiplicator = 1.f;
         float               ramming_step_multiplicator = 1.f;
         float               max_e_speed = std::numeric_limits<float>::max();
@@ -275,26 +262,20 @@ public:
         float               nozzle_diameter;
         float               filament_area;
     };
-
 private:
 	WipeTower();
-
 	enum wipe_shape // A fill-in direction
 	{
 		SHAPE_NORMAL = 1,
 		SHAPE_REVERSED = -1
 	};
-
-
     const bool  m_peters_wipe_tower   = false; // sparse wipe tower inspired by Peter's post processor - not finished yet
     const float Width_To_Nozzle_Ratio = 1.25f; // desired line width (oval) in multiples of nozzle diameter - may not be actually neccessary to adjust
     const float WT_EPSILON            = 1e-3f;
     const float filament_area() const {
         return m_filpar[0].filament_area; // all extruders are assumed to have the same filament diameter at this point
     }
-
     PrintConfig *m_config = NULL;
-
 	bool   m_semm               = true; // Are we using a single extruder multimaterial printer?
     Vec2f  m_wipe_tower_pos; 			// Left front corner of the wipe tower in mm.
 	float  m_wipe_tower_width; 			// Width of the wipe tower.
@@ -307,7 +288,6 @@ private:
 	size_t m_max_color_changes 	= 0; 	// Maximum number of color changes per layer.
 	bool   m_is_first_layer 	= false;// Is this the 1st layer of the print? If so, print the brim around the waste tower.
     int    m_old_temperature    = -1;   // To keep track of what was the last temp that we set (so we don't issue the command when not neccessary)
-
 	// G-code generator parameters.
     float           m_cooling_tube_retraction   = 0.f;
     float           m_cooling_tube_length       = 0.f;
@@ -317,16 +297,11 @@ private:
     bool            m_set_extruder_trimpot      = false;
     bool            m_adhesion                  = true;
     GCodeFlavor     m_gcode_flavor;
-
-
     float m_perimeter_width = 0.4f * Width_To_Nozzle_Ratio; // Width of an extrusion line, also a perimeter spacing for 100% infill.
     float m_brim_width = 0.4 * Width_To_Nozzle_Ratio * Width_To_Nozzle_Ratio; // Width of an extrusion line, also a perimeter spacing for 100% infill.
     float m_extrusion_flow = 0.038f; //0.029f;// Extrusion flow is derived from m_perimeter_width, layer height and filament diameter.
-
 	// Extruder specific parameters.
     std::vector<FilamentParameters> m_filpar;
-
-
 	// State of the wipe tower generator.
 	unsigned int m_num_layer_changes = 0; // Layer change counter for the output statistics.
 	unsigned int m_num_tool_changes  = 0; // Tool change change counter for the output statistics.
@@ -336,11 +311,9 @@ private:
 	wipe_shape   	m_current_shape = SHAPE_NORMAL;
 	unsigned int 	m_current_tool  = 0;
     const std::vector<std::vector<float>> wipe_volumes;
-
 	float           m_depth_traversed = 0.f; // Current y position at the wipe tower.
 	bool 			m_left_to_right   = true;
 	float			m_extra_spacing   = 1.f;
-
 	// Calculates extrusion flow needed to produce required line width for given layer height
 	float extrusion_flow(float layer_height = -1.f) const	// negative layer_height - return current m_extrusion_flow
 	{
@@ -348,22 +321,16 @@ private:
 			return m_extrusion_flow;
 		return layer_height * ( m_perimeter_width - layer_height * (1.f-float(M_PI)/4.f)) / filament_area();
 	}
-
 	// Calculates length of extrusion line to extrude given volume
 	float volume_to_length(float volume, float line_width, float layer_height) const {
 		return std::max(0.f, volume / (layer_height * (line_width - layer_height * (1.f - float(M_PI) / 4.f))));
 	}
-
 	// Calculates depth for all layers and propagates them downwards
 	void plan_tower();
-
 	// Goes through m_plan and recalculates depths and width of the WT to make it exactly square - experimental
 	void make_wipe_tower_square();
-
     // Goes through m_plan, calculates border and finish_layer extrusions and subtracts them from last wipe
     void save_on_last_wipe();
-
-
 	struct box_coordinates
 	{
 		box_coordinates(float left, float bottom, float width, float height) :
@@ -394,8 +361,6 @@ private:
 		Vec2f rd;	// right lower
 		Vec2f ru;  // right upper
 	};
-
-
 	// to store information about tool changes for a given layer
 	struct WipeTowerInfo{
 		struct ToolChange {
@@ -413,31 +378,23 @@ private:
 		float depth;	// depth of the layer based on all layers above
 		float extra_spacing;
 		float toolchanges_depth() const { float sum = 0.f; for (const auto &a : tool_changes) sum += a.required_depth; return sum; }
-
 		std::vector<ToolChange> tool_changes;
-
 		WipeTowerInfo(float z_par, float layer_height_par)
 			: z{z_par}, height{layer_height_par}, depth{0}, extra_spacing{1.f} {}
 	};
-
 	std::vector<WipeTowerInfo> m_plan; 	// Stores information about all layers and toolchanges for the future wipe tower (filled by plan_toolchange(...))
 	std::vector<WipeTowerInfo>::iterator m_layer_info = m_plan.end();
-
     // Stores information about used filament length per extruder:
     std::vector<float> m_used_filament_length;
-
-
 	// Returns gcode for wipe tower brim
 	// sideOnly			-- set to false -- experimental, draw brim on sides of wipe tower
 	// offset			-- set to 0		-- experimental, offset to replace brim in front / rear of wipe tower
 	ToolChangeResult toolchange_Brim(bool sideOnly = false, float y_offset = 0.f);
-
 	void toolchange_Unload(
 		WipeTowerWriter &writer,
 		const box_coordinates  &cleaning_box, 
 		const std::string&	 	current_material,
 		const int 				new_temperature);
-
 	void toolchange_Change(
 		WipeTowerWriter &writer,
 		const unsigned int		new_tool,
@@ -452,10 +409,5 @@ private:
 		const box_coordinates  &cleaning_box,
 		float wipe_volume);
 };
-
-
-
-
 }; // namespace Slic3r
-
 #endif // WipeTowerPrusaMM_hpp_ 
