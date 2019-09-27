@@ -136,17 +136,17 @@ public:
             m_filpar[idx].cooling_initial_speed = (float)m_config->filament_cooling_initial_speed.get_at(idx);
             m_filpar[idx].cooling_final_speed = (float)m_config->filament_cooling_final_speed.get_at(idx);
 			// start skinnydip        
-			m_filpar[idx].filament_enable_toolchange_temp 		= config.filament_enable_toolchange_temp.get_at(idx); 		// skinnydip
-			m_filpar[idx].filament_toolchange_temp 						= config.filament_toolchange_temp.get_at(idx); 	   	// skinnydip
-			m_filpar[idx].filament_enable_toolchange_part_fan = config.filament_enable_toolchange_part_fan.get_at(idx); 	// skinnydip
-			m_filpar[idx].filament_toolchange_part_fan_speed 	= config.filament_toolchange_part_fan_speed.get_at(idx);	// skinnydip
-			m_filpar[idx].filament_use_skinnydip 							= config.filament_use_skinnydip.get_at(idx); 	// skinnydip
-			m_filpar[idx].filament_use_fast_skinnydip 							= config.filament_use_fast_skinnydip.get_at(idx); 	// skinnydip
-			m_filpar[idx].filament_skinnydip_distance 				= config.filament_skinnydip_distance.get_at(idx); 		// skinnydip
-			m_filpar[idx].filament_melt_zone_pause 						= config.filament_melt_zone_pause.get_at(idx);	    // skinnydip
-			m_filpar[idx].filament_cooling_zone_pause 				= config.filament_cooling_zone_pause.get_at(idx);		// skinnydip
-			m_filpar[idx].filament_dip_insertion_speed 				= config.filament_dip_insertion_speed.get_at(idx);		// skinnydip
-			m_filpar[idx].filament_dip_extraction_speed 			= config.filament_dip_extraction_speed.get_at(idx);	     // skinnydip          
+			m_filpar[idx].filament_enable_toolchange_temp 			= (bool)m_config->filament_enable_toolchange_temp.get_at(idx); 		// skinnydip
+			m_filpar[idx].filament_toolchange_temp 					= (float)m_config->filament_toolchange_temp.get_at(idx); 	   	// skinnydip
+			m_filpar[idx].filament_enable_toolchange_part_fan		= (bool)m_config->filament_enable_toolchange_part_fan.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_toolchange_part_fan_speed 		= (float)m_config->filament_toolchange_part_fan_speed.get_at(idx);	// skinnydip
+			m_filpar[idx].filament_use_skinnydip 					= (bool)m_config->filament_use_skinnydip.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_use_fast_skinnydip 				= (bool)m_config->filament_use_fast_skinnydip.get_at(idx); 	// skinnydip
+			m_filpar[idx].filament_skinnydip_distance 				= (float)m_config->filament_skinnydip_distance.get_at(idx); 		// skinnydip
+			m_filpar[idx].filament_melt_zone_pause 					= (float)m_config->filament_melt_zone_pause.get_at(idx);	    // skinnydip
+			m_filpar[idx].filament_cooling_zone_pause 				= (float)m_config->filament_cooling_zone_pause.get_at(idx);		// skinnydip
+			m_filpar[idx].filament_dip_insertion_speed 				= (float)m_config->filament_dip_insertion_speed.get_at(idx);		// skinnydip
+			m_filpar[idx].filament_dip_extraction_speed 			= (float)m_config->filament_dip_extraction_speed.get_at(idx);	     // skinnydip          
 			// end skinnydip	
         }
         m_filpar[idx].filament_area = (M_PI/4.f) * pow((float)m_config->filament_diameter.get_at(idx), 2); // all extruders are assumed to have the same filament diameter at this point
