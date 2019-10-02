@@ -14,6 +14,8 @@
 #include <utility>
 #include <stack>
 #include <vector>
+#include <numeric>
+#include <boost/log/trivial.hpp>
 
 #ifdef SLIC3R_DEBUG
 #include "SVG.hpp"
