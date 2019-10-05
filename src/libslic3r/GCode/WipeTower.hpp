@@ -173,6 +173,19 @@ public:
         int                 cooling_moves = 0;
         float               cooling_initial_speed = 0.f;
         float               cooling_final_speed = 0.f;
+		// start skinnydip
+        bool                filament_enable_toolchange_temp = false;
+        int                 filament_toolchange_temp = 222.f;
+        bool                filament_enable_toolchange_part_fan = false;
+        int                 filament_toolchange_part_fan_speed = 0;
+        bool                filament_use_skinnydip = true;
+        bool                filament_use_fast_skinnydip = false;
+        float               filament_skinnydip_distance = 10.f;
+        int                 filament_melt_zone_pause = 0;
+        int                 filament_cooling_zone_pause = 0;
+        float               filament_dip_insertion_speed = 0.f;
+        float               filament_dip_extraction_speed = 0.f;		
+		// end skinnydip		
         float               ramming_line_width_multiplicator = 1.f;
         float               ramming_step_multiplicator = 1.f;
         float               max_e_speed = std::numeric_limits<float>::max();

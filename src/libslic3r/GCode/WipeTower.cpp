@@ -303,6 +303,57 @@ public:
 		m_current_tool = tool;
 		return *this;
 	}
+	
+	//add skinnydip move (dip in, pause, dip out, pause)
+	WipeTowerWriter& skinnydip_move(float distance, float downspeed, int meltpause, float upspeed, int coolpause) 
+	{
+         this->append("; SKINNYDIP START\n");
+	       char all[320] ="";
+               snprintf(all, 80, "G1 E%.4f F%.0f\n", distance, downspeed*60 );
+	       this->append(all);
+	       snprintf(all, 80, "G4 P%d\n", meltpause);
+	       this->append(all);
+	       snprintf(all, 80,  "G1 E-%.4f F%.0f\n", distance, upspeed*60);
+	       this->append(all);
+	       snprintf(all, 80, "G4 P%d\n", coolpause);
+	       this->append(all);
+               this->append("; SKINNYDIP END\n");
+               return *this;
+	}
+	//add toolchange_temp -skinnydip
+	WipeTowerWriter& wait_for_toolchange_temp(int tc_temp, bool fan_on, int fan_speed, bool fast) 
+	{
+	    char all[128];
+            if (fan_on == true){
+            sprintf(all, "M106 S%u ;Part fan on to cool hotend\n",(unsigned int)(255.0 * fan_speed / 100.0));
+	    this->append(all);
+            }
+	    sprintf(all, "M109 S%d ;SKINNYDIP TOOLCHANGE WAIT FOR TEMP %s\n", tc_temp, fast ? "FAST MODE":"NORMAL MODE");
+	    this->append(all);
+	    if (fan_on == true){
+	    sprintf(all, "M106 S0 ;Fan off\n"); //turn off fan
+	    this->append(all);
+	    }
+            return *this;
+	}
+
+	//begin toolchange_temp -skinnydip
+	WipeTowerWriter& begin_toolchange_temp(int tc_temp, bool fast) 
+	{		
+	    char tdbuf[128];
+	    sprintf(tdbuf, "M104 S%d  ;SKINNYDIP BEGIN TOOLCHANGE TEMP %s\n", tc_temp, fast ? "FAST MODE":"NORMAL MODE");
+	    m_gcode += tdbuf;
+            return *this;
+	}
+
+	//restore toolchange_temp -skinnydip
+	WipeTowerWriter& restore_pre_toolchange_temp(int tc_temp, bool fast) 
+	{
+	    char tdbuf[128];
+	    sprintf(tdbuf, "M104 S%d  ;RESTORE PRE-TOOLCHANGE TEMP %s\n", tc_temp, fast ? "FAST MODE":"NORMAL MODE");
+	    m_gcode += tdbuf;
+            return *this;
+	}
 
 	// Set extruder temperature, don't wait by default.
 	WipeTowerWriter& set_extruder_temp(int temperature, bool wait = false)
@@ -512,6 +563,19 @@ void WipeTower::set_extruder(size_t idx, const PrintConfig& config)
         m_filpar[idx].cooling_moves           = config.filament_cooling_moves.get_at(idx);
         m_filpar[idx].cooling_initial_speed   = float(config.filament_cooling_initial_speed.get_at(idx));
         m_filpar[idx].cooling_final_speed     = float(config.filament_cooling_final_speed.get_at(idx));
+		//start skinnydip
+		m_filpar[idx].filament_enable_toolchange_temp 		= config.filament_enable_toolchange_temp.get_at(idx); 		// skinnydip
+		m_filpar[idx].filament_toolchange_temp 						= config.filament_toolchange_temp.get_at(idx); 	   	// skinnydip
+		m_filpar[idx].filament_enable_toolchange_part_fan = config.filament_enable_toolchange_part_fan.get_at(idx); 	// skinnydip
+		m_filpar[idx].filament_toolchange_part_fan_speed 	= config.filament_toolchange_part_fan_speed.get_at(idx);	// skinnydip
+		m_filpar[idx].filament_use_skinnydip 							= config.filament_use_skinnydip.get_at(idx); 	// skinnydip
+		m_filpar[idx].filament_use_fast_skinnydip 							= config.filament_use_fast_skinnydip.get_at(idx); 	// skinnydip
+		m_filpar[idx].filament_skinnydip_distance 				= float(config.filament_skinnydip_distance.get_at(idx)); 		// skinnydip
+		m_filpar[idx].filament_melt_zone_pause 						= config.filament_melt_zone_pause.get_at(idx);	    // skinnydip
+		m_filpar[idx].filament_cooling_zone_pause 				= config.filament_cooling_zone_pause.get_at(idx);		// skinnydip
+		m_filpar[idx].filament_dip_insertion_speed 				= float(config.filament_dip_insertion_speed.get_at(idx));		// skinnydip
+		m_filpar[idx].filament_dip_extraction_speed 			= float(config.filament_dip_extraction_speed.get_at(idx));	     // skinnydip          
+		//end_skinnydip
     }
 
     m_filpar[idx].filament_area = float((M_PI/4.f) * pow(config.filament_diameter.get_at(idx), 2)); // all extruders are assumed to have the same filament diameter at this point
@@ -919,6 +983,17 @@ void WipeTower::toolchange_Unload(
     float old_x = writer.x();
     float turning_point = (!m_left_to_right ? xl : xr );
     if (m_semm && (m_cooling_tube_retraction != 0 || m_cooling_tube_length != 0)) {
+		
+		// set toolchange temperature just prior to filament being extracted from melt zone and wait for set point
+		//(SKINNYDIP--normal mode only)
+		if ((m_filpar[m_current_tool].filament_enable_toolchange_temp == true) && 
+				(m_filpar[m_current_tool].filament_use_fast_skinnydip == false)) {
+		 	writer.wait_for_toolchange_temp(m_filpar[m_current_tool].filament_toolchange_temp, 
+											m_filpar[m_current_tool].filament_enable_toolchange_part_fan,
+											m_filpar[m_current_tool].filament_toolchange_part_fan_speed,
+											false); //normal mode
+		    }
+
         float total_retraction_distance = m_cooling_tube_retraction + m_cooling_tube_length/2.f - 15.f; // the 15mm is reserved for the first part after ramming
         writer.suppress_preview()
               .retract(15.f, m_filpar[m_current_tool].unloading_speed_start * 60.f) // feedrate 5000mm/min = 83mm/s
@@ -933,19 +1008,38 @@ void WipeTower::toolchange_Unload(
               .travel(old_x, writer.y()) // in case previous move was shortened to limit feedrate*/
               .resume_preview();
     }
+	
+
+    
     // Wipe tower should only change temperature with single extruder MM. Otherwise, all temperatures should
     // be already set and there is no need to change anything. Also, the temperature could be changed
     // for wrong extruder.
-    if (m_semm) {
-    if (new_temperature != 0 && (new_temperature != m_old_temperature || m_is_first_layer) ) { 	// Set the extruder temperature, but don't wait.
-        // If the required temperature is the same as last time, don't emit the M104 again (if user adjusted the value, it would be reset)
-        // However, always change temperatures on the first layer (this is to avoid issues with priming lines turned off).
-		writer.set_extruder_temp(new_temperature, false);
-        m_old_temperature = new_temperature;
-    }
-    }
+	// additionally, we are suppressing this temperature change if skinnydip fast mode is active because it will happen later
+	//if no toolchange temperatures are being used, just set the temperature of the next material.
+	if (m_semm && (m_filpar[m_current_tool].filament_enable_toolchange_temp == false)){  
+		if (new_temperature != 0 && (new_temperature != m_old_temperature || m_is_first_layer)) { 	// Set the extruder temperature, but don't wait.
+			// If the required temperature is the same as last time, don't emit the M104 again (if user adjusted the value, it would be reset)
+			// However, always change temperatures on the first layer (this is to avoid issues with priming lines turned off).
+			writer.set_extruder_temp(new_temperature, false);
+				m_old_temperature = new_temperature;
+		}
+	}
+	//otherwise, if toolchange temperature changes are on and in normal mode, return to the previously set temperature 
+	else if (m_semm && (m_filpar[m_current_tool].filament_enable_toolchange_temp && (m_filpar[m_current_tool].filament_use_fast_skinnydip == false))) {
+		writer.restore_pre_toolchange_temp(m_filpar[m_current_tool].temperature, false); //skinnydip normal mode only
+	}
 
     // Cooling:
+	if (m_semm) {
+	//begin to cool extruder to toolchange temperature during cooling moves (only if using skinnydip fast mode)
+    		if ((m_filpar[m_current_tool].filament_enable_toolchange_temp == true) && 
+			            (m_filpar[m_current_tool].filament_use_fast_skinnydip == true)) {
+		    		writer.begin_toolchange_temp(m_filpar[m_current_tool].filament_toolchange_temp, true);	//skinnydip fast mode only
+			}
+	}
+ 
+
+    // Generate Cooling Moves
     const int& number_of_moves = m_filpar[m_current_tool].cooling_moves;
     if (number_of_moves > 0) {
         const float& initial_speed = m_filpar[m_current_tool].cooling_initial_speed;
@@ -964,6 +1058,52 @@ void WipeTower::toolchange_Unload(
             writer.load_move_x_advanced(old_x, -m_cooling_tube_length, speed);
         }
     }
+	
+	//BEGIN SKINNYDIP SECTION
+	if (m_semm) {
+	//wait for extruder to reach toolchange temperature after cooling moves complete (SKINNYDIP--fast mode only)
+		if ((m_filpar[m_current_tool].filament_enable_toolchange_temp == true) && (m_filpar[m_current_tool].filament_use_fast_skinnydip == true)) {
+		    writer.wait_for_toolchange_temp(m_filpar[m_current_tool].filament_toolchange_temp, 
+			                     			m_filpar[m_current_tool].filament_enable_toolchange_part_fan,
+						                    m_filpar[m_current_tool].filament_toolchange_part_fan_speed,
+											true); //fast mode			  
+		}		
+	}
+
+	if (m_semm) {
+	    //Generate a skinnydip move
+	    if (m_filpar[m_current_tool].filament_use_skinnydip == true) {
+	    writer.suppress_preview()
+	          .skinnydip_move(m_filpar[m_current_tool].filament_skinnydip_distance, 
+	          						   m_filpar[m_current_tool].filament_dip_insertion_speed,
+			     					   m_filpar[m_current_tool].filament_melt_zone_pause,
+	                     			   m_filpar[m_current_tool].filament_dip_extraction_speed,
+	             	     			   m_filpar[m_current_tool].filament_cooling_zone_pause)
+	          .resume_preview();
+	    }
+	}
+
+		//ensure that proper hotend temperature is restored after skinnydip has finished meddling, 
+		//honor first layer temperature settings if applicable 
+
+		if ((!m_is_first_layer) && (m_filpar[m_current_tool].filament_enable_toolchange_temp == true) && 
+											(m_filpar[m_current_tool].filament_use_fast_skinnydip == true)) {
+			//begin to restore pre toolchange temp after skinnydip move completes without delay  (SKINNYDIP--fast method)
+				writer.restore_pre_toolchange_temp(m_filpar[m_current_tool].temperature, true); //skinnydip fast mode only
+ 		}
+
+		//the following temperature change is suppressed if using skinnydip normal mode since it has already happened
+		else if (m_is_first_layer && (m_filpar[m_current_tool].filament_enable_toolchange_temp == true) && 
+												(m_filpar[m_current_tool].filament_use_fast_skinnydip == true)){
+				// obey first layer temperature setting
+				if (new_temperature != 0 && (new_temperature != m_old_temperature || m_is_first_layer) ) { 	
+					writer.restore_pre_toolchange_temp(new_temperature, true); //skinnydip fast mode only
+					m_old_temperature = new_temperature;
+				}			  
+			}
+
+
+	
 
     // let's wait is necessary:
     writer.wait(m_filpar[m_current_tool].delay);
