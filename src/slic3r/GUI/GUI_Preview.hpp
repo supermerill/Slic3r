@@ -80,7 +80,6 @@ class Preview : public wxPanel
     wxCheckBox* m_checkbox_retractions;
     wxCheckBox* m_checkbox_unretractions;
     wxCheckBox* m_checkbox_shells;
-    wxCheckBox* m_checkbox_legend;
 
     DynamicPrintConfig* m_config;
     BackgroundSlicingProcess* m_process;
@@ -130,8 +129,6 @@ public:
 
     void update_view_type();
 
-    bool is_loaded() const { return m_loaded; }
-
 private:
     bool init(wxWindow* parent, Bed3D& bed, Camera& camera, GLToolbar& view_toolbar, Model* model);
 
@@ -150,12 +147,11 @@ private:
     void on_checkbox_retractions(wxCommandEvent& evt);
     void on_checkbox_unretractions(wxCommandEvent& evt);
     void on_checkbox_shells(wxCommandEvent& evt);
-    void on_checkbox_legend(wxCommandEvent& evt);
 
     // Create/Update/Reset double slider on 3dPreview
     void create_double_slider();
     void update_double_slider(const std::vector<double>& layers_z, bool keep_z_range = false);
-    void check_slider_values(std::vector<double> &ticks_from_config,
+    void fill_slider_values(std::vector<std::pair<int, double>> &values,
                             const std::vector<double> &layers_z);
     void reset_double_slider();
     // update DoubleSlider after keyDown in canvas

@@ -108,6 +108,7 @@ static inline bool opts_equal(const DynamicConfig &config_old, const DynamicConf
 
 std::vector<std::string> PlaceholderParser::config_diff(const DynamicPrintConfig &rhs)
 {
+    const ConfigDef *def = rhs.def();
     std::vector<std::string> diff_keys;
     for (const t_config_option_key &opt_key : rhs.keys())
         if (! opts_equal(m_config, rhs, opt_key))
@@ -123,6 +124,7 @@ std::vector<std::string> PlaceholderParser::config_diff(const DynamicPrintConfig
 // a current extruder ID is used.
 bool PlaceholderParser::apply_config(const DynamicPrintConfig &rhs)
 {
+    const ConfigDef *def = rhs.def();
     bool modified = false;
     for (const t_config_option_key &opt_key : rhs.keys()) {
         if (! opts_equal(m_config, rhs, opt_key)) {
@@ -173,11 +175,6 @@ void PlaceholderParser::apply_env_variables()
 }
 
 namespace spirit = boost::spirit;
-// Using an encoding, which accepts unsigned chars.
-// Don't use boost::spirit::ascii, as it crashes internally due to indexing with negative char values for UTF8 characters into some 7bit character classification tables.
-//namespace spirit_encoding = boost::spirit::ascii;
-//FIXME iso8859_1 is just a workaround for the problem above. Replace it with UTF8 support!
-namespace spirit_encoding = boost::spirit::iso8859_1;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 
@@ -934,7 +931,7 @@ namespace client
     ///////////////////////////////////////////////////////////////////////////
     // Inspired by the C grammar rules https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
     template <typename Iterator>
-    struct macro_processor : qi::grammar<Iterator, std::string(const MyContext*), qi::locals<bool>, spirit_encoding::space_type>
+    struct macro_processor : qi::grammar<Iterator, std::string(const MyContext*), qi::locals<bool>, spirit::ascii::space_type>
     {
         macro_processor() : macro_processor::base_type(start)
         {
@@ -947,12 +944,12 @@ namespace client
             qi::lexeme_type             lexeme;
             qi::no_skip_type            no_skip;
             qi::real_parser<double, strict_real_policies_without_nan_inf> strict_double;
-            spirit_encoding::char_type  char_;
+            spirit::ascii::char_type    char_;
             utf8_char_skipper_parser    utf8char;
             spirit::bool_type           bool_;
             spirit::int_type            int_;
             spirit::double_type         double_;
-            spirit_encoding::string_type string;
+            spirit::ascii::string_type  string;
 			spirit::eoi_type			eoi;
 			spirit::repository::qi::iter_pos_type iter_pos;
             auto                        kw = spirit::repository::qi::distinct(qi::copy(alnum | '_'));
@@ -1181,20 +1178,20 @@ namespace client
         }
 
         // Generic expression over expr<Iterator>.
-        typedef qi::rule<Iterator, expr<Iterator>(const MyContext*), spirit_encoding::space_type> RuleExpression;
+        typedef qi::rule<Iterator, expr<Iterator>(const MyContext*), spirit::ascii::space_type> RuleExpression;
 
         // The start of the grammar.
-        qi::rule<Iterator, std::string(const MyContext*), qi::locals<bool>, spirit_encoding::space_type> start;
+        qi::rule<Iterator, std::string(const MyContext*), qi::locals<bool>, spirit::ascii::space_type> start;
         // A free-form text.
-        qi::rule<Iterator, std::string(), spirit_encoding::space_type> text;
+        qi::rule<Iterator, std::string(), spirit::ascii::space_type> text;
         // A free-form text, possibly empty, possibly containing macro expansions.
-        qi::rule<Iterator, std::string(const MyContext*), spirit_encoding::space_type> text_block;
+        qi::rule<Iterator, std::string(const MyContext*), spirit::ascii::space_type> text_block;
         // Statements enclosed in curely braces {}
-        qi::rule<Iterator, std::string(const MyContext*), spirit_encoding::space_type> macro;
+        qi::rule<Iterator, std::string(const MyContext*), spirit::ascii::space_type> macro;
         // Legacy variable expansion of the original Slic3r, in the form of [scalar_variable] or [vector_variable_index].
-        qi::rule<Iterator, std::string(const MyContext*), spirit_encoding::space_type> legacy_variable_expansion;
+        qi::rule<Iterator, std::string(const MyContext*), spirit::ascii::space_type> legacy_variable_expansion;
         // Parsed identifier name.
-        qi::rule<Iterator, boost::iterator_range<Iterator>(), spirit_encoding::space_type> identifier;
+        qi::rule<Iterator, boost::iterator_range<Iterator>(), spirit::ascii::space_type> identifier;
         // Ternary operator (?:) over logical_or_expression.
         RuleExpression conditional_expression;
         // Logical or over logical_and_expressions.
@@ -1212,16 +1209,16 @@ namespace client
         // Number literals, functions, braced expressions, variable references, variable indexing references.
         RuleExpression unary_expression;
         // Rule to capture a regular expression enclosed in //.
-        qi::rule<Iterator, boost::iterator_range<Iterator>(), spirit_encoding::space_type> regular_expression;
+        qi::rule<Iterator, boost::iterator_range<Iterator>(), spirit::ascii::space_type> regular_expression;
         // Evaluate boolean expression into bool.
-        qi::rule<Iterator, bool(const MyContext*), spirit_encoding::space_type> bool_expr_eval;
+        qi::rule<Iterator, bool(const MyContext*), spirit::ascii::space_type> bool_expr_eval;
         // Reference of a scalar variable, or reference to a field of a vector variable.
-        qi::rule<Iterator, expr<Iterator>(const MyContext*), qi::locals<OptWithPos<Iterator>, int>, spirit_encoding::space_type> scalar_variable_reference;
+        qi::rule<Iterator, expr<Iterator>(const MyContext*), qi::locals<OptWithPos<Iterator>, int>, spirit::ascii::space_type> scalar_variable_reference;
         // Rule to translate an identifier to a ConfigOption, or to fail.
-        qi::rule<Iterator, OptWithPos<Iterator>(const MyContext*), spirit_encoding::space_type> variable_reference;
+        qi::rule<Iterator, OptWithPos<Iterator>(const MyContext*), spirit::ascii::space_type> variable_reference;
 
-        qi::rule<Iterator, std::string(const MyContext*), qi::locals<bool, bool>, spirit_encoding::space_type> if_else_output;
-//        qi::rule<Iterator, std::string(const MyContext*), qi::locals<expr<Iterator>, bool, std::string>, spirit_encoding::space_type> switch_output;
+        qi::rule<Iterator, std::string(const MyContext*), qi::locals<bool, bool>, spirit::ascii::space_type> if_else_output;
+//        qi::rule<Iterator, std::string(const MyContext*), qi::locals<expr<Iterator>, bool, std::string>, spirit::ascii::space_type> switch_output;
 
         qi::symbols<char> keywords;
     };
@@ -1233,7 +1230,7 @@ static std::string process_macro(const std::string &templ, client::MyContext &co
     typedef client::macro_processor<iterator_type> macro_processor;
 
     // Our whitespace skipper.
-    spirit_encoding::space_type space;
+    spirit::ascii::space_type   space;
     // Our grammar, statically allocated inside the method, meaning it will be allocated the first time
     // PlaceholderParser::process() runs.
     //FIXME this kind of initialization is not thread safe!

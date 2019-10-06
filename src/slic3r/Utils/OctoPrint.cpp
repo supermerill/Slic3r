@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <sstream>
-#include <exception>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -70,7 +69,7 @@ bool OctoPrint::test(wxString &msg) const
                     msg = wxString::Format(_(L("Mismatched type of print host: %s")), text ? *text : "OctoPrint");
                 }
             }
-            catch (const std::exception &) {
+            catch (...) {
                 res = false;
                 msg = "Could not parse server response";
             }

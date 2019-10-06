@@ -12,11 +12,6 @@
 #include <ClipperUtils.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
-
-#if defined(_MSC_VER) && defined(__clang__)
-#define BOOST_NO_CXX17_HDR_STRING_VIEW
-#endif
-
 #include <boost/multiprecision/integer.hpp>
 #include <boost/rational.hpp>
 
@@ -133,24 +128,13 @@ protected:
     PConfig   m_pconf; // Placement configuration
     TBin      m_bin;
     double    m_bin_area;
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#pragma warning(disable: 4267)
-#endif
     SpatIndex m_rtree; // spatial index for the normal (bigger) objects
     SpatIndex m_smallsrtree;    // spatial index for only the smaller items
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
     double    m_norm;           // A coefficient to scale distances
     MultiPolygon m_merged_pile; // The already merged pile (vector of items)
     Box          m_pilebb;      // The bounding box of the merged pile.
-    ItemGroup m_remaining;      // Remaining items
-    ItemGroup m_items;          // allready packed items
-    size_t    m_item_count = 0; // Number of all items to be packed
+    ItemGroup m_remaining; // Remaining items (m_items at the beginning)
+    ItemGroup m_items;     // The items to be packed
     
     template<class T> ArithmeticOnly<T, double> norm(T val)
     {
@@ -168,6 +152,7 @@ protected:
         const double bin_area = m_bin_area;
         const SpatIndex& spatindex = m_rtree;
         const SpatIndex& smalls_spatindex = m_smallsrtree;
+        const ItemGroup& remaining = m_remaining;
         
         // We will treat big items (compared to the print bed) differently
         auto isBig = [bin_area](double a) {
@@ -209,8 +194,8 @@ protected:
         } compute_case;
         
         bool bigitems = isBig(item.area()) || spatindex.empty();
-        if(bigitems && !m_remaining.empty()) compute_case = BIG_ITEM;
-        else if (bigitems && m_remaining.empty()) compute_case = LAST_BIG_ITEM;
+        if(bigitems && !remaining.empty()) compute_case = BIG_ITEM;
+        else if (bigitems && remaining.empty()) compute_case = LAST_BIG_ITEM;
         else compute_case = SMALL_ITEM;
         
         switch (compute_case) {
@@ -235,7 +220,7 @@ protected:
             // The smalles distance from the arranged pile center:
             double dist = norm(*(std::min_element(dists.begin(), dists.end())));
             double bindist = norm(pl::distance(ibb.center(), bincenter));
-            dist = 0.8 * dist + 0.2 * bindist;
+            dist = 0.8 * dist + 0.2*bindist;
 
             // Prepare a variable for the alignment score.
             // This will indicate: how well is the candidate item
@@ -267,24 +252,29 @@ protected:
                     if(ascore < alignment_score) alignment_score = ascore;
                 }
             }
-            
+
             density = std::sqrt(norm(fullbb.width()) * norm(fullbb.height()));
-            double R = double(m_remaining.size()) / m_item_count;
-            
+
             // The final mix of the score is the balance between the
             // distance from the full pile center, the pack density and
             // the alignment with the neighbors
             if (result.empty())
-                score = 0.50 * dist + 0.50 * density;
+                score = 0.5 * dist + 0.5 * density;
             else
-                score = R * 0.60 * dist +
-                        (1.0 - R) * 0.20 * density +
-                        0.20 * alignment_score;
+                score = 0.40 * dist + 0.40 * density + 0.2 * alignment_score;
             
             break;
         }
         case LAST_BIG_ITEM: {
-            score = norm(pl::distance(ibb.center(), m_pilebb.center()));
+            auto mp = m_merged_pile;
+            mp.emplace_back(item.transformedShape());
+            auto chull = sl::convexHull(mp);
+    
+            placers::EdgeCache<clppr::Polygon> ec(chull);
+            
+            double circ  = norm(ec.circumference());
+            double bcirc = 2.0 * norm(fullbb.width() + fullbb.height());
+            score = 0.5 * circ + 0.5 * bcirc;
             break;
         }
         case SMALL_ITEM: {
@@ -350,17 +340,9 @@ public:
         m_pck.configure(m_pconf);
     }
     
-    AutoArranger(const TBin &                  bin,
-                 std::function<void(unsigned)> progressind,
-                 std::function<bool(void)>     stopcond)
-        : AutoArranger{bin, 0 /* no min distance */, progressind, stopcond}
-    {}
-     
-    template<class It> inline void operator()(It from, It to) {
-        m_rtree.clear();
-        m_item_count += size_t(to - from);
-        m_pck.execute(from, to);
-        m_item_count = 0;
+    template<class...Args> inline void operator()(Args&&...args) {
+        m_rtree.clear(); /*m_preload_idx.clear();*/
+        m_pck.execute(std::forward<Args>(args)...);
     }
     
     inline void preload(std::vector<Item>& fixeditems) {
@@ -379,7 +361,6 @@ public:
         }
 
         m_pck.configure(m_pconf);
-        m_item_count += fixeditems.size();
     }
 };
 
@@ -443,18 +424,6 @@ inline Circle to_lnCircle(const CircleBed& circ) {
 }
 
 // Get the type of bed geometry from a simple vector of points.
-void BedShapeHint::reset(BedShapes type)
-{
-    if (m_type != type) {
-        if (m_type == bsIrregular)
-            m_bed.polygon.Slic3r::Polyline::~Polyline();
-        else if (type == bsIrregular)
-            ::new (&m_bed.polygon) Polyline();
-    }
-    
-    m_type = type;
-}
-
 BedShapeHint::BedShapeHint(const Polyline &bed) {
     auto x = [](const Point& p) { return p(X); };
     auto y = [](const Point& p) { return p(Y); };
@@ -523,58 +492,19 @@ BedShapeHint::BedShapeHint(const Polyline &bed) {
         m_type = BedShapes::bsCircle;
         m_bed.circ = c;
     } else {
-        assert(m_type != BedShapes::bsIrregular);
         m_type = BedShapes::bsIrregular;
-        ::new (&m_bed.polygon) Polyline(bed);
+        m_bed.polygon = bed;
     }
-}
-
-BedShapeHint &BedShapeHint::operator=(BedShapeHint &&cpy)
-{
-    reset(cpy.m_type);
-    
-    switch(m_type) {
-    case bsBox: m_bed.box = std::move(cpy.m_bed.box); break;
-    case bsCircle: m_bed.circ = std::move(cpy.m_bed.circ); break;
-    case bsIrregular: m_bed.polygon = std::move(cpy.m_bed.polygon); break;
-    case bsInfinite: m_bed.infbed = std::move(cpy.m_bed.infbed); break;
-    case bsUnknown: break;
-    }
-    
-    return *this;
-}
-
-BedShapeHint &BedShapeHint::operator=(const BedShapeHint &cpy)
-{
-    reset(cpy.m_type);
-    
-    switch(m_type) {
-    case bsBox: m_bed.box = cpy.m_bed.box; break;
-    case bsCircle: m_bed.circ = cpy.m_bed.circ; break;
-    case bsIrregular: m_bed.polygon = cpy.m_bed.polygon; break;
-    case bsInfinite: m_bed.infbed = cpy.m_bed.infbed; break;
-    case bsUnknown: break;
-    }
-    
-    return *this;
-}
-
-template<class Bin> void remove_large_items(std::vector<Item> &items, Bin &&bin)
-{
-    auto it = items.begin();
-    while (it != items.end())
-        sl::isInside(it->transformedShape(), bin) ?
-            ++it : it = items.erase(it);
 }
 
 template<class BinT> // Arrange for arbitrary bin type
 void _arrange(
-        std::vector<Item> &           shapes,
-        std::vector<Item> &           excludes,
-        const BinT &                  bin,
-        coord_t                       minobjd,
-        std::function<void(unsigned)> progressfn,
-        std::function<bool()>         stopfn)
+    std::vector<Item> &           shapes,
+    std::vector<Item> &           excludes,
+    const BinT &                  bin,
+    coord_t                       minobjd,
+    std::function<void(unsigned)> prind,
+    std::function<bool()>         stopfn)
 {
     // Integer ceiling the min distance from the bed perimeters
     coord_t md = minobjd - 2 * scaled(0.1 + EPSILON);
@@ -583,13 +513,16 @@ void _arrange(
     auto corrected_bin = bin;
     sl::offset(corrected_bin, md);
     
-    AutoArranger<BinT> arranger{corrected_bin, progressfn, stopfn};
+    AutoArranger<BinT> arranger{corrected_bin, 0, prind, stopfn};
     
     auto infl = coord_t(std::ceil(minobjd / 2.0));
     for (Item& itm : shapes) itm.inflate(infl);
     for (Item& itm : excludes) itm.inflate(infl);
     
-    remove_large_items(excludes, corrected_bin);
+    auto it = excludes.begin();
+    while (it != excludes.end())
+        sl::isInside(it->transformedShape(), corrected_bin) ?
+            ++it : it = excludes.erase(it);
 
     // If there is something on the plate
     if (!excludes.empty()) arranger.preload(excludes);
@@ -685,7 +618,7 @@ void arrange(ArrangePolygons &             arrangables,
         _arrange(items, fixeditems, Box::infinite(), min_obj_dist, pri, cfn);
         break;
     }
-    }
+    };
     
     for(size_t i = 0; i < items.size(); ++i) {
         clppr::IntPoint tr = items[i].translation();

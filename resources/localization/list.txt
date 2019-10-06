@@ -9,17 +9,14 @@ src/slic3r/GUI/ConfigWizard.cpp
 src/slic3r/GUI/Field.cpp
 src/slic3r/GUI/FirmwareDialog.cpp
 src/slic3r/GUI/GLCanvas3D.cpp
-src/slic3r/GUI/GLCanvas3DManager.cpp
 src/slic3r/GUI/Gizmos/GLGizmoCut.cpp
 src/slic3r/GUI/Gizmos/GLGizmoFlatten.cpp
 src/slic3r/GUI/Gizmos/GLGizmoMove.cpp
 src/slic3r/GUI/Gizmos/GLGizmoRotate.cpp
 src/slic3r/GUI/Gizmos/GLGizmoScale.cpp
 src/slic3r/GUI/Gizmos/GLGizmoSlaSupports.cpp
-src/slic3r/GUI/Gizmos/GLGizmosManager.cpp
 src/slic3r/GUI/GUI.cpp
 src/slic3r/GUI/GUI_App.cpp
-src/slic3r/GUI/GUI_ObjectLayers.cpp
 src/slic3r/GUI/GUI_ObjectList.cpp
 src/slic3r/GUI/GUI_ObjectManipulation.cpp
 src/slic3r/GUI/GUI_ObjectSettings.cpp
@@ -27,7 +24,6 @@ src/slic3r/GUI/GUI_Preview.cpp
 src/slic3r/GUI/KBShortcutsDialog.cpp
 src/slic3r/GUI/MainFrame.cpp
 src/slic3r/GUI/MsgDialog.cpp
-src/slic3r/GUI/OptionsGroup.cpp
 src/slic3r/GUI/Plater.cpp
 src/slic3r/GUI/Preferences.cpp
 src/slic3r/GUI/Preset.cpp
@@ -36,7 +32,6 @@ src/slic3r/GUI/PresetHints.cpp
 src/slic3r/GUI/PrintHostDialogs.cpp
 src/slic3r/GUI/ProgressStatusBar.cpp
 src/slic3r/GUI/RammingChart.cpp
-src/slic3r/GUI/Selection.cpp
 src/slic3r/GUI/SysInfoDialog.cpp
 src/slic3r/GUI/Tab.cpp
 src/slic3r/GUI/Tab.hpp

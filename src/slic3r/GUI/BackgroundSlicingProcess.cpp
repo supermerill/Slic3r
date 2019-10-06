@@ -153,12 +153,7 @@ void BackgroundSlicingProcess::thread_proc()
 		} catch (CanceledException & /* ex */) {
 			// Canceled, this is all right.
 			assert(m_print->canceled());
-        } catch (const std::bad_alloc& ex) {
-            wxString errmsg = wxString::Format(_(L("%s has encountered an error. It was likely caused by running out of memory. "
-                                  "If you are sure you have enough RAM on your system, this may also be a bug and we would "
-                                  "be glad if you reported it.")), SLIC3R_APP_NAME);
-            error = errmsg.ToStdString() + "\n\n" + std::string(ex.what());
-        } catch (std::exception &ex) {
+		} catch (std::exception &ex) {
 			error = ex.what();
 		} catch (...) {
 			error = "Unknown C++ exception.";
@@ -222,11 +217,7 @@ bool BackgroundSlicingProcess::start()
 	if (m_state == STATE_INITIAL) {
 		// The worker thread is not running yet. Start it.
 		assert(! m_thread.joinable());
-		boost::thread::attributes attrs;
-		// Duplicating the stack allocation size of Thread Building Block worker threads of the thread pool:
-		// allocate 4MB on a 64bit system, allocate 2MB on a 32bit system by default.
-		attrs.set_stack_size((sizeof(void*) == 4) ? (2048 * 1024) : (4096 * 1024));
-		m_thread = boost::thread(attrs, [this]{this->thread_proc_safe();});
+		m_thread = std::thread([this]{this->thread_proc_safe();});
 		// Wait until the worker thread is ready to execute the background processing task.
 		m_condition.wait(lck, [this](){ return m_state == STATE_IDLE; });
 	}

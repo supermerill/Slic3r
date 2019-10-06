@@ -1,6 +1,5 @@
 project(Slic3r-native)
 
-add_subdirectory(build-utils)
 add_subdirectory(admesh)
 add_subdirectory(avrdude)
 # boost/nowide
@@ -52,7 +51,7 @@ if (SLIC3R_GUI)
             endif ()
         endif ()
     else ()
-        find_package(wxWidgets 3.1 REQUIRED COMPONENTS html adv gl core base)
+        find_package(wxWidgets 3.1 REQUIRED COMPONENTS base core adv html gl)
     endif ()
 
     if(UNIX)
@@ -60,9 +59,6 @@ if (SLIC3R_GUI)
     endif()
 
     include(${wxWidgets_USE_FILE})
-
-#    list(REMOVE_ITEM wxWidgets_LIBRARIES oleacc)
-    message(STATUS "wx libs: ${wxWidgets_LIBRARIES}")
 
     add_subdirectory(slic3r)
 endif()
@@ -73,20 +69,13 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/PrusaSlicer.rc.in ${CMAKE_CURRENT_BINARY_DIR}/slic3r.rc @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/PrusaSlicer.manifest.in ${CMAKE_CURRENT_BINARY_DIR}/slic3r.manifest @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/osx/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist @ONLY)
-if (WIN32)
+if (MSVC)
     add_library(slic3r SHARED PrusaSlicer.cpp PrusaSlicer.hpp)
 else ()
     add_executable(slic3r PrusaSlicer.cpp PrusaSlicer.hpp)
 endif ()
-
 add_library(slic3r_lib STATIC PrusaSlicer.cpp PrusaSlicer.hpp)
-
-if (MINGW)
-    target_link_options(slic3r PUBLIC "-Wl,-allow-multiple-definition")
-    set_target_properties(slic3r PROPERTIES PREFIX "")
-endif (MINGW)
-
-if (NOT WIN32)
+if (NOT MSVC)
     # Binary name on unix like systems (OSX, Linux)
     set_target_properties(slic3r PROPERTIES OUTPUT_NAME "slic3r++")
 endif ()
@@ -115,7 +104,7 @@ if (SLIC3R_GUI)
 
     # Configure libcurl and its dependencies OpenSSL & zlib
     find_package(CURL REQUIRED)
-    if (NOT WIN32)
+    if (NOT MSVC)
         # Required by libcurl
         find_package(ZLIB REQUIRED)
     endif()
@@ -149,7 +138,7 @@ if (SLIC3R_GUI)
         target_link_libraries(slic3r user32.lib Setupapi.lib OpenGL32.Lib GlU32.Lib)
         target_link_libraries(slic3r_lib user32.lib Setupapi.lib OpenGL32.Lib GlU32.Lib)
     elseif (MINGW)
-        target_link_libraries(slic3r opengl32 ws2_32 uxtheme setupapi)
+        target_link_libraries(slic3r -lopengl32)
         target_link_libraries(slic3r_lib -lopengl32)
     elseif (APPLE)
         target_link_libraries(slic3r "-framework OpenGL")
@@ -162,34 +151,27 @@ endif ()
 
 # On Windows, a shim application is required to produce a console / non console version of the Slic3r application.
 # Also the shim may load the Mesa software OpenGL renderer if the default renderer does not support OpenGL 2.0 and higher.
-if (WIN32)
-    if (MINGW)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -municode")
-    endif()
-
+if (MSVC)
     add_executable(slic3r_app_gui WIN32 PrusaSlicer_app_msvc.cpp ${CMAKE_CURRENT_BINARY_DIR}/slic3r.rc)
     # Generate debug symbols even in release mode.
-    if(MSVC)
-        target_link_options(slic3r_app_gui PUBLIC "$<$<CONFIG:RELEASE>:/DEBUG>")
-    endif()
+    #target_link_options(slic3r_app_gui PUBLIC "$<$<CONFIG:RELEASE>:/DEBUG>")
     target_compile_definitions(slic3r_app_gui PRIVATE -DSLIC3R_WRAPPER_NOCONSOLE)
     add_dependencies(slic3r_app_gui slic3r)
-    set_target_properties(slic3r_app_gui PROPERTIES OUTPUT_NAME "prusa-slicer")
+    set_target_properties(slic3r_app_gui PROPERTIES OUTPUT_NAME "slic3r++")
     target_link_libraries(slic3r_app_gui PRIVATE boost_headeronly)
 
     add_executable(slic3r_app_console PrusaSlicer_app_msvc.cpp ${CMAKE_CURRENT_BINARY_DIR}/slic3r.rc)
     # Generate debug symbols even in release mode.
-    if (MSVC)
-    target_link_options(slic3r_app_console PUBLIC "$<$<CONFIG:RELEASE>:/DEBUG>")
-    endif ()
+    #target_link_options(slic3r_app_console PUBLIC "$<$<CONFIG:RELEASE>:/DEBUG>")
     target_compile_definitions(slic3r_app_console PRIVATE -DSLIC3R_WRAPPER_CONSOLE)
     add_dependencies(slic3r_app_console slic3r)
-    set_target_properties(slic3r_app_console PROPERTIES OUTPUT_NAME "prusa-slicer-console")
+    set_target_properties(slic3r_app_console PROPERTIES OUTPUT_NAME "slic3r++_console")
     target_link_libraries(slic3r_app_console PRIVATE boost_headeronly)
+	
 endif ()
 
 # Link the resources dir to where Slic3r GUI expects it
-if (WIN32)
+if (MSVC)
     if (CMAKE_CONFIGURATION_TYPES)
         foreach (CONF ${CMAKE_CONFIGURATION_TYPES})
             file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/${CONF}" WIN_CONF_OUTPUT_DIR)

@@ -9,7 +9,7 @@
     %name{_new} ExtrusionEntityCollection();
     ~ExtrusionEntityCollection();
     Clone<ExtrusionEntityCollection> clone()
-        %code{% RETVAL = (ExtrusionEntityCollection*)THIS->clone(); %};
+        %code{% RETVAL = THIS->clone(); %};
     void reverse();
     void clear();
     ExtrusionEntityCollection* chained_path(bool no_reverse, ExtrusionRole role = erMixed)
@@ -31,11 +31,13 @@
     ExtrusionEntityCollection* flatten()
         %code{%
             RETVAL = new ExtrusionEntityCollection();
-            *RETVAL = THIS->flatten();
+            THIS->flatten(RETVAL);
         %};
     double min_mm3_per_mm();
     bool empty()
         %code{% RETVAL = THIS->entities.empty(); %};
+    std::vector<size_t> orig_indices()
+        %code{% RETVAL = THIS->orig_indices; %};
     Polygons polygons_covered_by_width();
     Polygons polygons_covered_by_spacing();
 %{

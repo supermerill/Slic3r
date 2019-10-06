@@ -22,8 +22,6 @@ namespace Slic3r {
         static const std::string Normal_Last_M73_Output_Placeholder_Tag;
         static const std::string Silent_Last_M73_Output_Placeholder_Tag;
 
-        static const std::string Color_Change_Tag;
-
         enum EMode : unsigned char
         {
             Normal,
@@ -213,18 +211,8 @@ namespace Slic3r {
         typedef std::map<Block::EMoveType, MoveStats> MovesStatsMap;
 #endif // ENABLE_MOVE_STATS
 
-    public:
         typedef std::pair<unsigned int, unsigned int> G1LineIdToBlockId;
         typedef std::vector<G1LineIdToBlockId> G1LineIdToBlockIdMap;
-
-        struct PostProcessData
-        {
-            const G1LineIdToBlockIdMap& g1_line_ids;
-            const BlocksList& blocks;
-            float time;
-
-            PostProcessData(const G1LineIdToBlockIdMap& g1_line_ids, const BlocksList& blocks, float time) : g1_line_ids(g1_line_ids), blocks(blocks), time(time) {}
-        };
 
     private:
         EMode m_mode;
@@ -273,12 +261,11 @@ namespace Slic3r {
         void calculate_time_from_lines(const std::vector<std::string>& gcode_lines);
 
         // Process the gcode contained in the file with the given filename, 
-        // replacing placeholders with correspondent new lines M73
-        // placing new lines M73 (containing the remaining time) where needed (in dependence of the given interval in seconds)
-        // and removing working tags (as those used for color changes)
-        // if normal_mode == nullptr no M73 line will be added for normal mode
-        // if silent_mode == nullptr no M73 line will be added for silent mode
-        static bool post_process(const std::string& filename, float interval_sec, const PostProcessData* const normal_mode, const PostProcessData* const silent_mode);
+        // placing in it new lines (M73) containing the remaining time, at the given interval in seconds
+        // and saving the result back in the same file
+        // This time estimator should have been already used to calculate the time estimate for the gcode
+        // contained in the given file before to call this method
+        bool post_process_remaining_times(const std::string& filename, float interval_sec);
 
         // Set current position on the given axis with the given value
         void set_axis_position(EAxis axis, float position);
@@ -359,21 +346,17 @@ namespace Slic3r {
         // Returns the estimated time, in minutes (integer)
         std::string get_time_minutes() const;
 
-        // Returns the estimated time, in seconds, for each color
+       // Returns the estimated time, in seconds, for each color
         std::vector<float> get_color_times() const;
 
         // Returns the estimated time, in format DDd HHh MMm SSs, for each color
-        // If include_remaining==true the strings will be formatted as: "time for color (remaining time at color start)"
-        std::vector<std::string> get_color_times_dhms(bool include_remaining) const;
+        std::vector<std::string> get_color_times_dhms() const;
 
         // Returns the estimated time, in minutes (integer), for each color
-        // If include_remaining==true the strings will be formatted as: "time for color (remaining time at color start)"
-        std::vector<std::string> get_color_times_minutes(bool include_remaining) const;
+        std::vector<std::string> get_color_times_minutes() const;
 
         // Return an estimate of the memory consumed by the time estimator.
         size_t memory_used() const;
-
-        PostProcessData get_post_process_data() const { return PostProcessData(m_g1_line_ids, m_blocks, m_time); }
 
     private:
         void _reset();
@@ -440,18 +423,14 @@ namespace Slic3r {
         // Set allowable instantaneous speed change
         void _processM566(const GCodeReader::GCodeLine& line);
 
+        // Set color change
+        void _processM600(const GCodeReader::GCodeLine& line);
+
         // Unload the current filament into the MK3 MMU2 unit at the end of print.
         void _processM702(const GCodeReader::GCodeLine& line);
 
         // Processes T line (Select Tool)
         void _processT(const GCodeReader::GCodeLine& line);
-
-        // Processes the tags
-        // Returns true if any tag has been processed
-        bool _process_tags(const GCodeReader::GCodeLine& line);
-
-        // Processes color change tag
-        void _process_color_change_tag();
 
         // Simulates firmware st_synchronize() call
         void _simulate_st_synchronize();

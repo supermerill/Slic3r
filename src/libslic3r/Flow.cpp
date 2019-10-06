@@ -76,14 +76,10 @@ float Flow::spacing() const
         return this->width + BRIDGE_EXTRA_SPACING;
     // rectangle with semicircles at the ends
     float min_flow_spacing = this->width - this->height * (1. - 0.25 * PI);
-    float res = this->width - PERIMETER_LINE_OVERLAP_FACTOR * (this->width - min_flow_spacing);
+    return this->width - PERIMETER_LINE_OVERLAP_FACTOR * (this->width - min_flow_spacing);
 #else
-    float res = float(this->bridge ? (this->width + BRIDGE_EXTRA_SPACING) : (this->width - this->height * (1. - 0.25 * PI)));
+    return float(this->bridge ? (this->width + BRIDGE_EXTRA_SPACING) : (this->width - this->height * (1. - 0.25 * PI)));
 #endif
-//    assert(res > 0.f);
-	if (res <= 0.f)
-		throw std::runtime_error("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?");
-	return res;
 }
 
 // This method returns the centerline spacing between an extrusion using this
@@ -93,26 +89,20 @@ float Flow::spacing(const Flow &other) const
 {
     assert(this->height == other.height);
     assert(this->bridge == other.bridge);
-    float res = float(this->bridge ? 
+    return float(this->bridge ? 
         0.5 * this->width + 0.5 * other.width + BRIDGE_EXTRA_SPACING :
         0.5 * this->spacing() + 0.5 * other.spacing());
-//    assert(res > 0.f);
-	if (res <= 0.f)
-		throw std::runtime_error("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?");
-	return res;
 }
 
 // This method returns extrusion volume per head move unit.
 double Flow::mm3_per_mm() const 
 {
-    float res = this->bridge ?
+    double res = this->bridge ?
         // Area of a circle with dmr of this->width.
         (this->width * this->width) * 0.25 * PI :
         // Rectangle with semicircles at the ends. ~ h (w - 0.215 h)
         this->height * (this->width - this->height * (1. - 0.25 * PI));
-    //assert(res > 0.);
-	if (res <= 0.)
-		throw std::runtime_error("Flow::mm3_per_mm() produced negative flow. Did you set some extrusion width too small?");
+    assert(res > 0.);
     return res;
 }
 

@@ -12,7 +12,6 @@
 #include "libslic3r/GCode/Analyzer.hpp"
 #include "slic3r/GUI/PresetBundle.hpp"
 #include "libslic3r/Format/STL.hpp"
-#include "libslic3r/Utils.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,8 +23,6 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include <boost/nowide/cstdio.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
@@ -77,19 +74,15 @@ void GLIndexedVertexArray::load_mesh_full_shading(const TriangleMesh &mesh)
     }
 }
 
-void GLIndexedVertexArray::finalize_geometry(bool opengl_initialized)
+void GLIndexedVertexArray::finalize_geometry() const
 {
     assert(this->vertices_and_normals_interleaved_VBO_id == 0);
     assert(this->triangle_indices_VBO_id == 0);
     assert(this->quad_indices_VBO_id == 0);
 
-	if (! opengl_initialized) {
-		// Shrink the data vectors to conserve memory in case the data cannot be transfered to the OpenGL driver yet.
-		this->shrink_to_fit();
-		return;
-	}
+    this->shrink_to_fit();
 
-    if (! this->vertices_and_normals_interleaved.empty()) {
+    if (! empty()) {
         glsafe(::glGenBuffers(1, &this->vertices_and_normals_interleaved_VBO_id));
         glsafe(::glBindBuffer(GL_ARRAY_BUFFER, this->vertices_and_normals_interleaved_VBO_id));
         glsafe(::glBufferData(GL_ARRAY_BUFFER, this->vertices_and_normals_interleaved.size() * 4, this->vertices_and_normals_interleaved.data(), GL_STATIC_DRAW));
@@ -131,8 +124,13 @@ void GLIndexedVertexArray::release_geometry()
 
 void GLIndexedVertexArray::render() const
 {
-    assert(this->vertices_and_normals_interleaved_VBO_id != 0);
-    assert(this->triangle_indices_VBO_id != 0 || this->quad_indices_VBO_id != 0);
+    if (this->vertices_and_normals_interleaved_VBO_id == 0)
+    {
+        // sends data to gpu, if not done yet
+        finalize_geometry();
+        if (this->vertices_and_normals_interleaved_VBO_id == 0)
+            return;
+    }
 
     glsafe(::glBindBuffer(GL_ARRAY_BUFFER, this->vertices_and_normals_interleaved_VBO_id));
     glsafe(::glVertexPointer(3, GL_FLOAT, 6 * sizeof(float), (const void*)(3 * sizeof(float))));
@@ -163,8 +161,13 @@ void GLIndexedVertexArray::render(
     const std::pair<size_t, size_t>& tverts_range,
     const std::pair<size_t, size_t>& qverts_range) const
 {
-    assert(this->vertices_and_normals_interleaved_VBO_id != 0);
-    assert(this->triangle_indices_VBO_id != 0 || this->quad_indices_VBO_id != 0);
+    if (this->vertices_and_normals_interleaved_VBO_id == 0)
+    {
+        // sends data to gpu, if not done yet
+        finalize_geometry();
+        if (this->vertices_and_normals_interleaved_VBO_id == 0)
+            return;
+    }
 
     // Render using the Vertex Buffer Objects.
     glsafe(::glBindBuffer(GL_ARRAY_BUFFER, this->vertices_and_normals_interleaved_VBO_id));
@@ -215,7 +218,6 @@ GLVolume::GLVolume(float r, float g, float b, float a)
     , extruder_id(0)
     , selected(false)
     , disabled(false)
-    , printable(true)
     , is_active(true)
     , zoom_to_volumes(true)
     , shader_outside_printer_detection_enabled(false)
@@ -271,13 +273,6 @@ void GLVolume::set_render_color()
             set_render_color(OUTSIDE_COLOR, 4);
         else
             set_render_color(color, 4);
-    }
-
-    if (!printable)
-    {
-        render_color[0] /= 4;
-        render_color[1] /= 4;
-        render_color[2] /= 4;
     }
 
     if (force_transparent)
@@ -420,32 +415,30 @@ bool GLVolume::is_sla_support() const { return this->composite_id.volume_id == -
 bool GLVolume::is_sla_pad() const { return this->composite_id.volume_id == -int(slaposBasePool); }
 
 std::vector<int> GLVolumeCollection::load_object(
-    const ModelObject       *model_object,
+    const ModelObject* model_object,
     int                      obj_idx,
-    const std::vector<int>  &instance_idxs,
-    const std::string       &color_by,
-    bool 					 opengl_initialized)
+    const std::vector<int>& instance_idxs,
+    const std::string& color_by)
 {
     std::vector<int> volumes_idx;
     for (int volume_idx = 0; volume_idx < int(model_object->volumes.size()); ++volume_idx)
         for (int instance_idx : instance_idxs)
-            volumes_idx.emplace_back(this->GLVolumeCollection::load_object_volume(model_object, obj_idx, volume_idx, instance_idx, color_by, opengl_initialized));
+            volumes_idx.emplace_back(this->GLVolumeCollection::load_object_volume(model_object, obj_idx, volume_idx, instance_idx, color_by));
     return volumes_idx;
 }
 
 int GLVolumeCollection::load_object_volume(
-    const ModelObject   *model_object,
-    int                  obj_idx,
-    int                  volume_idx,
-    int                  instance_idx,
-    const std::string   &color_by,
-    bool 				 opengl_initialized)
+    const ModelObject* model_object,
+    int                             obj_idx,
+    int                             volume_idx,
+    int                             instance_idx,
+    const std::string& color_by)
 {
-    const ModelVolume   *model_volume = model_object->volumes[volume_idx];
-    const int            extruder_id  = model_volume->extruder_id();
-    const ModelInstance *instance 	  = model_object->instances[instance_idx];
-    const TriangleMesh  &mesh 		  = model_volume->mesh();
-    float 				 color[4];
+    const ModelVolume* model_volume = model_object->volumes[volume_idx];
+    const int            extruder_id = model_volume->extruder_id();
+    const ModelInstance* instance = model_object->instances[instance_idx];
+    const TriangleMesh& mesh = model_volume->mesh();
+    float color[4];
     memcpy(color, GLVolume::MODEL_COLOR[((color_by == "volume") ? volume_idx : obj_idx) % 4], sizeof(float) * 3);
     /*    if (model_volume->is_support_blocker()) {
             color[0] = 1.0f;
@@ -462,7 +455,6 @@ int GLVolumeCollection::load_object_volume(
     GLVolume& v = *this->volumes.back();
     v.set_color_from_model_volume(model_volume);
     v.indexed_vertex_array.load_mesh(mesh);
-    v.indexed_vertex_array.finalize_geometry(opengl_initialized);
     v.composite_id = GLVolume::CompositeID(obj_idx, volume_idx, instance_idx);
     if (model_volume->is_model_part())
     {
@@ -483,14 +475,13 @@ int GLVolumeCollection::load_object_volume(
 // This function produces volumes for multiple instances in a single shot,
 // as some object specific mesh conversions may be expensive.
 void GLVolumeCollection::load_object_auxiliary(
-    const SLAPrintObject 		   *print_object,
+    const SLAPrintObject* print_object,
     int                             obj_idx,
     // pairs of <instance_idx, print_instance_idx>
     const std::vector<std::pair<size_t, size_t>>& instances,
     SLAPrintObjectStep              milestone,
     // Timestamp of the last change of the milestone
-    size_t                          timestamp,
-    bool 				 			opengl_initialized)
+    size_t                          timestamp)
 {
     assert(print_object->is_step_done(milestone));
     Transform3d  mesh_trafo_inv = print_object->trafo().inverse();
@@ -504,7 +495,6 @@ void GLVolumeCollection::load_object_auxiliary(
         this->volumes.emplace_back(new GLVolume((milestone == slaposBasePool) ? GLVolume::SLA_PAD_COLOR : GLVolume::SLA_SUPPORT_COLOR));
         GLVolume& v = *this->volumes.back();
         v.indexed_vertex_array.load_mesh(mesh);
-	    v.indexed_vertex_array.finalize_geometry(opengl_initialized);
         v.composite_id = GLVolume::CompositeID(obj_idx, -int(milestone), (int)instance_idx.first);
         v.geometry_id = std::pair<size_t, size_t>(timestamp, model_instance.id().id);
         // Create a copy of the convex hull mesh for each instance. Use a move operator on the last instance.
@@ -521,7 +511,7 @@ void GLVolumeCollection::load_object_auxiliary(
 }
 
 int GLVolumeCollection::load_wipe_tower_preview(
-    int obj_idx, float pos_x, float pos_y, float width, float depth, float height, float rotation_angle, bool size_unknown, float brim_width, bool opengl_initialized)
+    int obj_idx, float pos_x, float pos_y, float width, float depth, float height, float rotation_angle, bool size_unknown, float brim_width)
 {
     if (depth < 0.01f)
         return int(this->volumes.size() - 1);
@@ -574,7 +564,6 @@ int GLVolumeCollection::load_wipe_tower_preview(
     this->volumes.emplace_back(new GLVolume(color));
     GLVolume& v = *this->volumes.back();
     v.indexed_vertex_array.load_mesh(mesh);
-    v.indexed_vertex_array.finalize_geometry(opengl_initialized);
     v.set_volume_offset(Vec3d(pos_x, pos_y, 0.0));
     v.set_volume_rotation(Vec3d(0., 0., (M_PI / 180.) * rotation_angle));
     v.composite_id = GLVolume::CompositeID(obj_idx, 0, 0);
@@ -583,23 +572,6 @@ int GLVolumeCollection::load_wipe_tower_preview(
     v.is_wipe_tower = true;
     v.shader_outside_printer_detection_enabled = !size_unknown;
     return int(this->volumes.size() - 1);
-}
-
-GLVolume* GLVolumeCollection::new_toolpath_volume(const float *rgba, size_t reserve_vbo_floats)
-{
-	GLVolume *out = new_nontoolpath_volume(rgba, reserve_vbo_floats);
-	out->is_extrusion_path = true;
-	return out;
-}
-
-GLVolume* GLVolumeCollection::new_nontoolpath_volume(const float *rgba, size_t reserve_vbo_floats)
-{
-	GLVolume *out = new GLVolume(rgba);
-	out->is_extrusion_path = false;
-	// Reserving number of vertices (3x position + 3x color)
-	out->indexed_vertex_array.reserve(reserve_vbo_floats / 6);
-	this->volumes.emplace_back(out);
-	return out;
 }
 
 GLVolumeWithIdAndZList volumes_to_render(const GLVolumePtrs& volumes, GLVolumeCollection::ERenderType type, const Transform3d& view_matrix, std::function<bool(const GLVolume&)> filter_func)
@@ -713,7 +685,7 @@ bool GLVolumeCollection::check_outside_state(const DynamicPrintConfig* config, M
 
     for (GLVolume* volume : this->volumes)
     {
-        if ((volume == nullptr) || !volume->printable || volume->is_modifier || (volume->is_wipe_tower && !volume->shader_outside_printer_detection_enabled) || ((volume->composite_id.volume_id < 0) && !volume->shader_outside_printer_detection_enabled))
+        if ((volume == nullptr) || volume->is_modifier || (volume->is_wipe_tower && !volume->shader_outside_printer_detection_enabled) || ((volume->composite_id.volume_id < 0) && !volume->shader_outside_printer_detection_enabled))
             continue;
 
         const BoundingBoxf3& bb = volume->transformed_convex_hull_bounding_box();
@@ -851,334 +823,6 @@ std::vector<double> GLVolumeCollection::get_current_print_zs(bool active_only) c
     return print_zs;
 }
 
-size_t GLVolumeCollection::cpu_memory_used() const 
-{
-	size_t memsize = sizeof(*this) + this->volumes.capacity() * sizeof(GLVolume);
-	for (const GLVolume *volume : this->volumes)
-		memsize += volume->cpu_memory_used();
-	return memsize;
-}
-
-size_t GLVolumeCollection::gpu_memory_used() const 
-{
-	size_t memsize = 0;
-	for (const GLVolume *volume : this->volumes)
-		memsize += volume->gpu_memory_used();
-	return memsize;
-}
-
-std::string GLVolumeCollection::log_memory_info() const 
-{ 
-	return " (GLVolumeCollection RAM: " + format_memsize_MB(this->cpu_memory_used()) + " GPU: " + format_memsize_MB(this->gpu_memory_used()) + " Both: " + format_memsize_MB(this->gpu_memory_used()) + ")";
-}
-
-bool can_export_to_obj(const GLVolume& volume)
-{
-    if (!volume.is_active || !volume.is_extrusion_path)
-        return false;
-
-    if (volume.indexed_vertex_array.triangle_indices.empty() && (std::min(volume.indexed_vertex_array.triangle_indices_size, volume.tverts_range.second - volume.tverts_range.first) == 0))
-        return false;
-
-    if (volume.indexed_vertex_array.quad_indices.empty() && (std::min(volume.indexed_vertex_array.quad_indices_size, volume.qverts_range.second - volume.qverts_range.first) == 0))
-        return false;
-
-    return true;
-}
-
-bool GLVolumeCollection::has_toolpaths_to_export() const
-{
-    for (const GLVolume* volume : this->volumes)
-    {
-        if (can_export_to_obj(*volume))
-            return true;
-    }
-
-    return false;
-}
-
-void GLVolumeCollection::export_toolpaths_to_obj(const char* filename) const
-{
-    if (filename == nullptr)
-        return;
-
-    if (!has_toolpaths_to_export())
-        return;
-
-    // collect color information to generate materials
-    typedef std::array<float, 4> Color;
-    std::set<Color> colors;
-    for (const GLVolume* volume : this->volumes)
-    {
-        if (!can_export_to_obj(*volume))
-            continue;
-
-        Color color;
-        ::memcpy((void*)color.data(), (const void*)volume->color, 4 * sizeof(float));
-        colors.insert(color);
-    }
-
-    // save materials file
-    boost::filesystem::path mat_filename(filename);
-    mat_filename.replace_extension("mtl");
-    FILE* fp = boost::nowide::fopen(mat_filename.string().c_str(), "w");
-    if (fp == nullptr) {
-        BOOST_LOG_TRIVIAL(error) << "GLVolumeCollection::export_toolpaths_to_obj: Couldn't open " << mat_filename.string().c_str() << " for writing";
-        return;
-    }
-
-    fprintf(fp, "# G-Code Toolpaths Materials\n");
-    fprintf(fp, "# Generated by %s based on Slic3r\n", SLIC3R_BUILD_ID);
-
-    unsigned int colors_count = 1;
-    for (const Color& color : colors)
-    {
-        fprintf(fp, "\nnewmtl material_%d\n", colors_count++);
-        fprintf(fp, "Ka 1 1 1\n");
-        fprintf(fp, "Kd %f %f %f\n", color[0], color[1], color[2]);
-        fprintf(fp, "Ks 0 0 0\n");
-    }
-
-    fclose(fp);
-
-    // save geometry file
-    fp = boost::nowide::fopen(filename, "w");
-    if (fp == nullptr) {
-        BOOST_LOG_TRIVIAL(error) << "GLVolumeCollection::export_toolpaths_to_obj: Couldn't open " << filename << " for writing";
-        return;
-    }
-
-    fprintf(fp, "# G-Code Toolpaths\n");
-    fprintf(fp, "# Generated by %s based on Slic3r\n", SLIC3R_BUILD_ID);
-    fprintf(fp, "\nmtllib ./%s\n", mat_filename.filename().string().c_str());
-
-    unsigned int vertices_count = 0;
-    unsigned int normals_count = 0;
-    unsigned int volumes_count = 0;
-
-    for (const GLVolume* volume : this->volumes)
-    {
-        if (!can_export_to_obj(*volume))
-            continue;
-
-        std::vector<float> src_vertices_and_normals_interleaved;
-        std::vector<int>   src_triangle_indices;
-        std::vector<int>   src_quad_indices;
-
-        if (!volume->indexed_vertex_array.vertices_and_normals_interleaved.empty())
-            // data are in CPU memory
-            src_vertices_and_normals_interleaved = volume->indexed_vertex_array.vertices_and_normals_interleaved;
-        else if ((volume->indexed_vertex_array.vertices_and_normals_interleaved_VBO_id != 0) && (volume->indexed_vertex_array.vertices_and_normals_interleaved_size != 0))
-        {
-            // data are in GPU memory
-            src_vertices_and_normals_interleaved = std::vector<float>(volume->indexed_vertex_array.vertices_and_normals_interleaved_size, 0.0f);
-
-            glsafe(::glBindBuffer(GL_ARRAY_BUFFER, volume->indexed_vertex_array.vertices_and_normals_interleaved_VBO_id));
-            glsafe(::glGetBufferSubData(GL_ARRAY_BUFFER, 0, src_vertices_and_normals_interleaved.size() * sizeof(float), src_vertices_and_normals_interleaved.data()));
-            glsafe(::glBindBuffer(GL_ARRAY_BUFFER, 0));
-        }
-        else
-            continue;
-
-        if (!volume->indexed_vertex_array.triangle_indices.empty())
-        {
-            // data are in CPU memory
-            size_t size = std::min(volume->indexed_vertex_array.triangle_indices.size(), volume->tverts_range.second - volume->tverts_range.first);
-            if (size != 0)
-            {
-                std::vector<int>::const_iterator it_begin = volume->indexed_vertex_array.triangle_indices.begin() + volume->tverts_range.first;
-                std::vector<int>::const_iterator it_end = volume->indexed_vertex_array.triangle_indices.begin() + volume->tverts_range.first + size;
-                std::copy(it_begin, it_end, std::back_inserter(src_triangle_indices));
-            }
-        }
-        else if ((volume->indexed_vertex_array.triangle_indices_VBO_id != 0) && (volume->indexed_vertex_array.triangle_indices_size != 0))
-        {
-            // data are in GPU memory
-            size_t size = std::min(volume->indexed_vertex_array.triangle_indices_size, volume->tverts_range.second - volume->tverts_range.first);
-            if (size != 0)
-            {
-                src_triangle_indices = std::vector<int>(size, 0);
-
-                glsafe(::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, volume->indexed_vertex_array.triangle_indices_VBO_id));
-                glsafe(::glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, volume->tverts_range.first * sizeof(int), size * sizeof(int), src_triangle_indices.data()));
-                glsafe(::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-            }
-        }
-
-        if (!volume->indexed_vertex_array.quad_indices.empty())
-        {
-            // data are in CPU memory
-            size_t size = std::min(volume->indexed_vertex_array.quad_indices.size(), volume->qverts_range.second - volume->qverts_range.first);
-            if (size != 0)
-            {
-                std::vector<int>::const_iterator it_begin = volume->indexed_vertex_array.quad_indices.begin() + volume->qverts_range.first;
-                std::vector<int>::const_iterator it_end = volume->indexed_vertex_array.quad_indices.begin() + volume->qverts_range.first + size;
-                std::copy(it_begin, it_end, std::back_inserter(src_quad_indices));
-            }
-        }
-        else if ((volume->indexed_vertex_array.quad_indices_VBO_id != 0) && (volume->indexed_vertex_array.quad_indices_size != 0))
-        {
-            // data are in GPU memory
-            size_t size = std::min(volume->indexed_vertex_array.quad_indices_size, volume->qverts_range.second - volume->qverts_range.first);
-            if (size != 0)
-            {
-                src_quad_indices = std::vector<int>(size, 0);
-
-                glsafe(::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, volume->indexed_vertex_array.quad_indices_VBO_id));
-                glsafe(::glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, volume->qverts_range.first * sizeof(int), size * sizeof(int), src_quad_indices.data()));
-                glsafe(::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-            }
-        }
-
-        if (src_triangle_indices.empty() && src_quad_indices.empty())
-            continue;
-
-        ++volumes_count;
-
-        // reduce output size by keeping only used vertices and normals
-
-        struct Vector
-        {
-            std::array<coord_t, 3> vector;
-
-            explicit Vector(float* ptr)
-            {
-                vector[0] = scale_(*(ptr + 0));
-                vector[1] = scale_(*(ptr + 1));
-                vector[2] = scale_(*(ptr + 2));
-            }
-        };
-        typedef std::vector<Vector> Vectors;
-
-        auto vector_less = [](const Vector& v1, const Vector& v2)->bool {
-            return v1.vector < v2.vector;
-        };
-
-        auto vector_equal = [](const Vector& v1, const Vector& v2)->bool {
-            return (v1.vector[0] == v2.vector[0]) && (v1.vector[1] == v2.vector[1]) && (v1.vector[2] == v2.vector[2]);
-        };
-
-        // copy used vertices and normals data
-        Vectors dst_normals;
-        Vectors dst_vertices;
-
-        unsigned int src_triangle_indices_size = (unsigned int)src_triangle_indices.size();
-        for (unsigned int i = 0; i < src_triangle_indices_size; ++i)
-        {
-            float* src_ptr = src_vertices_and_normals_interleaved.data() + src_triangle_indices[i] * 6;
-            dst_normals.emplace_back(src_ptr + 0);
-            dst_vertices.emplace_back(src_ptr + 3);
-        }
-
-        unsigned int src_quad_indices_size = (unsigned int)src_quad_indices.size();
-        for (unsigned int i = 0; i < src_quad_indices_size; ++i)
-        {
-            float* src_ptr = src_vertices_and_normals_interleaved.data() + src_quad_indices[i] * 6;
-            dst_normals.emplace_back(src_ptr + 0);
-            dst_vertices.emplace_back(src_ptr + 3);
-        }
-
-        // sort vertices and normals
-        std::sort(dst_normals.begin(), dst_normals.end(), vector_less);
-        std::sort(dst_vertices.begin(), dst_vertices.end(), vector_less);
-
-        // remove duplicated vertices and normals
-        dst_normals.erase(std::unique(dst_normals.begin(), dst_normals.end(), vector_equal), dst_normals.end());
-        dst_vertices.erase(std::unique(dst_vertices.begin(), dst_vertices.end(), vector_equal), dst_vertices.end());
-
-        // reindex triangles and quads
-        struct IndicesPair
-        {
-            int vertex;
-            int normal;
-            IndicesPair(int vertex, int normal) : vertex(vertex), normal(normal) {}
-        };
-        typedef std::vector<IndicesPair> Indices;
-
-        unsigned int src_vertices_count = (unsigned int)src_vertices_and_normals_interleaved.size() / 6;
-        std::vector<int> src_dst_vertex_indices_map(src_vertices_count, -1);
-        std::vector<int> src_dst_normal_indices_map(src_vertices_count, -1);
-
-        for (unsigned int i = 0; i < src_vertices_count; ++i)
-        {
-            float* src_ptr = src_vertices_and_normals_interleaved.data() + i * 6;
-            src_dst_normal_indices_map[i] = std::distance(dst_normals.begin(), std::lower_bound(dst_normals.begin(), dst_normals.end(), Vector(src_ptr + 0), vector_less));
-            src_dst_vertex_indices_map[i] = std::distance(dst_vertices.begin(), std::lower_bound(dst_vertices.begin(), dst_vertices.end(), Vector(src_ptr + 3), vector_less));
-        }
-
-        Indices dst_triangle_indices;
-        if (src_triangle_indices_size > 0)
-            dst_triangle_indices.reserve(src_triangle_indices_size);
-
-        for (unsigned int i = 0; i < src_triangle_indices_size; ++i)
-        {
-            int id = src_triangle_indices[i];
-            dst_triangle_indices.emplace_back(src_dst_vertex_indices_map[id], src_dst_normal_indices_map[id]);
-        }
-
-        Indices dst_quad_indices;
-        if (src_quad_indices_size > 0)
-            dst_quad_indices.reserve(src_quad_indices_size);
-
-        for (unsigned int i = 0; i < src_quad_indices_size; ++i)
-        {
-            int id = src_quad_indices[i];
-            dst_quad_indices.emplace_back(src_dst_vertex_indices_map[id], src_dst_normal_indices_map[id]);
-        }
-
-        // save to file
-        fprintf(fp, "\n# vertices volume %d\n", volumes_count);
-        for (const Vector& v : dst_vertices)
-        {
-            fprintf(fp, "v %g %g %g\n", unscale<float>(v.vector[0]), unscale<float>(v.vector[1]), unscale<float>(v.vector[2]));
-        }
-
-        fprintf(fp, "\n# normals volume %d\n", volumes_count);
-        for (const Vector& n : dst_normals)
-        {
-            fprintf(fp, "vn %g %g %g\n", unscale<float>(n.vector[0]), unscale<float>(n.vector[1]), unscale<float>(n.vector[2]));
-        }
-
-        Color color;
-        ::memcpy((void*)color.data(), (const void*)volume->color, 4 * sizeof(float));
-        fprintf(fp, "\n# material volume %d\n", volumes_count);
-        fprintf(fp, "usemtl material_%lld\n", (long long)(1 + std::distance(colors.begin(), colors.find(color))));
-
-        int base_vertex_id = vertices_count + 1;
-        int base_normal_id = normals_count + 1;
-
-        if (!dst_triangle_indices.empty())
-        {
-            fprintf(fp, "\n# triangular facets volume %d\n", volumes_count);
-            for (unsigned int i = 0; i < (unsigned int)dst_triangle_indices.size(); i += 3)
-            {
-                fprintf(fp, "f %d//%d %d//%d %d//%d\n", 
-                    base_vertex_id + dst_triangle_indices[i + 0].vertex, base_normal_id + dst_triangle_indices[i + 0].normal,
-                    base_vertex_id + dst_triangle_indices[i + 1].vertex, base_normal_id + dst_triangle_indices[i + 1].normal,
-                    base_vertex_id + dst_triangle_indices[i + 2].vertex, base_normal_id + dst_triangle_indices[i + 2].normal);
-            }
-        }
-
-        if (!dst_quad_indices.empty())
-        {
-            fprintf(fp, "\n# quadrangular facets volume %d\n", volumes_count);
-            for (unsigned int i = 0; i < (unsigned int)src_quad_indices.size(); i += 4)
-            {
-                fprintf(fp, "f %d//%d %d//%d %d//%d %d//%d\n", 
-                    base_vertex_id + dst_quad_indices[i + 0].vertex, base_normal_id + dst_quad_indices[i + 0].normal,
-                    base_vertex_id + dst_quad_indices[i + 1].vertex, base_normal_id + dst_quad_indices[i + 1].normal,
-                    base_vertex_id + dst_quad_indices[i + 2].vertex, base_normal_id + dst_quad_indices[i + 2].normal,
-                    base_vertex_id + dst_quad_indices[i + 3].vertex, base_normal_id + dst_quad_indices[i + 3].normal);
-            }
-        }
-
-        vertices_count += (unsigned int)dst_vertices.size();
-        normals_count += (unsigned int)dst_normals.size();
-    }
-
-    fclose(fp);
-}
-
 // caller is responsible for supplying NO lines with zero length
 static void thick_lines_to_indexed_vertex_array(
     const Lines                 &lines, 
@@ -1242,8 +886,8 @@ static void thick_lines_to_indexed_vertex_array(
         // calculate new XY normals
         Vec2d xy_right_normal = unscale(line.normal()).normalized();
 
-        int idx_a[4] = { 0, 0, 0, 0 }; // initialized to avoid warnings
-        int idx_b[4] = { 0, 0, 0, 0 }; // initialized to avoid warnings
+        int idx_a[4];
+        int idx_b[4];
         int idx_last = int(volume.vertices_and_normals_interleaved.size() / 6);
 
         bool bottom_z_different = bottom_z_prev != bottom_z;
@@ -1950,7 +1594,6 @@ bool GLArrow::on_init()
     triangles.emplace_back(7, 13, 6);
 
     m_volume.indexed_vertex_array.load_mesh(TriangleMesh(vertices, triangles));
-	m_volume.indexed_vertex_array.finalize_geometry(true);
     return true;
 }
 
@@ -2064,7 +1707,6 @@ bool GLCurvedArrow::on_init()
     triangles.emplace_back(vertices_per_level, 2 * vertices_per_level + 1, vertices_per_level + 1);
 
     m_volume.indexed_vertex_array.load_mesh(TriangleMesh(vertices, triangles));
-	m_volume.indexed_vertex_array.finalize_geometry(true);
     return true;
 }
 
@@ -2091,7 +1733,6 @@ bool GLBed::on_init_from_file(const std::string& filename)
     m_filename = filename;
 
     m_volume.indexed_vertex_array.load_mesh(model.mesh());
-	m_volume.indexed_vertex_array.finalize_geometry(true);
 
     float color[4] = { 0.235f, 0.235f, 0.235f, 1.0f };
     set_color(color, 4);
@@ -2122,11 +1763,6 @@ void _3DScene::remove_all_canvases()
 bool _3DScene::init(wxGLCanvas* canvas)
 {
     return s_canvas_mgr.init(canvas);
-}
-
-void _3DScene::destroy()
-{
-    s_canvas_mgr.destroy();
 }
 
 GUI::GLCanvas3D* _3DScene::get_canvas(wxGLCanvas* canvas)

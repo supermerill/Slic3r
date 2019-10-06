@@ -4,6 +4,17 @@
 
 namespace Slic3r {
 
+Surface::operator Polygons() const
+{
+    return this->expolygon;
+}
+
+double
+Surface::area() const
+{
+    return this->expolygon.area();
+}
+
 bool
 Surface::has_fill_void() const {
     return (this->surface_type & stDensVoid) != 0;

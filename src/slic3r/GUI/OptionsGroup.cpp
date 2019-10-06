@@ -1,4 +1,4 @@
-#include "OptionsGroup.hpp"
+﻿#include "OptionsGroup.hpp"
 #include "ConfigExceptions.hpp"
 
 #include <utility>
@@ -246,7 +246,7 @@ void OptionsGroup::append_line(const Line& line, wxStaticText**	full_Label/* = n
 		// add label if any
 		if (option.label != "") {
 //!			To correct translation by context have to use wxGETTEXT_IN_CONTEXT macro from wxWidget 3.1.1
-			wxString str_label = (option.label == L_CONTEXT("Top", "Layers") || option.label == L_CONTEXT("Bottom", "Layers")) ?
+			wxString str_label = (option.label == "Top" || option.label == "Bottom") ?
 								_CTX(option.label, "Layers") :
 								_(option.label);
 			label = new wxStaticText(this->ctrl_parent(), wxID_ANY, str_label + ":", wxDefaultPosition, wxDefaultSize);
@@ -457,9 +457,8 @@ void ConfigOptionsGroup::Show(const bool show)
 bool ConfigOptionsGroup::update_visibility(ConfigOptionMode mode) {
     if (m_options_mode.empty())
         return true;
-    int opt_mode_size = m_options_mode.size();
-    if (m_grid_sizer->GetEffectiveRowsCount() != opt_mode_size &&
-        opt_mode_size == 1)
+    if (m_grid_sizer->GetEffectiveRowsCount() != m_options_mode.size() &&
+        m_options_mode.size() == 1)
         return m_options_mode[0] <= mode;
 
     Show(true);
@@ -477,7 +476,7 @@ bool ConfigOptionsGroup::update_visibility(ConfigOptionMode mode) {
         coef+= cols;
 	}
 
-    if (hidden_row_cnt == opt_mode_size) {
+    if (hidden_row_cnt == m_options_mode.size()) {
         sizer->ShowItems(false);
         return false;
     }
@@ -590,11 +589,13 @@ boost::any ConfigOptionsGroup::get_config_value(const DynamicPrintConfig& config
 	switch (opt->type) {
 	case coFloatOrPercent:{
 		const auto &value = *config.option<ConfigOptionFloatOrPercent>(opt_key);
-
-        text_value = double_to_string(value.value);
 		if (value.percent)
+		{
+			text_value = wxString::Format(_T("%i"), int(value.value));
 			text_value += "%";
-
+		}
+		else
+			text_value = double_to_string(value.value);
 		ret = text_value;
 		break;
 	}

@@ -75,10 +75,7 @@ elseif (APPLE)
     endif ()
 
     include("deps-macos.cmake")
-elseif (MINGW)
-    message(STATUS "Building for MinGW...")
-    include("deps-mingw.cmake")
-else()
+else ()
     include("deps-linux.cmake")
 endif()
 

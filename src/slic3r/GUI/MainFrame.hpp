@@ -1,4 +1,4 @@
-#ifndef slic3r_MainFrame_hpp_
+﻿#ifndef slic3r_MainFrame_hpp_
 #define slic3r_MainFrame_hpp_
 
 #include "libslic3r/PrintConfig.hpp"
@@ -50,9 +50,8 @@ class MainFrame : public DPIFrame
     wxString    m_qs_last_input_file = wxEmptyString;
     wxString    m_qs_last_output_file = wxEmptyString;
     wxString    m_last_config = wxEmptyString;
-#if 0
-    wxMenuItem* m_menu_item_repeat { nullptr }; // doesn't used now
-#endif
+
+    wxMenuItem* m_menu_item_repeat { nullptr };
     wxMenuItem* m_menu_item_reslice_now { nullptr };
 
     PrintHostQueueDialog *m_printhost_queue_dlg;
@@ -66,10 +65,8 @@ class MainFrame : public DPIFrame
     bool can_start_new_project() const;
     bool can_save() const;
     bool can_export_model() const;
-    bool can_export_toolpaths() const;
     bool can_export_supports() const;
     bool can_export_gcode() const;
-    bool can_send_gcode() const;
     bool can_slice() const;
     bool can_change_view() const;
     bool can_select() const;
@@ -82,7 +79,6 @@ class MainFrame : public DPIFrame
     enum MenuItems
     {                   //   FFF                  SLA
         miExport = 0,   // Export G-code        Export
-        miSend,         // Send G-code          Send to print
         miMaterialTab,  // Filament Settings    Material Settings
     };
 

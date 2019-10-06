@@ -39,12 +39,10 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
 {
     // Fonts were created by the DPIFrame constructor for the monitor, on which the window opened.
     wxGetApp().update_fonts(this);
-/*
 #ifndef __WXOSX__ // Don't call SetFont under OSX to avoid name cutting in ObjectList 
     this->SetFont(this->normal_font());
 #endif
-    // Font is already set in DPIFrame constructor
-*/
+
     // Load the icon either from the exe, or from the ico file.
 #if _WIN32
     {
@@ -247,11 +245,6 @@ bool MainFrame::can_export_model() const
     return (m_plater != nullptr) && !m_plater->model().objects.empty();
 }
 
-bool MainFrame::can_export_toolpaths() const
-{
-    return (m_plater != nullptr) && (m_plater->printer_technology() == ptFFF) && m_plater->is_preview_shown() && m_plater->is_preview_loaded() && m_plater->has_toolpaths_to_export();
-}
-
 bool MainFrame::can_export_supports() const
 {
     if ((m_plater == nullptr) || (m_plater->printer_technology() != ptSLA) || m_plater->model().objects.empty())
@@ -284,18 +277,6 @@ bool MainFrame::can_export_gcode() const
     // TODO:: add other filters
 
     return true;
-}
-
-bool MainFrame::can_send_gcode() const
-{
-    if (m_plater == nullptr)
-        return false;
-
-    if (m_plater->model().objects.empty())
-        return false;
-
-    const auto print_host_opt = wxGetApp().preset_bundle->printers.get_edited_preset().config.option<ConfigOptionString>("print_host");
-    return print_host_opt != nullptr && !print_host_opt->value.empty();
 }
 
 bool MainFrame::can_slice() const
@@ -430,7 +411,6 @@ void MainFrame::init_menubar()
             }, wxID_FILE1, wxID_FILE9);
 
         std::vector<std::string> recent_projects = wxGetApp().app_config->get_recent_projects();
-        std::reverse(recent_projects.begin(), recent_projects.end());
         for (const std::string& project : recent_projects)
         {
             m_recent_projects.AddFileToHistory(from_u8(project));
@@ -470,24 +450,16 @@ void MainFrame::init_menubar()
             [this](wxCommandEvent&) { if (m_plater) m_plater->export_gcode(); }, menu_icon("export_gcode"), nullptr,
             [this](){return can_export_gcode(); }, this);
         m_changeable_menu_items.push_back(item_export_gcode);
-        wxMenuItem* item_send_gcode = append_menu_item(export_menu, wxID_ANY, _(L("S&end G-code")) + dots +"\tCtrl+Shift+G", _(L("Send to print current plate as G-code")),
-            [this](wxCommandEvent&) { if (m_plater) m_plater->send_gcode(); }, menu_icon("export_gcode"), nullptr,
-            [this](){return can_send_gcode(); }, this);
-        m_changeable_menu_items.push_back(item_send_gcode);
         export_menu->AppendSeparator();
         append_menu_item(export_menu, wxID_ANY, _(L("Export plate as &STL")) + dots, _(L("Export current plate as STL")),
             [this](wxCommandEvent&) { if (m_plater) m_plater->export_stl(); }, menu_icon("export_plater"), nullptr,
             [this](){return can_export_model(); }, this);
-        append_menu_item(export_menu, wxID_ANY, _(L("Export plate as STL &including supports")) + dots, _(L("Export current plate as STL including supports")),
+        append_menu_item(export_menu, wxID_ANY, _(L("Export plate as STL including supports")) + dots, _(L("Export current plate as STL including supports")),
             [this](wxCommandEvent&) { if (m_plater) m_plater->export_stl(true); }, menu_icon("export_plater"), nullptr,
             [this](){return can_export_supports(); }, this);
         append_menu_item(export_menu, wxID_ANY, _(L("Export plate as &AMF")) + dots, _(L("Export current plate as AMF")),
             [this](wxCommandEvent&) { if (m_plater) m_plater->export_amf(); }, menu_icon("export_plater"), nullptr,
             [this](){return can_export_model(); }, this);
-        export_menu->AppendSeparator();
-        append_menu_item(export_menu, wxID_ANY, _(L("Export &toolpaths as OBJ")) + dots, _(L("Export toolpaths as OBJ")),
-            [this](wxCommandEvent&) { if (m_plater) m_plater->export_toolpaths_to_obj(); }, menu_icon("export_plater"), nullptr,
-            [this]() {return can_export_toolpaths(); }, this);
         export_menu->AppendSeparator();
         append_menu_item(export_menu, wxID_ANY, _(L("Export &Config")) +dots +"\tCtrl+E", _(L("Export current configuration to file")),
             [this](wxCommandEvent&) { export_config(); }, menu_icon("export_config"));
@@ -568,10 +540,10 @@ void MainFrame::init_menubar()
         editMenu->AppendSeparator();
         append_menu_item(editMenu, wxID_ANY, _(L("&Undo")) + sep + GUI::shortkey_ctrl_prefix() + sep_space + "Z",
             _(L("Undo")), [this](wxCommandEvent&) { m_plater->undo(); },
-            "undo_menu", nullptr, [this](){return m_plater->can_undo(); }, this);
+            "undo", nullptr, [this](){return m_plater->can_undo(); }, this);
         append_menu_item(editMenu, wxID_ANY, _(L("&Redo")) + sep + GUI::shortkey_ctrl_prefix() + sep_space + "Y",
             _(L("Redo")), [this](wxCommandEvent&) { m_plater->redo(); },
-            "redo_menu", nullptr, [this](){return m_plater->can_redo(); }, this);
+            "redo", nullptr, [this](){return m_plater->can_redo(); }, this);
 
         editMenu->AppendSeparator();
         append_menu_item(editMenu, wxID_ANY, _(L("&Copy")) + sep + GUI::shortkey_ctrl_prefix() + sep_space + "C",
@@ -668,12 +640,12 @@ void MainFrame::init_menubar()
 //#            wxTheApp->check_version(1);
 //#        });
 //#        $versioncheck->Enable(wxTheApp->have_version_check);
-        append_menu_item(helpMenu, wxID_ANY, wxString::Format(_(L("Slic3r Website"))), 
-                                             wxString::Format(_(L("Open the Slic3r website in your browser"))),
-//            [this](wxCommandEvent&) { wxGetApp().open_web_page_localized("https://www.prusa3d.com/slicerweb"); });
+        append_menu_item(helpMenu, wxID_ANY, wxString::Format(_(L("%s &Website")), SLIC3R_APP_NAME), 
+                                             wxString::Format(_(L("Open the %s website in your browser")), SLIC3R_APP_NAME),
+            [this](wxCommandEvent&) { wxGetApp().open_web_page_localized("https://www.prusa3d.com/slicerweb"); });
 //        append_menu_item(helpMenu, wxID_ANY, wxString::Format(_(L("%s &Manual")), SLIC3R_APP_NAME),
 //                                             wxString::Format(_(L("Open the %s manual in your browser")), SLIC3R_APP_NAME),
-            [this](wxCommandEvent&) { wxLaunchDefaultBrowser("http://manual.slic3r.org/"); });
+//            [this](wxCommandEvent&) { wxLaunchDefaultBrowser("http://manual.slic3r.org/"); });
         helpMenu->AppendSeparator();
         append_menu_item(helpMenu, wxID_ANY, _(L("System &Info")), _(L("Show system information")), 
             [this](wxCommandEvent&) { wxGetApp().system_info(); });
@@ -720,8 +692,7 @@ void MainFrame::update_menubar()
 {
     const bool is_fff = plater()->printer_technology() == ptFFF;
 
-    m_changeable_menu_items[miExport]       ->SetItemLabel((is_fff ? _(L("Export &G-code"))         : _(L("E&xport"))       ) + dots     + "\tCtrl+G");
-    m_changeable_menu_items[miSend]         ->SetItemLabel((is_fff ? _(L("S&end G-code"))           : _(L("S&end to print"))) + dots    + "\tCtrl+Shift+G");
+    m_changeable_menu_items[miExport]       ->SetItemLabel((is_fff ? _(L("Export &G-code"))         : _(L("Export"))                    )   + dots + "\tCtrl+G");
 
     m_changeable_menu_items[miMaterialTab]  ->SetItemLabel((is_fff ? _(L("&Filament Settings Tab")) : _(L("Mate&rial Settings Tab")))   + "\tCtrl+3");
     m_changeable_menu_items[miMaterialTab]  ->SetBitmap(create_scaled_bitmap(this, menu_icon(is_fff ? "spool": "resin")));
@@ -744,26 +715,29 @@ void MainFrame::quick_slice(const int qs)
 
     // select input file
     if (!(qs & qsReslice)) {
-        wxFileDialog dlg(this, _(L("Choose a file to slice (STL/OBJ/AMF/3MF/PRUSA):")),
+        auto dlg = new wxFileDialog(this, _(L("Choose a file to slice (STL/OBJ/AMF/3MF/PRUSA):")),
             wxGetApp().app_config->get_last_dir(), "",
             file_wildcards(FT_MODEL), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-        if (dlg.ShowModal() != wxID_OK)
+        if (dlg->ShowModal() != wxID_OK) {
+            dlg->Destroy();
             return;
-        input_file = dlg.GetPath();
+        }
+        input_file = dlg->GetPath();
+        dlg->Destroy();
         if (!(qs & qsExportSVG))
             m_qs_last_input_file = input_file;
     }
     else {
         if (m_qs_last_input_file.IsEmpty()) {
-            wxMessageDialog dlg(this, _(L("No previously sliced file.")),
+            auto dlg = new wxMessageDialog(this, _(L("No previously sliced file.")),
                 _(L("Error")), wxICON_ERROR | wxOK);
-            dlg.ShowModal();
+            dlg->ShowModal();
             return;
         }
         if (std::ifstream(m_qs_last_input_file.ToUTF8().data())) {
-            wxMessageDialog dlg(this, _(L("Previously sliced file ("))+m_qs_last_input_file+_(L(") not found.")),
+            auto dlg = new wxMessageDialog(this, _(L("Previously sliced file ("))+m_qs_last_input_file+_(L(") not found.")),
                 _(L("File Not Found")), wxICON_ERROR | wxOK);
-            dlg.ShowModal();
+            dlg->ShowModal();
             return;
         }
         input_file = m_qs_last_input_file;
@@ -797,25 +771,31 @@ void MainFrame::quick_slice(const int qs)
     } 
     else if (qs & qsSaveAs) {
         // The following line may die if the output_filename_format template substitution fails.
-        wxFileDialog dlg(this, wxString::Format(_(L("Save %s file as:")) , qs & qsExportSVG ? _(L("SVG")) : _(L("G-code")) ),
+        auto dlg = new wxFileDialog(this, wxString::Format(_(L("Save %s file as:")) , qs & qsExportSVG ? _(L("SVG")) : _(L("G-code")) ),
             wxGetApp().app_config->get_last_output_dir(get_dir_name(output_file)), get_base_name(input_file), 
             qs & qsExportSVG ? file_wildcards(FT_SVG) : file_wildcards(FT_GCODE),
             wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-        if (dlg.ShowModal() != wxID_OK)
+        if (dlg->ShowModal() != wxID_OK) {
+            dlg->Destroy();
             return;
-        output_file = dlg.GetPath();
+        }
+        output_file = dlg->GetPath();
+        dlg->Destroy();
         if (!(qs & qsExportSVG))
             m_qs_last_output_file = output_file;
         wxGetApp().app_config->update_last_output_dir(get_dir_name(output_file));
     } 
     else if (qs & qsExportPNG) {
-        wxFileDialog dlg(this, _(L("Save zip file as:")),
+        auto dlg = new wxFileDialog(this, _(L("Save zip file as:")),
             wxGetApp().app_config->get_last_output_dir(get_dir_name(output_file)),
             get_base_name(output_file), "*.sl1", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-        if (dlg.ShowModal() != wxID_OK)
+        if (dlg->ShowModal() != wxID_OK) {
+            dlg->Destroy();
             return;
-        output_file = dlg.GetPath();
         }
+        output_file = dlg->GetPath();
+        dlg->Destroy();
+    }
 
     // show processbar dialog
     m_progress_dialog = new wxProgressDialog(_(L("Slicing")) + dots, 
@@ -860,23 +840,29 @@ void MainFrame::repair_stl()
 {
     wxString input_file;
     {
-        wxFileDialog dlg(this, _(L("Select the STL file to repair:")),
+        auto dlg = new wxFileDialog(this, _(L("Select the STL file to repair:")),
             wxGetApp().app_config->get_last_dir(), "",
             file_wildcards(FT_STL), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-        if (dlg.ShowModal() != wxID_OK)
+        if (dlg->ShowModal() != wxID_OK) {
+            dlg->Destroy();
             return;
-        input_file = dlg.GetPath();
         }
+        input_file = dlg->GetPath();
+        dlg->Destroy();
+    }
 
     wxString output_file = input_file;
     {
-        wxFileDialog dlg( this, L("Save OBJ file (less prone to coordinate errors than STL) as:"),
+        auto dlg = new wxFileDialog( this, L("Save OBJ file (less prone to coordinate errors than STL) as:"), 
                                         get_dir_name(output_file), get_base_name(output_file, ".obj"),
                                         file_wildcards(FT_OBJ), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-        if (dlg.ShowModal() != wxID_OK)
+        if (dlg->ShowModal() != wxID_OK) {
+            dlg->Destroy();
             return;
-        output_file = dlg.GetPath();
         }
+        output_file = dlg->GetPath();
+        dlg->Destroy();
+    }
 
     auto tmesh = new Slic3r::TriangleMesh();
     tmesh->ReadSTLFile(input_file.ToUTF8().data());
@@ -896,13 +882,14 @@ void MainFrame::export_config()
         return;
     }
     // Ask user for the file name for the config file.
-    wxFileDialog dlg(this, _(L("Save configuration as:")),
+    auto dlg = new wxFileDialog(this, _(L("Save configuration as:")),
         !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
         !m_last_config.IsEmpty() ? get_base_name(m_last_config) : "config.ini",
         file_wildcards(FT_INI), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     wxString file;
-    if (dlg.ShowModal() == wxID_OK)
-        file = dlg.GetPath();
+    if (dlg->ShowModal() == wxID_OK)
+        file = dlg->GetPath();
+    dlg->Destroy();
     if (!file.IsEmpty()) {
         wxGetApp().app_config->update_config_dir(get_dir_name(file));
         m_last_config = file;
@@ -915,12 +902,13 @@ void MainFrame::load_config_file()
 {
         if (!wxGetApp().check_unsaved_changes())
             return;
-    wxFileDialog dlg(this, _(L("Select configuration to load:")),
+        auto dlg = new wxFileDialog(this, _(L("Select configuration to load:")),
             !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
             "config.ini", "INI files (*.ini, *.gcode)|*.ini;*.INI;*.gcode;*.g", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	wxString file;
-    if (dlg.ShowModal() == wxID_OK)
-        file = dlg.GetPath();
+	if (dlg->ShowModal() == wxID_OK) 
+        file = dlg->GetPath();
+        dlg->Destroy();
 	if (! file.IsEmpty() && this->load_config_file(file.ToUTF8().data())) {
         wxGetApp().app_config->update_config_dir(get_dir_name(file));
         m_last_config = file;
@@ -951,13 +939,14 @@ void MainFrame::export_configbundle()
         return;
     }
     // Ask user for a file name.
-    wxFileDialog dlg(this, _(L("Save presets bundle as:")),
+    auto dlg = new wxFileDialog(this, _(L("Save presets bundle as:")),
         !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
         SLIC3R_APP_KEY "_config_bundle.ini",
         file_wildcards(FT_INI), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     wxString file;
-    if (dlg.ShowModal() == wxID_OK)
-        file = dlg.GetPath();
+    if (dlg->ShowModal() == wxID_OK)
+        file = dlg->GetPath();
+    dlg->Destroy();
     if (!file.IsEmpty()) {
         // Export the config bundle.
         wxGetApp().app_config->update_config_dir(get_dir_name(file));
@@ -977,13 +966,16 @@ void MainFrame::load_configbundle(wxString file/* = wxEmptyString, const bool re
     if (!wxGetApp().check_unsaved_changes())
         return;
     if (file.IsEmpty()) {
-        wxFileDialog dlg(this, _(L("Select configuration to load:")),
+        auto dlg = new wxFileDialog(this, _(L("Select configuration to load:")),
             !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
             "config.ini", file_wildcards(FT_INI), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-        if (dlg.ShowModal() != wxID_OK)
+		if (dlg->ShowModal() != wxID_OK) {
+			dlg->Destroy();
             return;
-        file = dlg.GetPath();
 		}
+        file = dlg->GetPath();
+        dlg->Destroy();
+    }
 
     wxGetApp().app_config->update_config_dir(get_dir_name(file));
 

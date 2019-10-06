@@ -91,7 +91,6 @@ public:
     void init_gl();
 
     bool init(wxGLCanvas* canvas);
-    void destroy();
 
     GLCanvas3D* get_canvas(wxGLCanvas* canvas);
 

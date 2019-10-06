@@ -9,11 +9,6 @@
 #include <map>
 
 namespace Slic3r {
-
-namespace UndoRedo {
-struct Snapshot;
-}
-
 namespace GUI {
 
 class GLCanvas3D;
@@ -54,30 +49,25 @@ public:
 
     enum EType : unsigned char
     {
+        Undefined,
         Move,
         Scale,
         Rotate,
         Flatten,
         Cut,
         SlaSupports,
-        Undefined
+        Num_Types
     };
 
 private:
     GLCanvas3D& m_parent;
     bool m_enabled;
-    std::vector<std::unique_ptr<GLGizmoBase>> m_gizmos;
+    typedef std::map<EType, GLGizmoBase*> GizmosMap;
+    GizmosMap m_gizmos;
     mutable GLTexture m_icons_texture;
     mutable bool m_icons_texture_dirty;
     BackgroundTexture m_background_texture;
     EType m_current;
-    EType m_hover;
-
-    std::vector<size_t> get_selectable_idxs() const;
-    std::vector<size_t> get_activable_idxs() const;
-    size_t get_gizmo_idx_from_mouse(const Vec2d& mouse_pos) const;
-
-    void activate_gizmo(EType type);
 
     float m_overlay_icons_size;
     float m_overlay_scale;
@@ -103,6 +93,7 @@ private:
 
 public:
     explicit GLGizmosManager(GLCanvas3D& parent);
+    ~GLGizmosManager();
 
     bool init();
 
@@ -116,8 +107,16 @@ public:
 
         ar(m_current);
 
-        if (m_current != Undefined)
-            m_gizmos[m_current]->load(ar);
+        GLGizmoBase* curr = get_current();
+		for (GizmosMap::const_iterator it = m_gizmos.begin(); it != m_gizmos.end(); ++it) {
+			GLGizmoBase* gizmo = it->second;
+			if (gizmo != nullptr) {
+				gizmo->set_hover_id(-1);
+				gizmo->set_state((it->second == curr) ? GLGizmoBase::On : GLGizmoBase::Off);
+				if (gizmo == curr)
+					gizmo->load(ar);
+			}
+		}
     }
 
     template<class Archive>
@@ -128,8 +127,9 @@ public:
 
         ar(m_current);
 
-        if (m_current != Undefined && !m_gizmos.empty())
-            m_gizmos[m_current]->save(ar);
+        GLGizmoBase* curr = get_current();
+        if (curr != nullptr)
+            curr->save(ar);
     }
 
     bool is_enabled() const { return m_enabled; }
@@ -173,7 +173,6 @@ public:
     void set_sla_support_data(ModelObject* model_object);
     bool gizmo_event(SLAGizmoEventType action, const Vec2d& mouse_position = Vec2d::Zero(), bool shift_down = false, bool alt_down = false, bool control_down = false);
     ClippingPlane get_sla_clipping_plane() const;
-    bool wants_reslice_supports_on_undo() const;
 
     void render_current_gizmo() const;
     void render_current_gizmo_for_picking_pass() const;
@@ -187,9 +186,11 @@ public:
     bool on_char(wxKeyEvent& evt);
     bool on_key(wxKeyEvent& evt);
 
-    void update_after_undo_redo(const UndoRedo::Snapshot& snapshot);
+    void update_after_undo_redo();
 
 private:
+    void reset();
+
     void render_background(float left, float top, float right, float bottom, float border) const;
     void do_render_overlay() const;
 
@@ -202,6 +203,7 @@ private:
 
     void update_on_off_state(const Vec2d& mouse_pos);
     std::string update_hover_state(const Vec2d& mouse_pos);
+    bool overlay_contains_mouse(const Vec2d& mouse_pos) const;
     bool grabber_contains_mouse() const;
 };
 

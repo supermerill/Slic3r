@@ -14,14 +14,14 @@ public:
     {
         float rgba[4];
 
-        Color(const float *argba) { memcpy(this->rgba, argba, sizeof(float) * 4); }
-		Color(float r = 1.f, float g = 1.f, float b = 1.f, float a = 1.f) { rgba[0] = r; rgba[1] = g; rgba[2] = b; rgba[3] = a; }
+        Color();
+        Color(float r, float g, float b, float a);
 
         std::vector<unsigned char> as_bytes() const;
 
         static const Color Dummy;
     };
-    
+
     // Color mapping from a <min, max> range into a smooth rainbow of 10 colors.
     struct Range
     {
@@ -81,8 +81,9 @@ public:
             Num_View_Types
         };
 
-        static const Color Default_Extrusion_Role_Colors[erCount];
-        static const std::string Default_Extrusion_Role_Names[erCount];
+        static const unsigned int Num_Extrusion_Roles = (unsigned int)erMixed + 1;
+        static const Color Default_Extrusion_Role_Colors[Num_Extrusion_Roles];
+        static const std::string Default_Extrusion_Role_Names[Num_Extrusion_Roles];
         static const EViewType Default_View_Type;
 
         struct Layer
@@ -96,8 +97,8 @@ public:
         typedef std::vector<Layer> LayersList;
 
         EViewType view_type;
-        Color role_colors[erCount];
-        std::string role_names[erCount];
+        Color role_colors[Num_Extrusion_Roles];
+        std::string role_names[Num_Extrusion_Roles];
         LayersList layers;
         unsigned int role_flags;
 

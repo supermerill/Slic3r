@@ -345,9 +345,9 @@ bool GLToolbar::is_any_item_pressed() const
     return false;
 }
 
-int GLToolbar::get_item_id(const std::string& name) const
+unsigned int GLToolbar::get_item_id(const std::string& name) const
 {
-    for (int i = 0; i < (int)m_items.size(); ++i)
+    for (unsigned int i = 0; i < (unsigned int)m_items.size(); ++i)
     {
         if (m_items[i]->get_name() == name)
             return i;
@@ -356,9 +356,19 @@ int GLToolbar::get_item_id(const std::string& name) const
     return -1;
 }
 
-void GLToolbar::get_additional_tooltip(int item_id, std::string& text)
+void GLToolbar::force_left_action(unsigned int item_id, GLCanvas3D& parent)
 {
-    if ((0 <= item_id) && (item_id < (int)m_items.size()))
+    do_action(GLToolbarItem::Left, item_id, parent, false);
+}
+
+void GLToolbar::force_right_action(unsigned int item_id, GLCanvas3D& parent)
+{
+    do_action(GLToolbarItem::Right, item_id, parent, false);
+}
+
+void GLToolbar::get_additional_tooltip(unsigned int item_id, std::string& text)
+{
+    if (item_id < (unsigned int)m_items.size())
     {
         GLToolbarItem* item = m_items[item_id];
         if (item != nullptr)
@@ -371,9 +381,9 @@ void GLToolbar::get_additional_tooltip(int item_id, std::string& text)
     text = L("");
 }
 
-void GLToolbar::set_additional_tooltip(int item_id, const std::string& text)
+void GLToolbar::set_additional_tooltip(unsigned int item_id, const std::string& text)
 {
-    if ((0 <= item_id) && (item_id < (int)m_items.size()))
+    if (item_id < (unsigned int)m_items.size())
     {
         GLToolbarItem* item = m_items[item_id];
         if (item != nullptr)
@@ -456,7 +466,7 @@ bool GLToolbar::on_mouse(wxMouseEvent& evt, GLCanvas3D& parent)
             if ((item_id != -2) && !m_items[item_id]->is_separator() && ((m_pressed_toggable_id == -1) || (m_items[item_id]->get_last_action_type() == GLToolbarItem::Left)))
             {
                 // mouse is inside an icon
-                do_action(GLToolbarItem::Left, item_id, parent, true);
+                do_action(GLToolbarItem::Left, (unsigned int)item_id, parent, true);
                 parent.set_as_dirty();
             }
         }
@@ -473,7 +483,7 @@ bool GLToolbar::on_mouse(wxMouseEvent& evt, GLCanvas3D& parent)
             if ((item_id != -2) && !m_items[item_id]->is_separator() && ((m_pressed_toggable_id == -1) || (m_items[item_id]->get_last_action_type() == GLToolbarItem::Right)))
             {
                 // mouse is inside an icon
-                do_action(GLToolbarItem::Right, item_id, parent, true);
+                do_action(GLToolbarItem::Right, (unsigned int)item_id, parent, true);
                 parent.set_as_dirty();
             }
         }
@@ -546,11 +556,11 @@ float GLToolbar::get_main_size() const
     return size * m_layout.scale;
 }
 
-void GLToolbar::do_action(GLToolbarItem::EActionType type, int item_id, GLCanvas3D& parent, bool check_hover)
+void GLToolbar::do_action(GLToolbarItem::EActionType type, unsigned int item_id, GLCanvas3D& parent, bool check_hover)
 {
     if ((m_pressed_toggable_id == -1) || (m_pressed_toggable_id == item_id))
     {
-        if ((0 <= item_id) && (item_id < (int)m_items.size()))
+        if (item_id < (unsigned int)m_items.size())
         {
             GLToolbarItem* item = m_items[item_id];
             if ((item != nullptr) && !item->is_separator() && (!check_hover || item->is_hovered()))
@@ -861,10 +871,11 @@ int GLToolbar::contains_mouse_horizontal(const Vec2d& mouse_pos, const GLCanvas3
     float left = m_layout.left + scaled_border;
     float top = m_layout.top - scaled_border;
 
-
-    for (size_t id=0; id<m_items.size(); ++id)
+    int id = -1;
+    
+    for (GLToolbarItem* item : m_items)
     {
-        GLToolbarItem* item = m_items[id];
+        ++id;
         
         if (!item->is_visible())
             continue;
@@ -935,9 +946,11 @@ int GLToolbar::contains_mouse_vertical(const Vec2d& mouse_pos, const GLCanvas3D&
     float left = m_layout.left + scaled_border;
     float top = m_layout.top - scaled_border;
 
-    for (size_t id=0; id<m_items.size(); ++id)
+    int id = -1;
+
+    for (GLToolbarItem* item : m_items)
     {
-        GLToolbarItem* item = m_items[id];
+        ++id;
 
         if (!item->is_visible())
             continue;
@@ -1233,7 +1246,7 @@ bool GLToolbar::update_items_enabled_state()
 {
     bool ret = false;
 
-    for (int i = 0; i < (int)m_items.size(); ++i)
+    for (unsigned int i = 0; i < (unsigned int)m_items.size(); ++i)
     {
         GLToolbarItem* item = m_items[i];
         ret |= item->update_enabled_state();

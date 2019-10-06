@@ -62,8 +62,6 @@ Tab::Tab(wxNotebook* parent, const wxString& title, Preset::Type type) :
 
     m_em_unit = wxGetApp().em_unit();
 
-    m_config_manipulation = get_config_manipulation();
-
 	Bind(wxEVT_SIZE, ([this](wxSizeEvent &evt) {
 		for (auto page : m_pages)
 			if (! page.get()->IsShown())
@@ -161,8 +159,8 @@ void Tab::create_preset_tab()
 	m_undo_to_sys_btn->Bind(wxEVT_BUTTON, ([this](wxCommandEvent) { on_roll_back_value(true); }));
 	m_question_btn->Bind(wxEVT_BUTTON, ([this](wxCommandEvent)
 	{
-        ButtonsDescription dlg(this, m_icon_descriptions);
-        if (dlg.ShowModal() == wxID_OK) {
+		auto dlg = new ButtonsDescription(this, m_icon_descriptions);
+		if (dlg->ShowModal() == wxID_OK) {
 			// Colors for ui "decoration"
             for (Tab *tab : wxGetApp().tabs_list) {
                 tab->m_sys_label_clr = wxGetApp().get_label_clr_sys();
@@ -232,7 +230,7 @@ void Tab::create_preset_tab()
 		//! select_preset(m_presets_choice->GetStringSelection().ToUTF8().data()); 
 		//! we doing next:
 		int selected_item = m_presets_choice->GetSelection();
-        if (m_selected_preset_item == size_t(selected_item) && !m_presets->current_is_dirty())
+		if (m_selected_preset_item == selected_item && !m_presets->current_is_dirty())
 			return;
 		if (selected_item >= 0) {
 			std::string selected_string = m_presets_choice->GetString(selected_item).ToUTF8().data();
@@ -375,8 +373,6 @@ void Tab::update_labels_colour()
 //	Thaw();
 
 	auto cur_item = m_treectrl->GetFirstVisibleItem();
-    if (!cur_item || !m_treectrl->IsVisible(cur_item))
-        return;
 	while (cur_item) {
 		auto title = m_treectrl->GetItemText(cur_item);
 		for (auto page : m_pages)
@@ -472,7 +468,7 @@ void Tab::update_changed_ui()
 
 	wxTheApp->CallAfter([this]() {
         if (parent()) //To avoid a crash, parent should be exist for a moment of a tree updating
-            update_changed_tree_ui();
+		update_changed_tree_ui();
 	});
 }
 
@@ -489,7 +485,7 @@ template<class T>
 void add_correct_opts_to_options_list(const std::string &opt_key, std::map<std::string, int>& map, Tab *tab, const int& value)
 {
 	T *opt_cur = static_cast<T*>(tab->m_config->option(opt_key));
-    for (size_t i = 0; i < opt_cur->values.size(); i++)
+	for (int i = 0; i < opt_cur->values.size(); i++)
 		map.emplace(opt_key + "#" + std::to_string(i), value);
 }
 
@@ -545,11 +541,10 @@ void TabSLAMaterial::init_options_list()
 void Tab::get_sys_and_mod_flags(const std::string& opt_key, bool& sys_page, bool& modified_page)
 {
     auto opt = m_options_list.find(opt_key);
-    if (opt == m_options_list.end()) 
-        return;
-
+    if (opt != m_options_list.end()){
         if (sys_page) sys_page = (opt->second & osSystemValue) != 0;
         modified_page |= (opt->second & osInitValue) == 0;
+    }
 }
 
 void Tab::update_changed_tree_ui()
@@ -736,8 +731,6 @@ void Tab::update_mode()
     m_mode_sizer->SetMode(m_mode);
 
     update_visibility();
-
-    update_changed_tree_ui();
 }
 
 void Tab::update_visibility()
@@ -750,6 +743,8 @@ void Tab::update_visibility()
 
     Layout();
 	Thaw();
+
+    update_changed_tree_ui();
 }
 
 void Tab::msw_rescale()
@@ -841,11 +836,6 @@ static wxString support_combo_value_for_config(const DynamicPrintConfig &config,
 				                                    _("Everywhere"));
 }
 
-static wxString pad_combo_value_for_config(const DynamicPrintConfig &config)
-{
-    return config.opt_bool("pad_enable") ? (config.opt_bool("pad_around_object") ? _("Around object") : _("Below object")) : _("None");
-}
-
 void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
 {
 	if (wxGetApp().plater() == nullptr) {
@@ -860,20 +850,10 @@ void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
         og_freq_chng_params->set_value(opt_key, val);
 	}
 
-    if (opt_key == "pad_around_object") {
-        for (PageShp &pg : m_pages) {
-            Field * fld = pg->get_field(opt_key);
-            if (fld) fld->set_value(value, false);
-        }
-    }
-
 	if (is_fff ?
 			(opt_key == "support_material" || opt_key == "support_material_auto" || opt_key == "support_material_buildplate_only") :
         	(opt_key == "supports_enable"  || opt_key == "support_buildplate_only"))
 		og_freq_chng_params->set_value("support", support_combo_value_for_config(*m_config, is_fff));
-
-    if (! is_fff && (opt_key == "pad_enable" || opt_key == "pad_around_object"))
-        og_freq_chng_params->set_value("pad", pad_combo_value_for_config(*m_config));
 
 	if (opt_key == "brim_width")
 	{
@@ -995,7 +975,6 @@ void Tab::update_preset_description_line()
 					description_line += "\n\n\t" + _(L("default SLA print profile")) + ": \n\t\t" + default_sla_print_profile;
 				break;
 			}
-            default: break;
 			}
 		}
 	}
@@ -1010,8 +989,6 @@ void Tab::update_frequently_changed_parameters()
     if (!og_freq_chng_params) return;
 
 	og_freq_chng_params->set_value("support", support_combo_value_for_config(*m_config, is_fff));
-    if (! is_fff)
-        og_freq_chng_params->set_value("pad", pad_combo_value_for_config(*m_config));
 
     const std::string updated_value_key = is_fff ? "fill_density" : "pad_enable";
 
@@ -1064,10 +1041,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("no_perimeter_unsupported_algo");
 
         optgroup = page->new_optgroup(_(L("Advanced")));
-        line = { _(L("Gap Fill")), "" };
-        line.append_option(optgroup->get_option("gap_fill"));
-        line.append_option(optgroup->get_option("gap_fill_min_area"));
-        optgroup->append_line(line);
+        optgroup->append_single_option_line("gap_fill");
         line = { _(L("Seam")), "" };
         line.append_option(optgroup->get_option("seam_position"));
         line.append_option(optgroup->get_option("seam_travel"));
@@ -1289,7 +1263,7 @@ void TabPrint::build()
 		line.append_option(option);
 		optgroup->append_line(line);
 
-        optgroup = page->new_optgroup(_(L("Output file")));
+        optgroup = page->new_optgroup(_(L("Output file"))); 
         optgroup->append_single_option_line("gcode_comments");
 		optgroup->append_single_option_line("gcode_label_objects");
 		option = optgroup->get_option("output_filename_format");
@@ -1340,9 +1314,281 @@ void TabPrint::update()
     if (m_preset_bundle->printers.get_selected_preset().printer_technology() == ptSLA)
         return; // ys_FIXME
 
-    m_update_cnt++;
+    // #ys_FIXME_to_delete
+    //! Temporary workaround for the correct updates of the TextCtrl (like "layer_height"):
+    // KillFocus() for the wxSpinCtrl use CallAfter function. So,
+    // to except the duplicate call of the update() after dialog->ShowModal(),
+    // let check if this process is already started.
+    if (is_msg_dlg_already_exist)
+        return;
 
-    m_config_manipulation.update_print_fff_config(m_config, true);
+    m_update_cnt++;
+//	Freeze();
+
+    // layer_height shouldn't be equal to zero
+    if (m_config->opt_float("layer_height") < EPSILON)
+    {
+        const wxString msg_text = _(L("Zero layer height is not valid.\n\nThe layer height will be reset to 0.01."));
+        auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Layer height")), wxICON_WARNING | wxOK);
+        DynamicPrintConfig new_conf = *m_config;
+        is_msg_dlg_already_exist = true;
+        dialog->ShowModal();
+        new_conf.set_key_value("layer_height", new ConfigOptionFloat(0.01));
+        load_config(new_conf);
+        is_msg_dlg_already_exist = false;
+    }
+
+    if (fabs(m_config->option<ConfigOptionFloatOrPercent>("first_layer_height")->value - 0) < EPSILON)
+    {
+        const wxString msg_text = _(L("Zero first layer height is not valid.\n\nThe first layer height will be reset to 0.01."));
+        auto dialog = new wxMessageDialog(parent(), msg_text, _(L("First layer height")), wxICON_WARNING | wxOK);
+        DynamicPrintConfig new_conf = *m_config;
+        is_msg_dlg_already_exist = true;
+        dialog->ShowModal();
+        new_conf.set_key_value("first_layer_height", new ConfigOptionFloatOrPercent(0.01, false));
+        load_config(new_conf);
+        is_msg_dlg_already_exist = false;
+    }
+
+	double fill_density = m_config->option<ConfigOptionPercent>("fill_density")->value;
+
+    if (m_config->opt_bool("spiral_vase") && !(
+        m_config->opt_int("perimeters") == 1 
+        && m_config->opt_int("top_solid_layers") == 0
+        && fill_density == 0
+        && m_config->opt_bool("support_material") == false
+        && m_config->opt_int("support_material_enforce_layers") == 0
+        && m_config->opt_bool("exact_last_layer_height") == false
+        && m_config->opt_bool("ensure_vertical_shell_thickness") == false
+        && m_config->opt_bool("infill_dense") == false
+        && m_config->opt_bool("extra_perimeters") == false
+        )) {
+		wxString msg_text = _(L("The Spiral Vase mode requires:\n"
+			"- one perimeter\n"
+			"- no top solid layers\n"
+			"- 0% fill density\n"
+			"- no support material\n"
+			"- no ensure_vertical_shell_thickness\n"
+			"- unchecked 'exact last layer height'\n"
+			"- unchecked 'dense infill'\n"
+			"- unchecked 'extra perimeters'\n"
+			"\nShall I adjust those settings in order to enable Spiral Vase?"));
+		auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Spiral Vase")), wxICON_WARNING | wxYES | wxNO);
+		DynamicPrintConfig new_conf = *m_config;
+		if (dialog->ShowModal() == wxID_YES) {
+			new_conf.set_key_value("perimeters", new ConfigOptionInt(1));
+			new_conf.set_key_value("top_solid_layers", new ConfigOptionInt(0));
+			new_conf.set_key_value("fill_density", new ConfigOptionPercent(0));
+			new_conf.set_key_value("support_material", new ConfigOptionBool(false));
+            new_conf.set_key_value("support_material_enforce_layers", new ConfigOptionInt(0));
+            new_conf.set_key_value("exact_last_layer_height", new ConfigOptionBool(false));
+            new_conf.set_key_value("ensure_vertical_shell_thickness", new ConfigOptionBool(false));
+            new_conf.set_key_value("infill_dense", new ConfigOptionBool(false));
+            new_conf.set_key_value("extra_perimeters", new ConfigOptionBool(false));
+			fill_density = 0;
+		}
+		else {
+			new_conf.set_key_value("spiral_vase", new ConfigOptionBool(false));
+		}
+		load_config(new_conf);
+		on_value_change("fill_density", fill_density);
+	}
+
+	if (m_config->opt_bool("wipe_tower") && m_config->opt_bool("support_material") &&
+        ((ConfigOptionEnumGeneric*)m_config->option("support_material_contact_distance_type"))->value != zdNone &&
+		(m_config->opt_int("support_material_extruder") != 0 || m_config->opt_int("support_material_interface_extruder") != 0)) {
+		wxString msg_text = _(L("The Wipe Tower currently supports the non-soluble supports only\n"
+			"if they are printed with the current extruder without triggering a tool change.\n"
+			"(both support_material_extruder and support_material_interface_extruder need to be set to 0).\n"
+			"\nShall I adjust those settings in order to enable the Wipe Tower?"));
+		auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Wipe Tower")), wxICON_WARNING | wxYES | wxNO);
+		DynamicPrintConfig new_conf = *m_config;
+		if (dialog->ShowModal() == wxID_YES) {
+			new_conf.set_key_value("support_material_extruder", new ConfigOptionInt(0));
+			new_conf.set_key_value("support_material_interface_extruder", new ConfigOptionInt(0));
+		}
+		else
+			new_conf.set_key_value("wipe_tower", new ConfigOptionBool(false));
+		load_config(new_conf);
+	}
+
+	if (m_config->opt_bool("wipe_tower") && m_config->opt_bool("support_material") &&
+        ((ConfigOptionEnumGeneric*)m_config->option("support_material_contact_distance_type"))->value == zdNone &&
+		!m_config->opt_bool("support_material_synchronize_layers")) {
+		wxString msg_text = _(L("For the Wipe Tower to work with the soluble supports, the support layers\n"
+			"need to be synchronized with the object layers.\n"
+			"\nShall I synchronize support layers in order to enable the Wipe Tower?"));
+		auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Wipe Tower")), wxICON_WARNING | wxYES | wxNO);
+		DynamicPrintConfig new_conf = *m_config;
+		if (dialog->ShowModal() == wxID_YES) {
+			new_conf.set_key_value("support_material_synchronize_layers", new ConfigOptionBool(true));
+		}
+		else
+			new_conf.set_key_value("wipe_tower", new ConfigOptionBool(false));
+		load_config(new_conf);
+	}
+
+	if (m_config->opt_bool("support_material")) {
+		// Ask only once.
+		if (!m_support_material_overhangs_queried) {
+			m_support_material_overhangs_queried = true;
+			if (!m_config->opt_bool("overhangs")/* != 1*/) {
+				wxString msg_text = _(L("Supports work better, if the following feature is enabled:\n"
+					"- Detect bridging perimeters\n"
+					"\nShall I adjust those settings for supports?"));
+				auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Support Generator")), wxICON_WARNING | wxYES | wxNO | wxCANCEL);
+				DynamicPrintConfig new_conf = *m_config;
+				auto answer = dialog->ShowModal();
+				if (answer == wxID_YES) {
+					// Enable "detect bridging perimeters".
+					new_conf.set_key_value("overhangs", new ConfigOptionBool(true));
+				} else if (answer == wxID_NO) {
+					// Do nothing, leave supports on and "detect bridging perimeters" off.
+				} else if (answer == wxID_CANCEL) {
+					// Disable supports.
+					new_conf.set_key_value("support_material", new ConfigOptionBool(false));
+					m_support_material_overhangs_queried = false;
+				}
+				load_config(new_conf);
+			}
+		}
+	}
+	else {
+		m_support_material_overhangs_queried = false;
+	}
+
+	if (m_config->option<ConfigOptionPercent>("fill_density")->value == 100) {
+		auto fill_pattern = m_config->option<ConfigOptionEnum<InfillPattern>>("fill_pattern")->value;
+		std::string str_fill_pattern = "";
+		t_config_enum_values map_names = m_config->option<ConfigOptionEnum<InfillPattern>>("fill_pattern")->get_enum_values();
+		for (auto it : map_names) {
+			if (fill_pattern == it.second) {
+				str_fill_pattern = it.first;
+				break;
+			}
+		}
+        if (!str_fill_pattern.empty()) {
+            bool correct_100p_fill = false;
+			const std::vector<std::string> top_fill_pattern = m_config->def()->get("top_fill_pattern")->enum_values;
+			for (const std::string &fill : top_fill_pattern)
+			{
+				if (str_fill_pattern == fill)
+					correct_100p_fill = true;
+            }
+            const std::vector<std::string> bottom_fill_pattern = m_config->def()->get("bottom_fill_pattern")->enum_values;
+            for (const std::string &fill : bottom_fill_pattern) {
+                if (str_fill_pattern.compare(fill) == 0)
+                    correct_100p_fill = true;
+            }
+			// get fill_pattern name from enum_labels for using this one at dialog_msg
+			str_fill_pattern = _utf8(m_config->def()->get("fill_pattern")->enum_labels[fill_pattern]);
+			if (!correct_100p_fill) {
+				wxString msg_text = GUI::from_u8((boost::format(_utf8(L("The %1% infill pattern is not supposed to work at 100%% density.\n\n"
+					                                           "Shall I switch to rectilinear fill pattern?"))) % str_fill_pattern).str());
+				auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Infill")), wxICON_WARNING | wxYES | wxNO);
+				DynamicPrintConfig new_conf = *m_config;
+				if (dialog->ShowModal() == wxID_YES) {
+					new_conf.set_key_value("fill_pattern", new ConfigOptionEnum<InfillPattern>(ipRectilinear));
+					fill_density = 100;
+				}
+				else
+					fill_density = m_presets->get_selected_preset().config.option<ConfigOptionPercent>("fill_density")->value;
+				new_conf.set_key_value("fill_density", new ConfigOptionPercent(fill_density));
+				load_config(new_conf);
+				on_value_change("fill_density", fill_density);
+			}
+		}
+	}
+
+    bool have_perimeters = m_config->opt_int("perimeters") > 0;
+    for (auto el : { "extra_perimeters", "only_one_perimeter_top", "ensure_vertical_shell_thickness", "thin_walls", "overhangs",
+        "seam_position", "external_perimeters_first", "external_perimeter_extrusion_width",
+        "perimeter_speed", "small_perimeter_speed", "external_perimeter_speed", "perimeter_loop", "perimeter_loop_seam" })
+        get_field(el)->toggle(have_perimeters);
+
+    for (auto el : { "thin_walls_min_width", "thin_walls_overlap" }) get_field(el)->toggle(m_config->opt_bool("thin_walls"));
+    get_field("perimeter_loop_seam")->toggle(m_config->opt_bool("perimeter_loop"));
+
+	bool have_infill = m_config->option<ConfigOptionPercent>("fill_density")->value > 0;
+	// infill_extruder uses the same logic as in Print::extruders()
+	for (auto el : {"fill_pattern", "infill_every_layers", "infill_only_where_needed",
+					"solid_infill_every_layers", "solid_infill_below_area", "infill_extruder" })
+		get_field(el)->toggle(have_infill);
+
+    bool can_have_infill_dense = m_config->option<ConfigOptionPercent>("fill_density")->value < 50;
+    for (auto el : { "infill_dense" })
+        get_field(el)->toggle(can_have_infill_dense);
+    bool have_infill_dense = m_config->opt_bool("infill_dense") && can_have_infill_dense;
+    for (auto el : { "infill_dense_algo" })
+        get_field(el)->toggle(have_infill_dense);
+
+	bool have_solid_infill = m_config->opt_int("top_solid_layers") > 0 || m_config->opt_int("bottom_solid_layers") > 0;
+	// solid_infill_extruder uses the same logic as in Print::extruders()
+    for (auto el : { "top_fill_pattern", "bottom_fill_pattern", "solid_fill_pattern", "enforce_full_fill_volume", "external_infill_margin",
+        "infill_first", "solid_infill_extruder", "solid_infill_extrusion_width", "solid_infill_speed" })
+		get_field(el)->toggle(have_solid_infill);
+
+	for (auto el : {"fill_angle", "bridge_angle", "infill_extrusion_width",
+					"infill_speed", "bridge_speed" })
+		get_field(el)->toggle(have_infill || have_solid_infill);
+
+    get_field("gap_fill_speed")->toggle(have_perimeters && m_config->opt_bool("gap_fill"));
+
+	bool have_top_solid_infill = m_config->opt_int("top_solid_layers") > 0;
+	for (auto el : { "top_infill_extrusion_width", "top_solid_infill_speed" })
+		get_field(el)->toggle(have_top_solid_infill);
+
+	bool have_default_acceleration = m_config->opt_float("default_acceleration") > 0;
+	for (auto el : {"perimeter_acceleration", "infill_acceleration",
+					"bridge_acceleration", "first_layer_acceleration" })
+		get_field(el)->toggle(have_default_acceleration);
+
+	bool have_skirt = m_config->opt_int("skirts") > 0 || m_config->opt_float("min_skirt_length") > 0;
+	for (auto el : { "skirt_distance", "skirt_height" })
+		get_field(el)->toggle(have_skirt);
+
+	bool have_brim = m_config->opt_float("brim_width") > 0;
+	// perimeter_extruder uses the same logic as in Print::extruders()
+	get_field("perimeter_extruder")->toggle(have_perimeters || have_brim);
+
+    get_field("brim_ears")->toggle(have_brim);
+    get_field("brim_ears_max_angle")->toggle(have_brim && m_config->opt_bool("brim_ears"));
+
+	bool have_raft = m_config->opt_int("raft_layers") > 0;
+	bool have_support_material = m_config->opt_bool("support_material") || have_raft;
+	bool have_support_material_auto = have_support_material && m_config->opt_bool("support_material_auto");
+	bool have_support_interface = m_config->opt_int("support_material_interface_layers") > 0;
+    bool have_support_soluble = have_support_material && ((ConfigOptionEnumGeneric*)m_config->option("support_material_contact_distance_type"))->value == zdNone;
+	for (auto el : {"support_material_pattern", "support_material_with_sheath",
+					"support_material_spacing", "support_material_angle", "support_material_interface_layers",
+					"dont_support_bridges", "support_material_extrusion_width", 
+					"support_material_contact_distance_type", 
+					"support_material_xy_spacing", "support_material_interface_pattern" })
+		get_field(el)->toggle(have_support_material);
+    get_field("support_material_threshold")->toggle(have_support_material_auto);
+    for (auto el : { "support_material_contact_distance_top",
+        "support_material_contact_distance_bottom"})
+        get_field(el)->toggle(have_support_material && !have_support_soluble);
+
+	for (auto el : {"support_material_interface_spacing", "support_material_interface_extruder",
+					"support_material_interface_speed", "support_material_interface_contact_loops" })
+		get_field(el)->toggle(have_support_material && have_support_interface);
+	get_field("support_material_synchronize_layers")->toggle(have_support_soluble);
+
+	get_field("perimeter_extrusion_width")->toggle(have_perimeters || have_skirt || have_brim);
+	get_field("support_material_extruder")->toggle(have_support_material || have_skirt);
+	get_field("support_material_speed")->toggle(have_support_material || have_brim || have_skirt);
+
+	bool have_sequential_printing = m_config->opt_bool("complete_objects");
+	for (auto el : { "extruder_clearance_radius", "extruder_clearance_height" })
+		get_field(el)->toggle(have_sequential_printing);
+
+	bool have_ooze_prevention = m_config->opt_bool("ooze_prevention");
+	get_field("standby_temperature_delta")->toggle(have_ooze_prevention);
+
+	bool have_wipe_tower = m_config->opt_bool("wipe_tower");
+	for (auto el : { "wipe_tower_x", "wipe_tower_y", "wipe_tower_width", "wipe_tower_rotation_angle", "wipe_tower_bridging"})
+		get_field(el)->toggle(have_wipe_tower);
 
 	m_recommended_thin_wall_thickness_description_line->SetText(
 		from_u8(PresetHints::recommended_thin_wall_thickness(*m_preset_bundle)));
@@ -1351,13 +1597,8 @@ void TabPrint::update()
 //	Thaw();
     m_update_cnt--;
 
-    if (m_update_cnt==0) {
-        m_config_manipulation.toggle_print_fff_options(m_config);
-
-        wxGetApp().obj_list()->update_and_show_object_settings_item();
-
+    if (m_update_cnt==0)
         wxGetApp().mainframe->on_config_changed(m_config);
-}
 }
 
 void TabPrint::OnActivate()
@@ -1479,7 +1720,7 @@ void TabFilament::build()
 		optgroup->append_single_option_line("filament_density");
 		optgroup->append_single_option_line("filament_cost");
 
-        optgroup = page->new_optgroup(_(L("Temperature")) + wxString(" °C", wxConvUTF8));
+		optgroup = page->new_optgroup(_(L("Temperature ")) + wxString("°C", wxConvUTF8));
 		Line line = { _(L("Extruder")), "" };
 		line.append_option(optgroup->get_option("first_layer_temperature"));
 		line.append_option(optgroup->get_option("temperature"));
@@ -1633,17 +1874,6 @@ void TabFilament::reload_config()
 	Tab::reload_config();
 }
 
-void TabFilament::update_volumetric_flow_preset_hints()
-{
-    wxString text;
-    try {
-        text = from_u8(PresetHints::maximum_volumetric_flow_description(*m_preset_bundle));
-    } catch (std::exception &ex) {
-        text = _(L("Volumetric flow hints not available")) + "\n\n" + from_u8(ex.what());
-    }
-    m_volumetric_speed_description_line->SetText(text);
-}
-
 void TabFilament::update()
 {
     if (m_preset_bundle->printers.get_selected_preset().printer_technology() == ptSLA)
@@ -1653,7 +1883,8 @@ void TabFilament::update()
 
 	wxString text = from_u8(PresetHints::cooling_description(m_presets->get_edited_preset()));
 	m_cooling_description_line->SetText(text);
-    this->update_volumetric_flow_preset_hints();
+	text = from_u8(PresetHints::maximum_volumetric_flow_description(*m_preset_bundle));
+	m_volumetric_speed_description_line->SetText(text);
     Layout();
 
 	bool cooling = m_config->opt_bool("cooling", 0);
@@ -1675,7 +1906,7 @@ void TabFilament::update()
 
 void TabFilament::OnActivate()
 {
-    this->update_volumetric_flow_preset_hints();
+	m_volumetric_speed_description_line->SetText(from_u8(PresetHints::maximum_volumetric_flow_description(*m_preset_bundle)));
 	Tab::OnActivate();
 }
 
@@ -1888,7 +2119,7 @@ void TabPrinter::build_fff()
 		optgroup->append_single_option_line("single_extruder_multi_material");
 
 		optgroup->m_on_change = [this, optgroup](t_config_option_key opt_key, boost::any value) {
-            size_t extruders_count = boost::any_cast<size_t>(optgroup->get_value("extruders_count"));
+			size_t extruders_count = boost::any_cast<int>(optgroup->get_value("extruders_count"));
 			wxTheApp->CallAfter([this, opt_key, value, extruders_count]() {
 				if (opt_key == "extruders_count" || opt_key == "single_extruder_multi_material") {
 					extruders_count_changed(extruders_count);
@@ -1908,19 +2139,16 @@ void TabPrinter::build_fff()
                                     const wxString msg_text = _(L("Single Extruder Multi Material is selected, \n"
                                                                   "and all extruders must have the same diameter.\n"
                                                                   "Do you want to change the diameter for all extruders to first extruder nozzle diameter value?"));
-                                    wxMessageDialog dialog(parent(), msg_text, _(L("Nozzle diameter")), wxICON_WARNING | wxYES_NO);
+                                    auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Nozzle diameter")), wxICON_WARNING | wxYES_NO);
                                     
+                                    if (dialog->ShowModal() == wxID_YES) {
                                         DynamicPrintConfig new_conf = *m_config;
-                                    if (dialog.ShowModal() == wxID_YES) {
                                         for (size_t i = 1; i < nozzle_diameters.size(); i++)
                                             nozzle_diameters[i] = frst_diam;
 
                                         new_conf.set_key_value("nozzle_diameter", new ConfigOptionFloats(nozzle_diameters));
-                                    }
-                                    else
-                                        new_conf.set_key_value("single_extruder_multi_material", new ConfigOptionBool(false));
-
                                         load_config(new_conf);
+                                    }
                                     break;
                                 }
                             } 
@@ -2154,12 +2382,6 @@ void TabPrinter::build_sla()
     optgroup->append_single_option_line("absolute_correction");
     optgroup->append_single_option_line("gamma_correction");
 
-    optgroup = page->new_optgroup(_(L("Exposure")));
-    optgroup->append_single_option_line("min_exposure_time");
-    optgroup->append_single_option_line("max_exposure_time");
-    optgroup->append_single_option_line("min_initial_exposure_time");
-    optgroup->append_single_option_line("max_initial_exposure_time");
-
     optgroup = page->new_optgroup(_(L("Print Host upload")));
     build_printhost(optgroup.get());
 
@@ -2193,9 +2415,9 @@ void TabPrinter::extruders_count_changed(size_t extruders_count)
 {
     bool is_count_changed = false;
     if (m_extruders_count != extruders_count) {
-        m_extruders_count = extruders_count;
-        m_preset_bundle->printers.get_edited_preset().set_num_extruders(extruders_count);
-        m_preset_bundle->update_multi_material_filament_presets();
+	m_extruders_count = extruders_count;
+	m_preset_bundle->printers.get_edited_preset().set_num_extruders(extruders_count);
+	m_preset_bundle->update_multi_material_filament_presets();
         is_count_changed = true;
     }
     else if (m_extruders_count == 1 && 
@@ -2309,7 +2531,7 @@ void TabPrinter::build_unregular_pages()
 
 	// Add/delete Kinematics page according to is_marlin_flavor
 	size_t existed_page = 0;
-    for (size_t i = n_before_extruders; i < m_pages.size(); ++i) // first make sure it's not there already
+	for (int i = n_before_extruders; i < m_pages.size(); ++i) // first make sure it's not there already
 		if (m_pages[i]->title().find(_(L("Machine limits"))) != std::string::npos) {
 			if (!is_marlin_flavor || m_rebuild_kinematics_page)
 				m_pages.erase(m_pages.begin() + i);
@@ -2334,7 +2556,7 @@ void TabPrinter::build_unregular_pages()
 		(m_has_single_extruder_MM_page && m_extruders_count == 1))
 	{
 		// if we have a single extruder MM setup, add a page with configuration options:
-        for (size_t i = 0; i < m_pages.size(); ++i) // first make sure it's not there already
+		for (int i = 0; i < m_pages.size(); ++i) // first make sure it's not there already
 			if (m_pages[i]->title().find(_(L("Single extruder MM setup"))) != std::string::npos) {
 				m_pages.erase(m_pages.begin() + i);
 				break;
@@ -2380,12 +2602,11 @@ void TabPrinter::build_unregular_pages()
                     // if value was changed
                     if (fabs(nozzle_diameters[extruder_idx == 0 ? 1 : 0] - new_nd) > EPSILON) 
                     {
-                        const wxString msg_text = _(L("This is a single extruder multimaterial printer, diameters of all extruders "
-                                                      "will be set to the new value. Do you want to proceed?"));
-                        wxMessageDialog dialog(parent(), msg_text, _(L("Nozzle diameter")), wxICON_WARNING | wxYES_NO);
+                        const wxString msg_text = _(L("Do you want to change the diameter for all extruders?"));
+                        auto dialog = new wxMessageDialog(parent(), msg_text, _(L("Nozzle diameter")), wxICON_WARNING | wxYES_NO);
 
                         DynamicPrintConfig new_conf = *m_config;
-                        if (dialog.ShowModal() == wxID_YES) {
+                        if (dialog->ShowModal() == wxID_YES) {
                             for (size_t i = 0; i < nozzle_diameters.size(); i++) {
                                 if (i==extruder_idx)
                                     continue;
@@ -2434,33 +2655,7 @@ void TabPrinter::build_unregular_pages()
 			optgroup->append_single_option_line("retract_restart_extra_toolchange", extruder_idx);
 
 			optgroup = page->new_optgroup(_(L("Preview")));
-
-            auto reset_to_filament_color = [this, extruder_idx](wxWindow* parent) {
-                add_scaled_button(parent, &m_reset_to_filament_color, "undo",
-                                  _(L("Reset to Filament Color")), wxBU_LEFT | wxBU_EXACTFIT);
-                ScalableButton* btn = m_reset_to_filament_color;
-                btn->SetFont(Slic3r::GUI::wxGetApp().normal_font());
-                auto sizer = new wxBoxSizer(wxHORIZONTAL);
-                sizer->Add(btn);
-
-                btn->Bind(wxEVT_BUTTON, [this, extruder_idx](wxCommandEvent& e)
-                {
-                    std::vector<std::string> colors = static_cast<const ConfigOptionStrings*>(m_config->option("extruder_colour"))->values;
-                    colors[extruder_idx] = "";
-
-                    DynamicPrintConfig new_conf = *m_config;
-                    new_conf.set_key_value("extruder_colour", new ConfigOptionStrings(colors));
-                    load_config(new_conf);
-
-                    update_dirty();
-                    update();
-                });
-
-                return sizer;
-            };
-            line = optgroup->create_single_option_line("extruder_colour", extruder_idx);
-            line.append_widget(reset_to_filament_color);
-            optgroup->append_line(line);
+			optgroup->append_single_option_line("extruder_colour", extruder_idx);
 
 #ifdef __WXMSW__
 		layout_page(page);
@@ -2486,8 +2681,8 @@ void TabPrinter::on_preset_loaded()
 {
 	// update the extruders count field
 	auto   *nozzle_diameter = dynamic_cast<const ConfigOptionFloats*>(m_config->option("nozzle_diameter"));
-    size_t extruders_count = nozzle_diameter->values.size();
-    set_value("extruders_count", int(extruders_count));
+	int extruders_count = nozzle_diameter->values.size();
+	set_value("extruders_count", extruders_count);
 	// update the GUI field according to the number of nozzle diameters supplied
 	extruders_count_changed(extruders_count);
 }
@@ -2617,15 +2812,15 @@ void TabPrinter::update_fff()
 		get_field("retract_before_wipe", i)->toggle(wipe);
 
 		if (use_firmware_retraction && wipe) {
-            wxMessageDialog dialog(parent(),
+			auto dialog = new wxMessageDialog(parent(),
 				_(L("The Wipe option is not available when using the Firmware Retraction mode.\n"
 				"\nShall I disable it in order to enable Firmware Retraction?")),
 				_(L("Firmware Retraction")), wxICON_WARNING | wxYES | wxNO);
 
 			DynamicPrintConfig new_conf = *m_config;
-            if (dialog.ShowModal() == wxID_YES) {
+			if (dialog->ShowModal() == wxID_YES) {
 				auto wipe = static_cast<ConfigOptionBools*>(m_config->option("wipe")->clone());
-                for (size_t w = 0; w < wipe->values.size(); w++)
+				for (int w = 0; w < wipe->values.size(); w++)
 					wipe->values[w] = false;
 				new_conf.set_key_value("wipe", wipe);
 			}
@@ -2979,10 +3174,10 @@ bool Tab::may_discard_current_dirty_preset(PresetCollection* presets /*= nullptr
 		message += wxString("\n") + tab + from_u8(new_printer_name) + "\n\n";
 		message += _(L("and it has the following unsaved changes:"));
 	}
-    wxMessageDialog confirm(parent(),
+	auto confirm = new wxMessageDialog(parent(),
 		message + "\n" + changes + "\n\n" + _(L("Discard changes and continue anyway?")),
 		_(L("Unsaved Changes")), wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION);
-    return confirm.ShowModal() == wxID_YES;
+	return confirm->ShowModal() == wxID_YES;
 }
 
 // If we are switching from the FFF-preset to the SLA, we should to control the printed objects if they have a part(s).
@@ -3089,11 +3284,11 @@ void Tab::save_preset(std::string name /*= ""*/)
 			values.push_back(preset.name);
 		}
 
-        SavePresetWindow dlg(parent());
-        dlg.build(title(), default_name, values);
-        if (dlg.ShowModal() != wxID_OK)
+		auto dlg = new SavePresetWindow(parent());
+		dlg->build(title(), default_name, values);	
+		if (dlg->ShowModal() != wxID_OK)
 			return;
-        name = dlg.get_name();
+		name = dlg->get_name();
 		if (name == "") {
 			show_error(this, _(L("The supplied name is empty. It can't be saved.")));
 			return;
@@ -3602,9 +3797,6 @@ void TabSLAPrint::build()
     optgroup->append_single_option_line("support_base_diameter");
     optgroup->append_single_option_line("support_base_height");
     optgroup->append_single_option_line("support_base_safety_distance");
-    
-    // Mirrored parameter from Pad page for toggling elevation on the same page
-    optgroup->append_single_option_line("pad_around_object");
     optgroup->append_single_option_line("support_object_elevation");
 
     optgroup = page->new_optgroup(_(L("Connection of the support sticks and junctions")));
@@ -3626,7 +3818,6 @@ void TabSLAPrint::build()
 //    optgroup->append_single_option_line("pad_edge_radius");
     optgroup->append_single_option_line("pad_wall_slope");
     
-    optgroup->append_single_option_line("pad_around_object");
     optgroup->append_single_option_line("pad_object_gap");
     optgroup->append_single_option_line("pad_object_connector_stride");
     optgroup->append_single_option_line("pad_object_connector_width");
@@ -3676,39 +3867,58 @@ void TabSLAPrint::update()
 
      m_update_cnt++;
 
-    m_config_manipulation.update_print_sla_config(m_config, true);
+    double head_penetration = m_config->opt_float("support_head_penetration");
+    double head_width       = m_config->opt_float("support_head_width");
+    if (head_penetration > head_width) {
+        wxString msg_text = _(
+            L("Head penetration should not be greater than the head width."));
+
+        auto dialog = new wxMessageDialog(parent(),
+                                          msg_text,
+                                          _(L("Invalid Head penetration")),
+                                          wxICON_WARNING | wxOK);
+
+        DynamicPrintConfig new_conf = *m_config;
+        if (dialog->ShowModal() == wxID_OK) {
+            new_conf.set_key_value("support_head_penetration",
+                                   new ConfigOptionFloat(head_width));
+        }
+
+        load_config(new_conf);
+    }
+
+    double pinhead_d = m_config->opt_float("support_head_front_diameter");
+    double pillar_d  = m_config->opt_float("support_pillar_diameter");
+    if (pinhead_d > pillar_d) {
+        wxString msg_text = _(L(
+            "Pinhead diameter should be smaller than the pillar diameter."));
+
+        auto dialog = new wxMessageDialog(parent(),
+                                          msg_text,
+                                          _(L("Invalid pinhead diameter")),
+                                          wxICON_WARNING | wxOK);
+
+        DynamicPrintConfig new_conf = *m_config;
+        if (dialog->ShowModal() == wxID_OK) {
+            new_conf.set_key_value("support_head_front_diameter",
+                                   new ConfigOptionFloat(pillar_d / 2.0));
+        }
+
+        load_config(new_conf);
+    }
+    
+    // if(m_config->opt_float("support_object_elevation") < EPSILON &&
+    //    m_config->opt_bool("pad_enable")) {
+    //     // TODO: disable editding of:
+    //     // pad_object_connector_stride
+    //     // pad_object_connector_width
+    //     // pad_object_connector_penetration
+    // }
+
     m_update_cnt--;
 
-    if (m_update_cnt == 0) {
-        m_config_manipulation.toggle_print_sla_options(m_config);
-
-        wxGetApp().obj_list()->update_and_show_object_settings_item();
-
-        wxGetApp().mainframe->on_config_changed(m_config);
+    if (m_update_cnt == 0) wxGetApp().mainframe->on_config_changed(m_config);
 }
-}
-
-ConfigManipulation Tab::get_config_manipulation()
-{
-    auto load_config = [this]()
-    {
-        update_dirty();
-        // Initialize UI components with the config values.
-        reload_config();
-        update();
-    };
-
-    auto get_field_ = [this](const t_config_option_key& opt_key, int opt_index) {
-        return get_field(opt_key, opt_index);
-    };
-
-    auto cb_value_change = [this](const std::string& opt_key, const boost::any& value) {
-        return on_value_change(opt_key, value);
-    };
-
-    return ConfigManipulation(load_config, get_field_, cb_value_change);
-}
-
 
 } // GUI
 } // Slic3r

@@ -6,7 +6,7 @@
 #include <string>
 
 #include "libslic3r/Config.hpp"
-#include "libslic3r/Semver.hpp"
+#include "slic3r/Utils/Semver.hpp"
 
 namespace Slic3r {
 

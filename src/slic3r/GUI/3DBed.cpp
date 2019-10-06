@@ -474,10 +474,10 @@ void Bed3D::render_texture(const std::string& filename, bool bottom, GLCanvas3D&
         m_requires_canvas_update = true;
     }
     else if (m_requires_canvas_update && m_texture.all_compressed_data_sent_to_gpu())
-        m_requires_canvas_update = false;
-
-    if (m_texture.all_compressed_data_sent_to_gpu() && canvas.is_keeping_dirty())
+    {
         canvas.stop_keeping_dirty();
+        m_requires_canvas_update = false;
+    }
 
     if (m_triangles.get_vertices_count() > 0)
     {
@@ -609,12 +609,10 @@ void Bed3D::render_default(bool bottom) const
         if (!has_model && !bottom)
         {
             // draw background
-            glsafe(::glDepthMask(GL_FALSE));
             glsafe(::glColor4f(0.35f, 0.35f, 0.35f, 0.4f));
             glsafe(::glNormal3d(0.0f, 0.0f, 1.0f));
             glsafe(::glVertexPointer(3, GL_FLOAT, m_triangles.get_vertex_data_size(), (GLvoid*)m_triangles.get_vertices_data()));
             glsafe(::glDrawArrays(GL_TRIANGLES, 0, (GLsizei)triangles_vcount));
-            glsafe(::glDepthMask(GL_TRUE));
         }
 
         // draw grid

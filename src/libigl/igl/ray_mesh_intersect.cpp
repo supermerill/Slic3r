@@ -29,9 +29,7 @@ IGL_INLINE bool igl::ray_mesh_intersect(
   // Should be but can't be const 
   Vector3d s_d = s.template cast<double>();
   Vector3d dir_d = dir.template cast<double>();
-  hits.clear(); 
-  hits.reserve(F.rows());
-
+  hits.clear();
   // loop over all triangles
   for(int f = 0;f<F.rows();f++)
   {

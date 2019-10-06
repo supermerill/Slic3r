@@ -550,7 +550,16 @@ public:
             return ret;
         };
 
-        this->template remove_unpackable_items<Placer>(store_, bin, pconfig);
+        // Safety test: try to pack each item into an empty bin. If it fails
+        // then it should be removed from the not_packed list
+        { auto it = store_.begin();
+            while (it != store_.end() && !this->stopcond_()) {
+                Placer p(bin); p.configure(pconfig);
+                if(!p.pack(*it, rem(it, store_))) {
+                    it = store_.erase(it);
+                } else it++;
+            }
+        }
 
         int acounter = int(store_.size());
         std::atomic_flag flg = ATOMIC_FLAG_INIT;

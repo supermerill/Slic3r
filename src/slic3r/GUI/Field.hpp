@@ -152,7 +152,7 @@ public:
     virtual wxWindow*	getWindow() { return nullptr; }
 
 	bool				is_matched(const std::string& string, const std::string& pattern);
-	void				get_value_by_opt_type(wxString& str, const bool check_value = true);
+	void				get_value_by_opt_type(wxString& str);
 
     /// Factory method for generating new derived classes.
     template<class T>
@@ -336,8 +336,6 @@ class SpinCtrl : public Field {
 	using Field::Field;
 private:
 	static const int UNDEF_VALUE = INT_MIN;
-
-    bool            suppress_propagation {false};
 public:
 	SpinCtrl(const ConfigOptionDef& opt, const t_config_option_key& id) : Field(opt, id), tmp_value(UNDEF_VALUE) {}
 	SpinCtrl(wxWindow* parent, const ConfigOptionDef& opt, const t_config_option_key& id) : Field(parent, opt, id), tmp_value(UNDEF_VALUE) {}
@@ -411,8 +409,6 @@ public:
 
 class ColourPicker : public Field {
 	using Field::Field;
-
-    void            set_undef_value(wxColourPickerCtrl* field);
 public:
 	ColourPicker(const ConfigOptionDef& opt, const t_config_option_key& id) : Field(opt, id) {}
 	ColourPicker(wxWindow* parent, const ConfigOptionDef& opt, const t_config_option_key& id) : Field(parent, opt, id) {}
@@ -426,9 +422,13 @@ public:
 		dynamic_cast<wxColourPickerCtrl*>(window)->SetColour(value);
 		m_disable_change_event = false;
 	 	}
-	void			set_value(const boost::any& value, bool change_event = false) override;
+	void			set_value(const boost::any& value, bool change_event = false) {
+		m_disable_change_event = !change_event;
+		dynamic_cast<wxColourPickerCtrl*>(window)->SetColour(boost::any_cast<wxString>(value));
+		m_disable_change_event = false;
+	}
+
 	boost::any&		get_value() override;
-    void            msw_rescale() override;
 
 	void			enable() override { dynamic_cast<wxColourPickerCtrl*>(window)->Enable(); };
 	void			disable() override{ dynamic_cast<wxColourPickerCtrl*>(window)->Disable(); };

@@ -90,7 +90,7 @@ static speed_t serial_baud_lookup(long baud)
    * If a non-standard BAUD rate is used, issue
    * a warning (if we are verbose) and return the raw rate
    */
-  avrdude_message(MSG_NOTICE, "%s: serial_baud_lookup(): Using non-standard baud rate: %ld\n",
+  avrdude_message(MSG_NOTICE, "%s: serial_baud_lookup(): Using non-standard baud rate: %ld",
               progname, baud);
 
   return baud;
@@ -110,7 +110,7 @@ static int ser_setspeed(union filedescriptor *fd, long baud)
    */
   rc = tcgetattr(fd->ifd, &termios);
   if (rc < 0) {
-    avrdude_message(MSG_INFO, "%s: ser_setspeed(): tcgetattr() failed\n",
+    avrdude_message(MSG_INFO, "%s: ser_setspeed(): tcgetattr() failed",
             progname);
     return -errno;
   }
@@ -150,7 +150,6 @@ static int ser_setspeed(union filedescriptor *fd, long baud)
   return 0;
 }
 
-#include "ac_cfg.h"
 
 // Timeout read & write variants
 // Additionally to the regular -1 on I/O error, they return -2 on timeout
@@ -222,35 +221,23 @@ ssize_t write_timeout(int fd, const void *buf, size_t count, long timeout)
 static int
 net_open(const char *port, union filedescriptor *fdp)
 {
-#ifdef HAVE_GETADDRINFO
-  char *hp, *hstr, *pstr;
-  int s, fd, ret = -1;
-  struct addrinfo hints;
-  struct addrinfo *result, *rp;
+  char *hstr, *pstr, *end;
+  unsigned int pnum;
+  int fd;
+  struct sockaddr_in sockaddr;
+  struct hostent *hp;
 
-  if ((hstr = hp = strdup(port)) == NULL) {
+  if ((hstr = strdup(port)) == NULL) {
     avrdude_message(MSG_INFO, "%s: net_open(): Out of memory!\n",
 	    progname);
     return -1;
   }
 
-  /*
-   * As numeric IPv6 addresses use colons as separators, we need to
-   * look for the last colon here, which separates the port number or
-   * service name from the host or IP address.
-   */
-  if (((pstr = strrchr(hstr, ':')) == NULL) || (pstr == hstr)) {
+  if (((pstr = strchr(hstr, ':')) == NULL) || (pstr == hstr)) {
     avrdude_message(MSG_INFO, "%s: net_open(): Mangled host:port string \"%s\"\n",
 	    progname, hstr);
-    goto error;
-  }
-
-  /*
-   * Remove brackets from the host part, if present.
-   */
-  if (*hstr == '[' && *(pstr-1) == ']') {
-    hstr++;
-    *(pstr-1) = '\0';
+    free(hstr);
+    return -1;
   }
 
   /*
@@ -258,49 +245,43 @@ net_open(const char *port, union filedescriptor *fdp)
    */
   *pstr++ = '\0';
 
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  s = getaddrinfo(hstr, pstr, &hints, &result);
+  pnum = strtoul(pstr, &end, 10);
 
-  if (s != 0) {
-    avrdude_message(MSG_INFO,
-	    "%s: net_open(): Cannot resolve "
-	    "host=\"%s\", port=\"%s\": %s\n",
-	    progname, hstr, pstr, gai_strerror(s));
-    goto error;
+  if ((*pstr == '\0') || (*end != '\0') || (pnum == 0) || (pnum > 65535)) {
+    avrdude_message(MSG_INFO, "%s: net_open(): Bad port number \"%s\"\n",
+	    progname, pstr);
+    free(hstr);
+    return -1;
   }
-  for (rp = result; rp != NULL; rp = rp->ai_next) {
-    fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-    if (fd == -1) {
-      /* This one failed, loop over */
-      continue;
-    }
-    if (connect(fd, rp->ai_addr, rp->ai_addrlen) != -1) {
-      /* Success, we are connected */
-      break;
-    }
-    close(fd);
-  }
-  if (rp == NULL) {
-    avrdude_message(MSG_INFO, "%s: net_open(): Cannot connect: %s\n",
-      progname, strerror(errno));
-  }
-  else {
-    fdp->ifd = fd;
-    ret = 0;
-  }
-  freeaddrinfo(result);
 
-error:
-  free(hp);
-  return ret;
-#else
-  avrdude_message(MSG_INFO,
-    "%s: Networking is not supported on your platform.\n"
-    "If you need it, please open a bug report.\n", progname);
-  return -1;
-#endif /* HAVE_GETADDRINFO */
+  if ((hp = gethostbyname(hstr)) == NULL) {
+    avrdude_message(MSG_INFO, "%s: net_open(): unknown host \"%s\"\n",
+	    progname, hstr);
+    free(hstr);
+    return -1;
+  }
+
+  free(hstr);
+
+  if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    avrdude_message(MSG_INFO, "%s: net_open(): Cannot open socket: %s\n",
+	    progname, strerror(errno));
+    return -1;
+  }
+
+  memset(&sockaddr, 0, sizeof(struct sockaddr_in));
+  sockaddr.sin_family = AF_INET;
+  sockaddr.sin_port = htons(pnum);
+  memcpy(&(sockaddr.sin_addr.s_addr), hp->h_addr, sizeof(struct in_addr));
+
+  if (connect(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr))) {
+    avrdude_message(MSG_INFO, "%s: net_open(): Connect failed: %s\n",
+	    progname, strerror(errno));
+    return -1;
+  }
+
+  fdp->ifd = fd;
+  return 0;
 }
 
 

@@ -5,7 +5,6 @@
 #include <thread>
 #include <deque>
 #include <sstream>
-#include <exception>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 
@@ -166,7 +165,7 @@ size_t Http::priv::form_file_read_cb(char *buffer, size_t size, size_t nitems, v
 
 	try {
 		stream->read(buffer, size * nitems);
-	} catch (const std::exception &) {
+	} catch (...) {
 		return CURL_READFUNC_ABORT;
 	}
 

@@ -3,10 +3,8 @@
 
 // For png export of the sliced model
 #include <fstream>
-#include <string>
 #include <sstream>
 #include <vector>
-#include <map>
 #include <array>
 
 #include "libslic3r/PrintConfig.hpp"
@@ -25,19 +23,20 @@ namespace Slic3r { namespace sla {
 class SLARasterWriter
 {
 public:
-    enum Orientation {
+    enum RasterOrientation {
         roLandscape,
         roPortrait
     };
     
     // Used for addressing parameters of set_statistics()
-    struct PrintStatistics
-    {    
-        double used_material = 0.;
-        double estimated_print_time_s = 0.;
-        size_t num_fade = 0;
-        size_t num_slow = 0;
-        size_t num_fast = 0;
+    enum ePrintStatistics
+    {
+        psUsedMaterial = 0,
+        psNumFade,
+        psNumSlow,
+        psNumFast,
+    
+        psCnt
     };
     
 private:
@@ -48,13 +47,21 @@ private:
         RawBytes rawbytes;
 
         Layer() = default;
-        
-        // The image is big, do not copy by accident
-        Layer(const Layer&) = delete; 
+        Layer(const Layer&) = delete; // The image is big, do not copy by accident
         Layer& operator=(const Layer&) = delete;
+        
+        // /////////////////////////////////////////////////////////////////////
+        // FIXME: the following is needed for MSVC2013 compatibility
+        // /////////////////////////////////////////////////////////////////////
 
-        Layer(Layer &&m) = default;
-        Layer &operator=(Layer &&) = default;
+        // Layer(Layer&& m) = default;
+        // Layer& operator=(Layer&&) = default;
+        Layer(Layer &&m):
+            raster(std::move(m.raster)), rawbytes(std::move(m.rawbytes)) {}
+        Layer& operator=(Layer &&m) {
+            raster = std::move(m.raster); rawbytes = std::move(m.rawbytes);
+            return *this;
+        }
     };
 
     // We will save the compressed PNG data into RawBytes type buffers in 
@@ -62,46 +69,66 @@ private:
     std::vector<Layer> m_layers_rst;
     Raster::Resolution m_res;
     Raster::PixelDim m_pxdim;
+    double m_exp_time_s = .0, m_exp_time_first_s = .0;
+    double m_layer_height = .0;
+    RasterOrientation m_o = roPortrait;
     std::array<bool, 2> m_mirror;
+    
     double m_gamma;
-    
-    std::map<std::string, std::string> m_config;
-    
+
+    double m_used_material = 0.0;
+    int    m_cnt_fade_layers = 0;
+    int    m_cnt_slow_layers = 0;
+    int    m_cnt_fast_layers = 0;
+
     std::string createIniContent(const std::string& projectname) const;
     
     static void flpXY(ClipperLib::Polygon& poly);
     static void flpXY(ExPolygon& poly);
 
 public:
-    SLARasterWriter(const Raster::Resolution  &res,
-                    const Raster::PixelDim    &pixdim,
-                    const std::array<bool, 2> &mirror,
-                    double gamma = 1.);
+
+    SLARasterWriter(const SLAPrinterConfig& cfg, 
+                    const SLAMaterialConfig& mcfg, 
+                    double layer_height);
 
     SLARasterWriter(const SLARasterWriter& ) = delete;
     SLARasterWriter& operator=(const SLARasterWriter&) = delete;
-    SLARasterWriter(SLARasterWriter&& m) = default;
-    SLARasterWriter& operator=(SLARasterWriter&&) = default;
+
+    // /////////////////////////////////////////////////////////////////////////
+    // FIXME: the following is needed for MSVC2013 compatibility
+    // /////////////////////////////////////////////////////////////////////////
+
+    // SLARasterWriter(SLARasterWriter&& m) = default;
+    // SLARasterWriter& operator=(SLARasterWriter&&) = default;
+    SLARasterWriter(SLARasterWriter&& m):
+        m_layers_rst(std::move(m.m_layers_rst)),
+        m_res(m.m_res),
+        m_pxdim(m.m_pxdim),
+        m_exp_time_s(m.m_exp_time_s),
+        m_exp_time_first_s(m.m_exp_time_first_s),
+        m_layer_height(m.m_layer_height),
+        m_o(m.m_o),
+        m_mirror(std::move(m.m_mirror)),
+        m_gamma(m.m_gamma),
+        m_used_material(m.m_used_material),
+        m_cnt_fade_layers(m.m_cnt_fade_layers),
+        m_cnt_slow_layers(m.m_cnt_slow_layers),
+        m_cnt_fast_layers(m.m_cnt_fast_layers)
+    {}
+
+    // /////////////////////////////////////////////////////////////////////////
 
     inline void layers(unsigned cnt) { if(cnt > 0) m_layers_rst.resize(cnt); }
     inline unsigned layers() const { return unsigned(m_layers_rst.size()); }
     
-    template<class Poly> void draw_polygon(const Poly& p, unsigned lyr,
-                      Orientation o = roPortrait)
-    {
+    template<class Poly> void draw_polygon(const Poly& p, unsigned lyr) {
         assert(lyr < m_layers_rst.size());
-        
-        switch (o) {
-        case roPortrait: {
-            Poly poly(p);
-            flpXY(poly);
+        if(m_o == roPortrait) {
+            Poly poly(p); flpXY(poly);
             m_layers_rst[lyr].raster.draw(poly);
-            break;
         }
-        case roLandscape:
-            m_layers_rst[lyr].raster.draw(p);
-            break;
-        }
+        else m_layers_rst[lyr].raster.draw(p);
     }
 
     inline void begin_layer(unsigned lyr) {
@@ -129,11 +156,9 @@ public:
         }
     }
 
-    void save(const std::string &fpath, const std::string &prjname = "");
+    void save(const std::string& fpath, const std::string& prjname = "");
 
-    void set_statistics(const PrintStatistics &statistics);
-    
-    void set_config(const DynamicPrintConfig &cfg);
+    void set_statistics(const std::vector<double> statistics);
 };
 
 } // namespace sla

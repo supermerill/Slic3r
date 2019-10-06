@@ -76,9 +76,9 @@ void CopyrightsDialog::fill_entries()
 {
     m_entries = {
         { "wxWidgets"       , "2019 wxWidgets"                              , "https://www.wxwidgets.org/" },
-        { "OpenGL"          , "1997-2019 The Khronos Group Inc"            , "https://www.opengl.org/" },
+        { "OpenGL"          , "1997-2019 The Khronos™ Group Inc"            , "https://www.opengl.org/" },
         { "GNU gettext"     , "1998, 2019 Free Software Foundation, Inc."   , "https://www.gnu.org/software/gettext/" },
-        { "PoEdit"          , "2019 Vaclav SlavaÂ­k"                          , "https://poedit.net/" },
+        { "PoEdit"          , "2019 Václav Slavík"                          , "https://poedit.net/" },
         { "ImGUI"           , "2014-2019 Omar Cornut"                       , "https://github.com/ocornut/imgui" },
         { "Eigen"           , ""                                            , "http://eigen.tuxfamily.org" },
         { "ADMesh"          , "1995, 1996  Anthony D. Martin; "
@@ -106,13 +106,8 @@ void CopyrightsDialog::fill_entries()
                               "2001-2016 Expat maintainers"                 , "http://www.libexpat.org/" },
         { "AVRDUDE"         , "2018  Free Software Foundation, Inc."        , "http://savannah.nongnu.org/projects/avrdude" },
         { "Shinyprofiler"   , "2007-2010 Aidin Abedi"                       , "http://code.google.com/p/shinyprofiler/" },
-        { "Real-Time DXT1/DXT5 C compression library"   
-                                    , "Based on original by fabian \"ryg\" giesen v1.04. "
-                              "Custom version, modified by Yann Collet"     , "https://github.com/Cyan4973/RygsDXTc" },
         { "Icons for STL and GCODE files."
-                            , "Akira Yasuda"                                , "http://3dp0.com/icons-for-stl-and-gcode/" },
-        { "AppImage packaging for Linux using AppImageKit"
-                            , "2004-2019 Simon Peter and contributors"      , "https://appimage.org/" }
+                            , "Akira Yasuda"                                , "http://3dp0.com/icons-for-stl-and-gcode/" }
     };
 }
 
@@ -258,18 +253,18 @@ AboutDialog::AboutDialog()
         const wxString is_lecensed_str = _(L("is licensed under the"));
         const wxString license_str = _(L("GNU Affero General Public License, version 3"));
         const wxString based_on_str = _(L("Slic3r++ is based on PrusaSlicer which is based on Slic3r by Alessandro Ranellucci and the RepRap community."));
-        const wxString contributors_str = _(L("Contributions by Henrik Brix Andersen, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Joseph Lenox, Y. Sapir, Mike Sheldrake, Vojtech Bubnik, Durand RÃ©mi and numerous others."));
+        const wxString contributors_str = _(L("Contributions by Henrik Brix Andersen, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Joseph Lenox, Y. Sapir, Mike Sheldrake, Vojtech Bubnik, Durand Rémi and numerous others."));
 		const auto text = wxString::Format(
             "<html>"
             "<body bgcolor= %s link= %s>"
             "<font color=%s>"
-            "Copyright &copy; 2018-2019 Durand RÃ©mi. <br />"
+            "Copyright &copy; 2018-2019 Durand Rémi. <br />"
             "Copyright &copy; 2016-2019 Prusa Research. <br />"
             "Copyright &copy; 2011-2017 Alessandro Ranellucci. <br />"
             "<a href=\"http://slic3r.org/\">Slic3r</a> is licensed under the "
             "<a href=\"http://www.gnu.org/licenses/agpl-3.0.html\">GNU Affero General Public License, version 3</a>."
             "<br /><br />"
-            "Contributions by Henrik Brix Andersen, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Joseph Lenox, Y. Sapir, Mike Sheldrake, Vojtech Bubnik, Durand RÃ©mi and numerous others. "
+            "Contributions by Henrik Brix Andersen, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Joseph Lenox, Y. Sapir, Mike Sheldrake, Vojtech Bubnik, Durand Rémi and numerous others. "
             "Manual by Gary Hodgson. Inspired by the RepRap community. <br />"
             "Slic3r logo designed by Corey Daniels, <a href=\"http://www.famfamfam.com/lab/icons/silk/\">Silk Icon Set</a> designed by Mark James. "
             "</font>"

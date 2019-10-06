@@ -5,5 +5,3 @@ add_library(semver STATIC
     semver.c
     semver.h
 )
-
-encoding_check(semver)

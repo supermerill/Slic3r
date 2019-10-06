@@ -5,10 +5,6 @@ include(PrecompiledHeader)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libslic3r_version.h.in ${CMAKE_CURRENT_BINARY_DIR}/libslic3r_version.h @ONLY)
 
-if (MINGW)
-    add_compile_options(-Wa,-mbig-obj)
-endif ()
-
 add_library(libslic3r STATIC
     pchheader.cpp
     pchheader.hpp
@@ -76,7 +72,7 @@ add_library(libslic3r STATIC
     GCode/CoolingBuffer.cpp
     GCode/CoolingBuffer.hpp
     GCode/PostProcessor.cpp
-    GCode/PostProcessor.hpp
+    GCode/PostProcessor.hpp    
 #    GCode/PressureEqualizer.cpp
 #    GCode/PressureEqualizer.hpp
     GCode/PreviewData.cpp
@@ -131,8 +127,6 @@ add_library(libslic3r STATIC
     Point.hpp
     Polygon.cpp
     Polygon.hpp
-    PolygonTrimmer.cpp
-    PolygonTrimmer.hpp
     Polyline.cpp
     Polyline.hpp
     PolylineCollection.cpp
@@ -145,7 +139,6 @@ add_library(libslic3r STATIC
     PrintConfig.hpp
     PrintObject.cpp
     PrintRegion.cpp
-    Semver.cpp
     SLAPrint.cpp
     SLAPrint.hpp
     SLA/SLAAutoSupports.hpp
@@ -169,8 +162,6 @@ add_library(libslic3r STATIC
     TriangleMesh.hpp
     utils.cpp
     Utils.hpp
-    Time.cpp
-    Time.hpp
     MTUtils.hpp
     Zipper.hpp
     Zipper.cpp
@@ -194,8 +185,6 @@ add_library(libslic3r STATIC
     SLA/SLARasterWriter.hpp
     SLA/SLARasterWriter.cpp
 )
-
-encoding_check(libslic3r)
 
 if (SLIC3R_PCH AND NOT SLIC3R_SYNTAXONLY)
     add_precompiled_header(libslic3r pchheader.hpp FORCEINCLUDE)

@@ -4,12 +4,9 @@
 #include "../GCode.hpp"
 #include "../Geometry.hpp"
 
-#include "../I18N.hpp"
-
 #include "3mf.hpp"
 
 #include <limits>
-#include <stdexcept>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -74,7 +71,6 @@ const char* V2_ATTR = "v2";
 const char* V3_ATTR = "v3";
 const char* OBJECTID_ATTR = "objectid";
 const char* TRANSFORM_ATTR = "transform";
-const char* PRINTABLE_ATTR = "printable";
 
 const char* KEY_ATTR = "key";
 const char* VALUE_ATTR = "value";
@@ -101,13 +97,6 @@ const char* INVALID_OBJECT_TYPES[] =
     "support",
     "surface",
     "other"
-};
-
-class version_error : public std::runtime_error
-{
-public:
-    version_error(const std::string& what_arg) : std::runtime_error(what_arg) {}
-    version_error(const char* what_arg) : std::runtime_error(what_arg) {}
 };
 
 const char* get_attribute_value_charptr(const char** attributes, unsigned int attributes_size, const char* attribute_key)
@@ -140,12 +129,6 @@ int get_attribute_value_int(const char** attributes, unsigned int attributes_siz
 {
     const char* text = get_attribute_value_charptr(attributes, attributes_size, attribute_key);
     return (text != nullptr) ? ::atoi(text) : 0;
-}
-
-bool get_attribute_value_bool(const char** attributes, unsigned int attributes_size, const char* attribute_key)
-{
-    const char* text = get_attribute_value_charptr(attributes, attributes_size, attribute_key);
-    return (text != nullptr) ? (bool)::atoi(text) : true;
 }
 
 Slic3r::Transform3d get_transform_from_string(const std::string& mat_str)
@@ -211,11 +194,6 @@ bool is_valid_object_type(const std::string& type)
 }
 
 namespace Slic3r {
-
-//! macro used to mark string used at localization,
-//! return same string
-#define L(s) (s)
-#define _(s) Slic3r::I18N::translate(s)
 
     // Base class with error messages management
     class _3MF_Base
@@ -365,7 +343,6 @@ namespace Slic3r {
 
         // Version of the 3mf file
         unsigned int m_version;
-        bool m_check_version;
 
         XML_Parser m_xml_parser;
         Model* m_model;
@@ -388,7 +365,7 @@ namespace Slic3r {
         _3MF_Importer();
         ~_3MF_Importer();
 
-        bool load_model_from_file(const std::string& filename, Model& model, DynamicPrintConfig& config, bool check_version);
+        bool load_model_from_file(const std::string& filename, Model& model, DynamicPrintConfig& config);
 
     private:
         void _destroy_xml_parser();
@@ -451,7 +428,7 @@ namespace Slic3r {
         bool _handle_start_metadata(const char** attributes, unsigned int num_attributes);
         bool _handle_end_metadata();
 
-        bool _create_object_instance(int object_id, const Transform3d& transform, const bool printable, unsigned int recur_counter);
+        bool _create_object_instance(int object_id, const Transform3d& transform, unsigned int recur_counter);
 
         void _apply_transform(ModelInstance& instance, const Transform3d& transform);
 
@@ -481,7 +458,6 @@ namespace Slic3r {
 
     _3MF_Importer::_3MF_Importer()
         : m_version(0)
-        , m_check_version(false)
         , m_xml_parser(nullptr)
         , m_model(nullptr)   
         , m_unit_factor(1.0f)
@@ -496,10 +472,9 @@ namespace Slic3r {
         _destroy_xml_parser();
     }
 
-    bool _3MF_Importer::load_model_from_file(const std::string& filename, Model& model, DynamicPrintConfig& config, bool check_version)
+    bool _3MF_Importer::load_model_from_file(const std::string& filename, Model& model, DynamicPrintConfig& config)
     {
         m_version = 0;
-        m_check_version = check_version;
         m_model = &model;
         m_unit_factor = 1.0f;
         m_curr_object.reset();
@@ -561,21 +536,12 @@ namespace Slic3r {
 
                 if (boost::algorithm::istarts_with(name, MODEL_FOLDER) && boost::algorithm::iends_with(name, MODEL_EXTENSION))
                 {
-                    try
+                    // valid model name -> extract model
+                    if (!_extract_model_from_archive(archive, stat))
                     {
-                        // valid model name -> extract model
-                        if (!_extract_model_from_archive(archive, stat))
-                        {
-                            close_zip_reader(&archive);
-                            add_error("Archive does not contain a valid model");
-                            return false;
-                        }
-                    }
-                    catch (const std::exception& e)
-                    {
-                        // ensure the zip archive is closed and rethrow the exception
                         close_zip_reader(&archive);
-                        throw std::runtime_error(e.what());
+                        add_error("Archive does not contain a valid model");
+                        return false;
                     }
                 }
             }
@@ -713,46 +679,25 @@ namespace Slic3r {
         XML_SetElementHandler(m_xml_parser, _3MF_Importer::_handle_start_model_xml_element, _3MF_Importer::_handle_end_model_xml_element);
         XML_SetCharacterDataHandler(m_xml_parser, _3MF_Importer::_handle_model_xml_characters);
 
-        struct CallbackData
+        void* parser_buffer = XML_GetBuffer(m_xml_parser, (int)stat.m_uncomp_size);
+        if (parser_buffer == nullptr)
         {
-            XML_Parser& parser;
-            const mz_zip_archive_file_stat& stat;
-
-            CallbackData(XML_Parser& parser, const mz_zip_archive_file_stat& stat) : parser(parser), stat(stat) {}
-        };
-
-        CallbackData data(m_xml_parser, stat);
-
-        mz_bool res = 0;
-
-        try
-        {
-            res = mz_zip_reader_extract_file_to_callback(&archive, stat.m_filename, [](void* pOpaque, mz_uint64 file_ofs, const void* pBuf, size_t n)->size_t {
-                CallbackData* data = (CallbackData*)pOpaque;
-                if (!XML_Parse(data->parser, (const char*)pBuf, (int)n, (file_ofs + n == data->stat.m_uncomp_size) ? 1 : 0))
-                {
-                    char error_buf[1024];
-                    ::sprintf(error_buf, "Error (%s) while parsing '%s' at line %d", XML_ErrorString(XML_GetErrorCode(data->parser)), data->stat.m_filename, (int)XML_GetCurrentLineNumber(data->parser));
-                    throw std::runtime_error(error_buf);
-                }
-
-                return n;
-                }, &data, 0);
-        }
-        catch (const version_error& e)
-        {
-            // rethrow the exception
-            throw std::runtime_error(e.what());
-        }
-        catch (std::exception& e)
-        {
-            add_error(e.what());
+            add_error("Unable to create buffer");
             return false;
         }
 
+        mz_bool res = mz_zip_reader_extract_file_to_mem(&archive, stat.m_filename, parser_buffer, (size_t)stat.m_uncomp_size, 0);
         if (res == 0)
         {
-            add_error("Error while extracting model data from zip archive");
+            add_error("Error while reading model data to buffer");
+            return false;
+        }
+
+        if (!XML_ParseBuffer(m_xml_parser, (int)stat.m_uncomp_size, 1))
+        {
+            char error_buf[1024];
+            ::sprintf(error_buf, "Error (%s) while parsing xml file at line %d", XML_ErrorString(XML_GetErrorCode(m_xml_parser)), (int)XML_GetCurrentLineNumber(m_xml_parser));
+            add_error(error_buf);
             return false;
         }
 
@@ -1422,9 +1367,8 @@ namespace Slic3r {
 
         int object_id = get_attribute_value_int(attributes, num_attributes, OBJECTID_ATTR);
         Transform3d transform = get_transform_from_string(get_attribute_value_string(attributes, num_attributes, TRANSFORM_ATTR));
-        int printable = get_attribute_value_bool(attributes, num_attributes, PRINTABLE_ATTR);
 
-        return _create_object_instance(object_id, transform, printable, 1);
+        return _create_object_instance(object_id, transform, 1);
     }
 
     bool _3MF_Importer::_handle_end_item()
@@ -1447,20 +1391,12 @@ namespace Slic3r {
     bool _3MF_Importer::_handle_end_metadata()
     {
         if (m_curr_metadata_name == SLIC3RPE_3MF_VERSION)
-        {
             m_version = (unsigned int)atoi(m_curr_characters.c_str());
-
-            if (m_check_version && (m_version > VERSION_3MF))
-            {
-                std::string msg = _(L("The selected 3mf file has been saved with a newer version of " + std::string(SLIC3R_APP_NAME) + " and is not compatible."));
-                throw version_error(msg.c_str());
-            }
-        }
 
         return true;
     }
 
-    bool _3MF_Importer::_create_object_instance(int object_id, const Transform3d& transform, const bool printable, unsigned int recur_counter)
+    bool _3MF_Importer::_create_object_instance(int object_id, const Transform3d& transform, unsigned int recur_counter)
     {
         static const unsigned int MAX_RECURSIONS = 10;
 
@@ -1496,7 +1432,6 @@ namespace Slic3r {
                     add_error("Unable to add object instance");
                     return false;
                 }
-                instance->printable = printable;
 
                 m_instances.emplace_back(instance, transform);
             }
@@ -1506,7 +1441,7 @@ namespace Slic3r {
             // recursively process nested components
             for (const Component& component : it->second)
             {
-                if (!_create_object_instance(component.object_id, transform * component.transform, printable, recur_counter + 1))
+                if (!_create_object_instance(component.object_id, transform * component.transform, recur_counter + 1))
                     return false;
             }
         }
@@ -1720,12 +1655,10 @@ namespace Slic3r {
         {
             unsigned int id;
             Transform3d transform;
-            bool printable;
 
-            BuildItem(unsigned int id, const Transform3d& transform, const bool printable)
+            BuildItem(unsigned int id, const Transform3d& transform)
                 : id(id)
                 , transform(transform)
-                , printable(printable)
             {
             }
         };
@@ -2018,7 +1951,7 @@ namespace Slic3r {
             Transform3d t = instance->get_matrix();
             // instance_id is just a 1 indexed index in build_items.
             assert(instance_id == build_items.size() + 1);
-            build_items.emplace_back(instance_id, t, instance->printable);
+            build_items.emplace_back(instance_id, t);
 
             stream << "  </" << OBJECT_TAG << ">\n";
 
@@ -2126,7 +2059,7 @@ namespace Slic3r {
                         stream << " ";
                 }
             }
-            stream << "\" printable =\"" << item.printable << "\" />\n";
+            stream << "\" />\n";
         }
 
         stream << " </" << BUILD_TAG << ">\n";
@@ -2372,13 +2305,13 @@ namespace Slic3r {
         return true;
     }
 
-    bool load_3mf(const char* path, DynamicPrintConfig* config, Model* model, bool check_version)
+    bool load_3mf(const char* path, DynamicPrintConfig* config, Model* model)
     {
         if ((path == nullptr) || (config == nullptr) || (model == nullptr))
             return false;
 
         _3MF_Importer importer;
-        bool res = importer.load_model_from_file(path, *model, *config, check_version);
+        bool res = importer.load_model_from_file(path, *model, *config);
         importer.log_errors();
         return res;
     }

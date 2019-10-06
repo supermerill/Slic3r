@@ -123,8 +123,8 @@ public:
         return *this;
     }
 
-	operator Polygons()  const { return this->expolygon; }
-	double area() 		 const { return this->expolygon.area(); }
+    operator Polygons() const;
+    double area() const;
     bool empty() const { return expolygon.empty(); }
     void clear() { expolygon.clear(); }
     bool has_fill_solid() const;

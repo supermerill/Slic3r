@@ -21,6 +21,8 @@
 
 namespace Slic3r {
 
+unsigned int Model::s_auto_extruder_id = 1;
+
 Model& Model::assign_copy(const Model &rhs)
 {
     this->copy_id(rhs);
@@ -84,7 +86,7 @@ void Model::update_links_bottom_up_recursive()
 	}
 }
 
-Model Model::read_from_file(const std::string& input_file, DynamicPrintConfig* config, bool add_default_instances, bool check_version)
+Model Model::read_from_file(const std::string &input_file, DynamicPrintConfig *config, bool add_default_instances)
 {
     Model model;
 
@@ -97,10 +99,11 @@ Model Model::read_from_file(const std::string& input_file, DynamicPrintConfig* c
         result = load_stl(input_file.c_str(), &model);
     else if (boost::algorithm::iends_with(input_file, ".obj"))
         result = load_obj(input_file.c_str(), &model);
-    else if (boost::algorithm::iends_with(input_file, ".amf") || boost::algorithm::iends_with(input_file, ".amf.xml"))
-        result = load_amf(input_file.c_str(), config, &model, check_version);
+    else if (!boost::algorithm::iends_with(input_file, ".zip.amf") && (boost::algorithm::iends_with(input_file, ".amf") ||
+        boost::algorithm::iends_with(input_file, ".amf.xml")))
+        result = load_amf(input_file.c_str(), config, &model);
     else if (boost::algorithm::iends_with(input_file, ".3mf"))
-        result = load_3mf(input_file.c_str(), config, &model, false);
+        result = load_3mf(input_file.c_str(), config, &model);
     else if (boost::algorithm::iends_with(input_file, ".prusa"))
         result = load_prus(input_file.c_str(), &model);
     else
@@ -121,15 +124,15 @@ Model Model::read_from_file(const std::string& input_file, DynamicPrintConfig* c
     return model;
 }
 
-Model Model::read_from_archive(const std::string& input_file, DynamicPrintConfig* config, bool add_default_instances, bool check_version)
+Model Model::read_from_archive(const std::string &input_file, DynamicPrintConfig *config, bool add_default_instances)
 {
     Model model;
 
     bool result = false;
     if (boost::algorithm::iends_with(input_file, ".3mf"))
-        result = load_3mf(input_file.c_str(), config, &model, check_version);
+        result = load_3mf(input_file.c_str(), config, &model);
     else if (boost::algorithm::iends_with(input_file, ".zip.amf"))
-        result = load_amf(input_file.c_str(), config, &model, check_version);
+        result = load_amf(input_file.c_str(), config, &model);
     else
         throw std::runtime_error("Unknown file format. Input file must have .3mf or .zip.amf extension.");
 
@@ -483,20 +486,9 @@ bool Model::looks_like_multipart_object() const
     return false;
 }
 
-// Generate next extruder ID string, in the range of (1, max_extruders).
-static inline std::string auto_extruder_id(unsigned int max_extruders, unsigned int &cntr)
-{
-    char str_extruder[64];
-    sprintf(str_extruder, "%ud", cntr + 1);
-    if (++ cntr == max_extruders)
-    	cntr = 0;
-    return str_extruder;
-}
-
 void Model::convert_multipart_object(unsigned int max_extruders)
 {
-	assert(this->objects.size() >= 2);
-    if (this->objects.size() < 2)
+    if (this->objects.empty())
         return;
     
     ModelObject* object = new ModelObject(this);
@@ -504,34 +496,60 @@ void Model::convert_multipart_object(unsigned int max_extruders)
     object->name = this->objects.front()->name;
     //FIXME copy the config etc?
 
-    unsigned int extruder_counter = 0;
+    reset_auto_extruder_id();
+
+	//supermerill: note: the new codepath indroduced in fab363493140a93c1786c7898424a73dd1ed2a2e
+	// doesn't work for my fork for a reason, deactivating it for now.
+	bool is_single_object = true; // (this->objects.size() == 1);
+
     for (const ModelObject* o : this->objects)
-    	for (const ModelVolume* v : o->volumes) {
+    {
+        for (const ModelVolume* v : o->volumes)
+        {
+            if (is_single_object)
+            {
+                // If there is only one object, just copy the volumes
+                ModelVolume* new_v = object->add_volume(*v);
+                if (new_v != nullptr)
+                {
+                    new_v->name = o->name;
+                    new_v->config.set_deserialize("extruder", get_auto_extruder_id_as_string(max_extruders));
+                    new_v->translate(-o->origin_translation);
+                }
+            }
+            else
+            {
                 // If there are more than one object, put all volumes together 
                 // Each object may contain any number of volumes and instances
                 // The volumes transformations are relative to the object containing them...
-            Geometry::Transformation trafo_volume = v->get_transformation();
-            // Revert the centering operation.
-            trafo_volume.set_offset(trafo_volume.get_offset() - o->origin_translation);
                 int counter = 1;
-            auto copy_volume = [o, max_extruders, &counter, &extruder_counter](ModelVolume *new_v) {
-                assert(new_v != nullptr);
-                new_v->name = o->name + "_" + std::to_string(counter++);
-                new_v->config.set_deserialize("extruder", auto_extruder_id(max_extruders, extruder_counter));
-                return new_v;
-            };
-            if (o->instances.empty()) {
-            	copy_volume(object->add_volume(*v))->set_transformation(trafo_volume);
-            } else {
                 for (const ModelInstance* i : o->instances)
+                {
+                    ModelVolume* new_v = object->add_volume(*v);
+                    if (new_v != nullptr)
+                    {
+                        new_v->name = o->name + "_" + std::to_string(counter++);
+                        new_v->config.set_deserialize("extruder", get_auto_extruder_id_as_string(max_extruders));
+                        new_v->translate(-o->origin_translation);
                         // ...so, transform everything to a common reference system (world)
-                	copy_volume(object->add_volume(*v))->set_transformation(i->get_transformation() * trafo_volume);                    
+                        new_v->set_transformation(i->get_transformation() * v->get_transformation());
                     }
                 }
+            }
+        }
+    }
 
-    // commented-out to fix #2868
-//    object->add_instance();
-//    object->instances[0]->set_offset(object->raw_mesh_bounding_box().center());
+    if (is_single_object)
+    {
+        // If there is only one object, keep its instances
+        for (const ModelInstance* i : this->objects.front()->instances)
+        {
+            object->add_instance(*i);
+        }
+    }
+    else
+        // If there are more than one object, create a single instance
+        object->add_instance();
 
     this->clear_objects();
     this->objects.push_back(object);
@@ -554,6 +572,32 @@ void Model::adjust_min_z()
             }
         }
     }
+}
+
+unsigned int Model::get_auto_extruder_id(unsigned int max_extruders)
+{
+    unsigned int id = s_auto_extruder_id;
+    if (id > max_extruders) {
+        // The current counter is invalid, likely due to switching the printer profiles
+        // to a profile with a lower number of extruders.
+        reset_auto_extruder_id();
+        id = s_auto_extruder_id;
+    } else if (++ s_auto_extruder_id > max_extruders) {
+        reset_auto_extruder_id();
+    }
+    return id;
+}
+
+std::string Model::get_auto_extruder_id_as_string(unsigned int max_extruders)
+{
+    char str_extruder[64];
+    sprintf(str_extruder, "%ud", get_auto_extruder_id(max_extruders));
+    return str_extruder;
+}
+
+void Model::reset_auto_extruder_id()
+{
+    s_auto_extruder_id = 1;
 }
 
 // Propose a filename including path derived from the ModelObject's input path.
@@ -602,7 +646,6 @@ ModelObject& ModelObject::assign_copy(const ModelObject &rhs)
     this->sla_points_status           = rhs.sla_points_status;
     this->layer_config_ranges         = rhs.layer_config_ranges;    // #ys_FIXME_experiment
     this->layer_height_profile        = rhs.layer_height_profile;
-    this->printable                   = rhs.printable;
     this->origin_translation          = rhs.origin_translation;
     m_bounding_box                    = rhs.m_bounding_box;
     m_bounding_box_valid              = rhs.m_bounding_box_valid;
@@ -712,7 +755,7 @@ ModelVolume* ModelObject::add_volume(const ModelVolume &other, TriangleMesh &&me
 {
     ModelVolume* v = new ModelVolume(this, other, std::move(mesh));
     this->volumes.push_back(v);
-    if(centered) v->center_geometry_after_creation();
+        if(centered) v->center_geometry_after_creation();
     this->invalidate_bounding_box();
     return v;
 }
@@ -1621,7 +1664,7 @@ size_t ModelVolume::split(unsigned int max_extruders)
     size_t ivolume = std::find(this->object->volumes.begin(), this->object->volumes.end(), this) - this->object->volumes.begin();
     std::string name = this->name;
 
-    unsigned int extruder_counter = 0;
+    Model::reset_auto_extruder_id();
     Vec3d offset = this->get_offset();
 
     for (TriangleMesh *mesh : meshptrs) {
@@ -1640,7 +1683,7 @@ size_t ModelVolume::split(unsigned int max_extruders)
         this->object->volumes[ivolume]->center_geometry_after_creation();
         this->object->volumes[ivolume]->translate(offset);
         this->object->volumes[ivolume]->name = name + "_" + std::to_string(idx + 1);
-        this->object->volumes[ivolume]->config.set_deserialize("extruder", auto_extruder_id(max_extruders, extruder_counter));
+        this->object->volumes[ivolume]->config.set_deserialize("extruder", Model::get_auto_extruder_id_as_string(max_extruders));
         delete mesh;
         ++ idx;
     }

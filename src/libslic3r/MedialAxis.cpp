@@ -375,9 +375,9 @@ add_point_same_percent(ThickPolyline* pattern, ThickPolyline* to_modify)
 }
 
 /// find the nearest angle in the contour (or 2 nearest if it's difficult to choose) 
-/// return 1 for an angle of 90Â° and 0 for an angle of 0Â° or 180Â°
+/// return 1 for an angle of 90° and 0 for an angle of 0° or 180°
 /// find the nearest angle in the contour (or 2 nearest if it's difficult to choose) 
-/// return 1 for an angle of 90Â° and 0 for an angle of 0Â° or 180Â°
+/// return 1 for an angle of 90° and 0 for an angle of 0° or 180°
 double
 get_coeff_from_angle_countour(Point &point, const ExPolygon &contour, coord_t min_dist_between_point) {
     double nearest_dist = point.distance_to(contour.contour.points.front());
@@ -428,7 +428,7 @@ get_coeff_from_angle_countour(Point &point, const ExPolygon &contour, coord_t mi
     //compute angle
     angle = point_nearest.ccw_angle(point_before, point_after);
     if (angle >= PI) angle = 2 * PI - angle;  // smaller angle
-    //compute the diff from 90Â°
+    //compute the diff from 90°
     angle = abs(angle - PI / 2);
     if (point_near.coincides_with(point_nearest) && std::max(nearest_dist, near_dist) + SCALED_EPSILON < point_nearest.distance_to(point_near)) {
         //not only nearest
@@ -485,11 +485,11 @@ MedialAxis::fusion_curve(ThickPolylines &pp)
         //compute angle
         double coeff_contour_angle = this->expolygon.contour.points[closest_point_idx].ccw_angle(this->expolygon.contour.points[prev_idx], this->expolygon.contour.points[next_idx]);
         if (coeff_contour_angle >= PI) coeff_contour_angle = 2 * PI - coeff_contour_angle;  // smaller angle
-        //compute the diff from 90Â°
+        //compute the diff from 90°
         coeff_contour_angle = abs(coeff_contour_angle - PI / 2);
 
 
-        // look if other end is a cross point with almost 90Â° angle
+        // look if other end is a cross point with almost 90° angle
         double sum_dot = 0;
         double min_dot = 0;
         // look if other end is a cross point with multiple other branch
@@ -522,7 +522,7 @@ MedialAxis::fusion_curve(ThickPolylines &pp)
         if (crosspoint.size() != 2) continue;
         if (sum_dot > 0.2) continue;
         if (min_dot > 0.5) continue;
-        //don't remove useful bits. TODO: use the mindot to know by how much to multiply (1 when 90Â°, 1.42 when 45+, 1 when 0Â°)
+        //don't remove useful bits. TODO: use the mindot to know by how much to multiply (1 when 90°, 1.42 when 45+, 1 when 0°)
         if (polyline.length() > polyline.width.front()*1.42) continue;
 
         //don't pull, it distords the line if there are too many points.
@@ -872,10 +872,10 @@ MedialAxis::main_fusion(ThickPolylines& pp)
 
                 // Get the branch/line in wich we may merge, if possible
                 // with that, we can decide what is important, and how we can merge that.
-                // angle_poly - angle_candi =90Â° => one is useless
+                // angle_poly - angle_candi =90° => one is useless
                 // both angle are equal => both are useful with same strength
                 // ex: Y => | both are useful to crete a nice line
-                // ex2: TTTTT => -----  these 90Â° useless lines should be discarded
+                // ex2: TTTTT => -----  these 90° useless lines should be discarded
                 find_main_branch = false;
                 biggest_main_branch_id = 0;
                 biggest_main_branch_length = 0;
@@ -965,7 +965,7 @@ MedialAxis::main_fusion(ThickPolylines& pp)
 
                 //get the angle of the nearest points of the contour to see : _| (good) \_ (average) __(bad)
                 //sqrt because the result are nicer this way: don't over-penalize /_ angles
-                //TODO: try if we can achieve a better result if we use a different algo if the angle is <90Â°
+                //TODO: try if we can achieve a better result if we use a different algo if the angle is <90°
                 const double coeff_angle_poly = (coeff_angle_cache.find(polyline.points.back()) != coeff_angle_cache.end())
                     ? coeff_angle_cache[polyline.points.back()]
                     : (get_coeff_from_angle_countour(polyline.points.back(), this->expolygon, std::min(min_width, (coord_t)(polyline.length() / 2))));

@@ -8,7 +8,7 @@
 
 #include "libslic3r/libslic3r.h"
 #include "libslic3r/PrintConfig.hpp"
-#include "libslic3r/Semver.hpp"
+#include "slic3r/Utils/Semver.hpp"
 
 class wxBitmap;
 class wxBitmapComboBox;

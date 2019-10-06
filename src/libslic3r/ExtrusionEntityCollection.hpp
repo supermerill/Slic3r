@@ -9,10 +9,7 @@ namespace Slic3r {
 class ExtrusionEntityCollection : public ExtrusionEntity
 {
 public:
-    virtual ExtrusionEntityCollection* clone() const override;
-    // Create a new object, initialize it with this object using the move semantics.
-	virtual ExtrusionEntityCollection* clone_move() override { return new ExtrusionEntityCollection(std::move(*this)); }
-
+    ExtrusionEntityCollection* clone() const;
 
     /// Owned ExtrusionEntities and descendent ExtrusionEntityCollections.
     /// Iterating over this needs to check each child to see if it, too is a collection.
@@ -46,12 +43,11 @@ public:
     bool empty() const { return this->entities.empty(); };
     void clear();
     void swap (ExtrusionEntityCollection &c);
-    void append(const ExtrusionEntity &entity) { this->entities.emplace_back(entity.clone()); }
-    void append(ExtrusionEntity &&entity) { this->entities.emplace_back(entity.clone_move()); }
+    void append(const ExtrusionEntity &entity) { this->entities.push_back(entity.clone()); }
     void append(const ExtrusionEntitiesPtr &entities) { 
         this->entities.reserve(this->entities.size() + entities.size());
-        for (const ExtrusionEntity *ptr : entities)
-            this->entities.emplace_back(ptr->clone());
+        for (ExtrusionEntitiesPtr::const_iterator ptr = entities.begin(); ptr != entities.end(); ++ptr)
+            this->entities.push_back((*ptr)->clone());
     }
     void append(ExtrusionEntitiesPtr &&src) {
         if (entities.empty())
