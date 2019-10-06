@@ -13,7 +13,10 @@ add_subdirectory(qhull)
 add_subdirectory(Shiny)
 add_subdirectory(semver)
 add_subdirectory(libigl)
-add_subdirectory(test)
+
+if(SLIC3R_BUILD_TESTS)
+  add_subdirectory(test)
+endif()
 
 # Adding libnest2d project for bin packing...
 set(LIBNEST2D_UNITTESTS ON CACHE BOOL "Force generating unittests for libnest2d")
