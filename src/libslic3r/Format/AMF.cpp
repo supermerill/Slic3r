@@ -11,6 +11,8 @@
 #include "../GCode.hpp"
 #include "../PrintConfig.hpp"
 #include "../Utils.hpp"
+#include "../I18N.hpp"
+
 #include "AMF.hpp"
 
 #include <boost/filesystem/operations.hpp>
@@ -42,9 +44,14 @@ const char* SLIC3R_CONFIG_TYPE = "slic3rpe_config";
 namespace Slic3r
 {
 
+//! macro used to mark string used at localization,
+//! return same string
+#define L(s) (s)
+#define _(s) Slic3r::I18N::translate(s)
+
 struct AMFParserContext
 {
-    AMFParserContext(XML_Parser parser, DynamicPrintConfig *config, Model *model) :
+    AMFParserContext(XML_Parser parser, DynamicPrintConfig* config, Model* model) :
         m_version(0),
         m_parser(parser),
         m_model(*model), 
@@ -137,6 +144,7 @@ struct AMFParserContext
         NODE_TYPE_MIRRORX,              // amf/constellation/instance/mirrorx
         NODE_TYPE_MIRRORY,              // amf/constellation/instance/mirrory
         NODE_TYPE_MIRRORZ,              // amf/constellation/instance/mirrorz
+        NODE_TYPE_PRINTABLE,            // amf/constellation/instance/mirrorz
         NODE_TYPE_METADATA,             // anywhere under amf/*/metadata
     };
 
@@ -145,7 +153,8 @@ struct AMFParserContext
             : deltax_set(false), deltay_set(false), deltaz_set(false)
             , rx_set(false), ry_set(false), rz_set(false)
             , scalex_set(false), scaley_set(false), scalez_set(false)
-            , mirrorx_set(false), mirrory_set(false), mirrorz_set(false) {}
+            , mirrorx_set(false), mirrory_set(false), mirrorz_set(false)
+            , printable(true) {}
         // Shift in the X axis.
         float deltax;
         bool  deltax_set;
@@ -178,6 +187,8 @@ struct AMFParserContext
         bool  mirrory_set;
         float mirrorz;
         bool  mirrorz_set;
+        // printable property
+        bool  printable;
 
         bool anything_set() const { return deltax_set || deltay_set || deltaz_set ||
                                            rx_set || ry_set || rz_set ||
@@ -321,6 +332,8 @@ void AMFParserContext::startElement(const char *name, const char **atts)
                 node_type_new = NODE_TYPE_MIRRORY;
             else if (strcmp(name, "mirrorz") == 0)
                 node_type_new = NODE_TYPE_MIRRORZ;
+            else if (strcmp(name, "printable") == 0)
+                node_type_new = NODE_TYPE_PRINTABLE;
         }
         else if (m_path[2] == NODE_TYPE_LAYER_CONFIG && strcmp(name, "range") == 0) {
             assert(m_object);
@@ -397,7 +410,8 @@ void AMFParserContext::characters(const XML_Char *s, int len)
                 m_path.back() == NODE_TYPE_SCALE ||
                 m_path.back() == NODE_TYPE_MIRRORX ||
                 m_path.back() == NODE_TYPE_MIRRORY ||
-                m_path.back() == NODE_TYPE_MIRRORZ)
+                m_path.back() == NODE_TYPE_MIRRORZ ||
+                m_path.back() == NODE_TYPE_PRINTABLE)
                 m_value[0].append(s, len);
             break;
         case 6:
@@ -505,6 +519,11 @@ void AMFParserContext::endElement(const char * /* name */)
         assert(m_instance);
         m_instance->mirrorz = float(atof(m_value[0].c_str()));
         m_instance->mirrorz_set = true;
+        m_value[0].clear();
+        break;
+    case NODE_TYPE_PRINTABLE:
+        assert(m_instance);
+        m_instance->printable = bool(atoi(m_value[0].c_str()));
         m_value[0].clear();
         break;
 
@@ -685,6 +704,7 @@ void AMFParserContext::endDocument()
                 mi->set_rotation(Vec3d(instance.rx_set ? (double)instance.rx : 0.0, instance.ry_set ? (double)instance.ry : 0.0, instance.rz_set ? (double)instance.rz : 0.0));
                 mi->set_scaling_factor(Vec3d(instance.scalex_set ? (double)instance.scalex : 1.0, instance.scaley_set ? (double)instance.scaley : 1.0, instance.scalez_set ? (double)instance.scalez : 1.0));
                 mi->set_mirror(Vec3d(instance.mirrorx_set ? (double)instance.mirrorx : 1.0, instance.mirrory_set ? (double)instance.mirrory : 1.0, instance.mirrorz_set ? (double)instance.mirrorz : 1.0));
+                mi->printable = instance.printable;
         }
     }
 }
@@ -742,7 +762,7 @@ bool load_amf_file(const char *path, DynamicPrintConfig *config, Model *model)
     return result;
 }
 
-bool extract_model_from_archive(mz_zip_archive& archive, const mz_zip_archive_file_stat& stat, DynamicPrintConfig* config, Model* model, unsigned int& version)
+bool extract_model_from_archive(mz_zip_archive& archive, const mz_zip_archive_file_stat& stat, DynamicPrintConfig* config, Model* model, bool check_version)
 {
     if (stat.m_uncomp_size == 0)
     {
@@ -763,43 +783,62 @@ bool extract_model_from_archive(mz_zip_archive& archive, const mz_zip_archive_fi
     XML_SetElementHandler(parser, AMFParserContext::startElement, AMFParserContext::endElement);
     XML_SetCharacterDataHandler(parser, AMFParserContext::characters);
 
-    void* parser_buffer = XML_GetBuffer(parser, (int)stat.m_uncomp_size);
-    if (parser_buffer == nullptr)
+    struct CallbackData
     {
-        printf("Unable to create buffer\n");
+        XML_Parser& parser;
+        const mz_zip_archive_file_stat& stat;
+
+        CallbackData(XML_Parser& parser, const mz_zip_archive_file_stat& stat) : parser(parser), stat(stat) {}
+    };
+
+    CallbackData data(parser, stat);
+
+    mz_bool res = 0;
+
+    try
+    {
+        res = mz_zip_reader_extract_file_to_callback(&archive, stat.m_filename, [](void* pOpaque, mz_uint64 file_ofs, const void* pBuf, size_t n)->size_t {
+            CallbackData* data = (CallbackData*)pOpaque;
+            if (!XML_Parse(data->parser, (const char*)pBuf, (int)n, (file_ofs + n == data->stat.m_uncomp_size) ? 1 : 0))
+            {
+                char error_buf[1024];
+                ::sprintf(error_buf, "Error (%s) while parsing '%s' at line %d", XML_ErrorString(XML_GetErrorCode(data->parser)), data->stat.m_filename, (int)XML_GetCurrentLineNumber(data->parser));
+                throw std::runtime_error(error_buf);
+            }
+
+            return n;
+            }, &data, 0);
+    }
+    catch (std::exception& e)
+    {
+        printf("%s\n", e.what());
         close_zip_reader(&archive);
         return false;
     }
 
-    mz_bool res = mz_zip_reader_extract_file_to_mem(&archive, stat.m_filename, parser_buffer, (size_t)stat.m_uncomp_size, 0);
     if (res == 0)
     {
-        printf("Error while reading model data to buffer\n");
-        close_zip_reader(&archive);
-        return false;
-    }
-
-    if (!XML_ParseBuffer(parser, (int)stat.m_uncomp_size, 1))
-    {
-        printf("Error (%s) while parsing xml file at line %d\n", XML_ErrorString(XML_GetErrorCode(parser)), (int)XML_GetCurrentLineNumber(parser));
+        printf("Error while extracting model data from zip archive");
         close_zip_reader(&archive);
         return false;
     }
 
     ctx.endDocument();
 
-    version = ctx.m_version;
+    if (check_version && (ctx.m_version > VERSION_AMF))
+    {
+        std::string msg = _(L("The selected amf file has been saved with a newer version of " + std::string(SLIC3R_APP_NAME) + " and is not compatible."));
+        throw std::runtime_error(msg.c_str());
+    }
 
     return true;
 }
 
 // Load an AMF archive into a provided model.
-bool load_amf_archive(const char *path, DynamicPrintConfig *config, Model *model)
+bool load_amf_archive(const char* path, DynamicPrintConfig* config, Model* model, bool check_version)
 {
     if ((path == nullptr) || (model == nullptr))
         return false;
-
-    unsigned int version = 0;
 
     mz_zip_archive archive;
     mz_zip_zero_struct(&archive);
@@ -820,11 +859,20 @@ bool load_amf_archive(const char *path, DynamicPrintConfig *config, Model *model
         {
             if (boost::iends_with(stat.m_filename, ".amf"))
             {
-                if (!extract_model_from_archive(archive, stat, config, model, version))
+                try
                 {
+                    if (!extract_model_from_archive(archive, stat, config, model, check_version))
+                    {
+                        close_zip_reader(&archive);
+                        printf("Archive does not contain a valid model");
+                        return false;
+                    }
+                }
+                catch (const std::exception& e)
+                {
+                    // ensure the zip archive is closed and rethrow the exception
                     close_zip_reader(&archive);
-                    printf("Archive does not contain a valid model");
-                    return false;
+                    throw std::runtime_error(e.what());
                 }
 
                 break;
@@ -849,7 +897,7 @@ bool load_amf_archive(const char *path, DynamicPrintConfig *config, Model *model
 
 // Load an AMF file into a provided model.
 // If config is not a null pointer, updates it if the amf file/archive contains config data
-bool load_amf(const char *path, DynamicPrintConfig *config, Model *model)
+bool load_amf(const char* path, DynamicPrintConfig* config, Model* model, bool check_version)
 {
     if (boost::iends_with(path, ".amf.xml"))
         // backward compatibility with older slic3r output
@@ -864,7 +912,7 @@ bool load_amf(const char *path, DynamicPrintConfig *config, Model *model)
         file.read(const_cast<char*>(zip_mask.data()), 2);
         file.close();
 
-        return (zip_mask == "PK") ? load_amf_archive(path, config, model) : load_amf_file(path, config, model);
+        return (zip_mask == "PK") ? load_amf_archive(path, config, model, check_version) : load_amf_file(path, config, model);
     }
     else
         return false;
@@ -1036,6 +1084,7 @@ bool store_amf(std::string &path, Model *model, const DynamicPrintConfig *config
                     "      <mirrorx>%lf</mirrorx>\n"
                     "      <mirrory>%lf</mirrory>\n"
                     "      <mirrorz>%lf</mirrorz>\n"
+                    "      <printable>%d</printable>\n"
                     "    </instance>\n",
                     object_id,
                     instance->get_offset(X),
@@ -1049,7 +1098,8 @@ bool store_amf(std::string &path, Model *model, const DynamicPrintConfig *config
                     instance->get_scaling_factor(Z),
                     instance->get_mirror(X),
                     instance->get_mirror(Y),
-                    instance->get_mirror(Z));
+                    instance->get_mirror(Z),
+                    instance->printable);
 
                 //FIXME missing instance->scaling_factor
                 instances.append(buf);

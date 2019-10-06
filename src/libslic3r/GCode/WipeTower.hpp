@@ -7,21 +7,21 @@
 #include <utility>
 #include <algorithm>
 
-#include "libslic3r/PrintConfig.hpp"
-
+#include "libslic3r/Point.hpp"
 
 namespace Slic3r
 {
 
 class WipeTowerWriter;
-
+class PrintConfig;
+enum GCodeFlavor : unsigned char;
 
 
 class WipeTower
 {
 public:
     struct Extrusion
-	{
+    {
 		Extrusion(const Vec2f &pos, float width, unsigned int tool) : pos(pos), width(width), tool(tool) {}
 		// End position of this extrusion.
 		Vec2f				pos;
@@ -78,105 +78,10 @@ public:
 	// y			-- y coordinates of wipe tower in mm ( left bottom corner )
 	// width		-- width of wipe tower in mm ( default 60 mm - leave as it is )
 	// wipe_area	-- space available for one toolchange in mm
-	//WipeTower(bool semm, float x, float y, float width, float rotation_angle, float cooling_tube_retraction,
- //             float cooling_tube_length, float parking_pos_retraction, float extra_loading_move, 
- //             float bridging, bool set_extruder_trimpot, GCodeFlavor flavor,
- //             const std::vector<std::vector<float>>& wiping_matrix, unsigned int initial_tool) :
- //       m_semm(semm),
- //       m_wipe_tower_pos(x, y),
-	//	m_wipe_tower_width(width),
-	//	m_wipe_tower_rotation_angle(rotation_angle),
-	//	m_y_shift(0.f),
-	//	m_z_pos(0.f),
-	//	m_is_first_layer(false),
- //       m_gcode_flavor(flavor),
- //       m_bridging(bridging),
- //       m_current_tool(initial_tool),
- //       wipe_volumes(wiping_matrix)
- //       {
- //           // If this is a single extruder MM printer, we will use all the SE-specific config values.
- //           // Otherwise, the defaults will be used to turn off the SE stuff.
- //           if (m_semm) {
- //               m_cooling_tube_retraction = cooling_tube_retraction;
- //               m_cooling_tube_length = cooling_tube_length;
- //               m_parking_pos_retraction = parking_pos_retraction;
- //               m_extra_loading_move = extra_loading_move;
- //               m_set_extruder_trimpot = set_extruder_trimpot;
- //           }
- //       }
-
-    WipeTower(PrintConfig &config, const std::vector<std::vector<float>>& wiping_matrix, unsigned int initial_tool, float first_layer_width) :
-        m_semm(config.single_extruder_multi_material.value),
-        m_wipe_tower_pos(float(config.wipe_tower_x.value), float(config.wipe_tower_y.value)),
-        m_wipe_tower_width(float(config.wipe_tower_width.value)),
-        m_wipe_tower_rotation_angle(float(config.wipe_tower_rotation_angle.value)),
-        m_y_shift(0.f),
-        m_z_pos(0.f),
-        m_is_first_layer(false),
-        m_bridging(float(config.wipe_tower_bridging)),
-        m_gcode_flavor(config.gcode_flavor), 
-        m_current_tool(initial_tool),
-        wipe_volumes(wiping_matrix),
-        m_brim_width(first_layer_width),
-        m_config(&config)
-    {
-        // If this is a single extruder MM printer, we will use all the SE-specific config values.
-        // Otherwise, the defaults will be used to turn off the SE stuff.
-        if (config.single_extruder_multi_material.value) {
-            m_cooling_tube_retraction = (float(config.cooling_tube_retraction.value));
-            m_cooling_tube_length = (float(config.cooling_tube_length.value));
-            m_parking_pos_retraction = (float(config.parking_pos_retraction.value));
-            m_extra_loading_move = (float(config.extra_loading_move.value));
-            m_set_extruder_trimpot = (config.high_current_on_filament_swap.value);
-        }
-    }
-
-	virtual ~WipeTower() {}
+    WipeTower(const PrintConfig& config, const std::vector<std::vector<float>>& wiping_matrix, size_t initial_tool);
 
 	// Set the extruder properties.
-	void set_extruder(size_t idx)
-	{
-        //while (m_filpar.size() < idx+1)   // makes sure the required element is in the vector
-        m_filpar.push_back(FilamentParameters());
-
-        m_filpar[idx].material = m_config->filament_type.get_at(idx);
-        m_filpar[idx].temperature = (float)m_config->temperature.get_at(idx);
-        m_filpar[idx].first_layer_temperature = m_config->first_layer_temperature.get_at(idx);
-
-        // If this is a single extruder MM printer, we will use all the SE-specific config values.
-        // Otherwise, the defaults will be used to turn off the SE stuff.
-        if (m_semm) {
-            m_filpar[idx].loading_speed = (float)m_config->filament_loading_speed.get_at(idx);
-            m_filpar[idx].loading_speed_start = (float)m_config->filament_loading_speed_start.get_at(idx);
-            m_filpar[idx].unloading_speed = (float)m_config->filament_unloading_speed.get_at(idx);
-            m_filpar[idx].unloading_speed_start = (float)m_config->filament_unloading_speed_start.get_at(idx);
-            m_filpar[idx].delay = (float)m_config->filament_toolchange_delay.get_at(idx);
-            m_filpar[idx].cooling_moves = (float)m_config->filament_cooling_moves.get_at(idx);
-            m_filpar[idx].cooling_initial_speed = (float)m_config->filament_cooling_initial_speed.get_at(idx);
-            m_filpar[idx].cooling_final_speed = (float)m_config->filament_cooling_final_speed.get_at(idx);
-        }
-
-        m_filpar[idx].filament_area = (M_PI/4.f) * pow((float)m_config->filament_diameter.get_at(idx), 2); // all extruders are assumed to have the same filament diameter at this point
-        m_filpar[idx].nozzle_diameter = (float)m_config->nozzle_diameter.get_at(idx); // to be used in future with (non-single) multiextruder MM
-
-        if ((float)m_config->filament_max_volumetric_speed.get_at(idx) != 0.f)
-            m_filpar[idx].max_e_speed = ((float)m_config->filament_max_volumetric_speed.get_at(idx) / filament_area());
-
-        m_perimeter_width = m_filpar[idx].nozzle_diameter * Width_To_Nozzle_Ratio; // all extruders are now assumed to have the same diameter
-
-        if (m_semm) {
-            std::stringstream stream{ m_config->filament_ramming_parameters.get_at(idx) };
-            float speed = 0.f;
-            stream >> m_filpar[idx].ramming_line_width_multiplicator >> m_filpar[idx].ramming_step_multiplicator;
-            m_filpar[idx].ramming_line_width_multiplicator /= 100;
-            m_filpar[idx].ramming_step_multiplicator /= 100;
-            while (stream >> speed)
-                m_filpar[idx].ramming_speed.push_back(speed);
-        }
-
-        m_used_filament_length.resize(std::max(m_used_filament_length.size(), idx + 1)); // makes sure that the vector is big enough so we don't have to check later
-	}
-
+    void set_extruder(size_t idx, const PrintConfig& config);
 
 	// Appends into internal structure m_plan containing info about the future wipe tower
 	// to be used before building begins. The entries must be added ordered in z.
@@ -242,7 +147,7 @@ public:
 
 	// Returns gcode for a toolchange and a final print head position.
 	// On the first layer, extrude a brim around the future wipe tower first.
-	ToolChangeResult tool_change(unsigned int new_tool, bool last_in_layer);
+    ToolChangeResult tool_change(size_t new_tool, bool last_in_layer);
 
 	// Fill the unfilled space with a sparse infill.
 	// Call this method only if layer_finished() is false.
@@ -285,15 +190,13 @@ private:
 		SHAPE_REVERSED = -1
 	};
 
-
     const bool  m_peters_wipe_tower   = false; // sparse wipe tower inspired by Peter's post processor - not finished yet
     const float Width_To_Nozzle_Ratio = 1.25f; // desired line width (oval) in multiples of nozzle diameter - may not be actually neccessary to adjust
     const float WT_EPSILON            = 1e-3f;
-    const float filament_area() const {
+    float filament_area() const {
         return m_filpar[0].filament_area; // all extruders are assumed to have the same filament diameter at this point
     }
 
-    PrintConfig *m_config = NULL;
 
 	bool   m_semm               = true; // Are we using a single extruder multimaterial printer?
     Vec2f  m_wipe_tower_pos; 			// Left front corner of the wipe tower in mm.
@@ -318,6 +221,12 @@ private:
     bool            m_adhesion                  = true;
     GCodeFlavor     m_gcode_flavor;
 
+    // Bed properties
+    enum {
+        RectangularBed,
+        CircularBed
+    } m_bed_shape;
+    float m_bed_width; // width of the bed bounding box
 
     float m_perimeter_width = 0.4f * Width_To_Nozzle_Ratio; // Width of an extrusion line, also a perimeter spacing for 100% infill.
     float m_brim_width = 0.4 * Width_To_Nozzle_Ratio * Width_To_Nozzle_Ratio; // Width of an extrusion line, also a perimeter spacing for 100% infill.
@@ -334,7 +243,7 @@ private:
 	bool m_print_brim = true;
 	// A fill-in direction (positive Y, negative Y) alternates with each layer.
 	wipe_shape   	m_current_shape = SHAPE_NORMAL;
-	unsigned int 	m_current_tool  = 0;
+    size_t 	m_current_tool  = 0;
     const std::vector<std::vector<float>> wipe_volumes;
 
 	float           m_depth_traversed = 0.f; // Current y position at the wipe tower.
@@ -399,13 +308,13 @@ private:
 	// to store information about tool changes for a given layer
 	struct WipeTowerInfo{
 		struct ToolChange {
-			unsigned int old_tool;
-			unsigned int new_tool;
+            size_t old_tool;
+            size_t new_tool;
 			float required_depth;
             float ramming_depth;
             float first_wipe_line;
             float wipe_volume;
-			ToolChange(unsigned int old, unsigned int newtool, float depth=0.f, float ramming_depth=0.f, float fwl=0.f, float wv=0.f)
+            ToolChange(size_t old, size_t newtool, float depth=0.f, float ramming_depth=0.f, float fwl=0.f, float wv=0.f)
             : old_tool{old}, new_tool{newtool}, required_depth{depth}, ramming_depth{ramming_depth}, first_wipe_line{fwl}, wipe_volume{wv} {}
 		};
 		float z;		// z position of the layer
@@ -440,7 +349,7 @@ private:
 
 	void toolchange_Change(
 		WipeTowerWriter &writer,
-		const unsigned int		new_tool,
+        const size_t		new_tool,
 		const std::string& 		new_material);
 	
 	void toolchange_Load(

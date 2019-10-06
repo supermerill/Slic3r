@@ -39,18 +39,24 @@ enum BedShapes {
 class BedShapeHint {
     BedShapes m_type = BedShapes::bsInfinite;
     
+    // The union neither calls constructors nor destructors of its members.
+    // The only member with non-trivial constructor / destructor is the polygon,
+    // a placement new / delete needs to be called over it.
     union BedShape_u {  // TODO: use variant from cpp17?
         CircleBed   circ;
         BoundingBox box;
         Polyline    polygon;
         InfiniteBed infbed{};
         ~BedShape_u() {}
-        BedShape_u() {};
+        BedShape_u() {}
     } m_bed;
+    
+    // Reset the type, allocate m_bed properly
+    void reset(BedShapes type);
     
 public:
 
-    BedShapeHint(){};
+    BedShapeHint(){}
     
     /// Get a bed shape hint for arrange() from a naked Polyline.
     explicit BedShapeHint(const Polyline &polyl);
@@ -73,38 +79,13 @@ public:
     {
         if (m_type == BedShapes::bsIrregular)
             m_bed.polygon.Slic3r::Polyline::~Polyline();
-    };
+    }
 
     BedShapeHint(const BedShapeHint &cpy) { *this = cpy; }
     BedShapeHint(BedShapeHint &&cpy) { *this = std::move(cpy); }
 
-    BedShapeHint &operator=(const BedShapeHint &cpy)
-    {
-        m_type = cpy.m_type;
-        switch(m_type) {
-        case bsBox: m_bed.box = cpy.m_bed.box; break;
-        case bsCircle: m_bed.circ = cpy.m_bed.circ; break;
-        case bsIrregular: m_bed.polygon = cpy.m_bed.polygon; break;
-        case bsInfinite: m_bed.infbed = cpy.m_bed.infbed; break;
-        case bsUnknown: break;
-        }
-        
-        return *this;
-    }
-
-    BedShapeHint& operator=(BedShapeHint &&cpy)
-    {
-        m_type = cpy.m_type;
-        switch(m_type) {
-        case bsBox: m_bed.box = std::move(cpy.m_bed.box); break;
-        case bsCircle: m_bed.circ = std::move(cpy.m_bed.circ); break;
-        case bsIrregular: m_bed.polygon = std::move(cpy.m_bed.polygon); break;
-        case bsInfinite: m_bed.infbed = std::move(cpy.m_bed.infbed); break;
-        case bsUnknown: break;
-        }
-        
-        return *this;
-    }
+    BedShapeHint &operator=(const BedShapeHint &cpy);
+    BedShapeHint& operator=(BedShapeHint &&cpy);
     
     BedShapes get_type() const { return m_type; }
 

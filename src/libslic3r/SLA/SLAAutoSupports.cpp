@@ -1,5 +1,5 @@
-#include "igl/random_points_on_mesh.h"
-#include "igl/AABB.h"
+//#include "igl/random_points_on_mesh.h"
+//#include "igl/AABB.h"
 
 #include <tbb/parallel_for.h>
 

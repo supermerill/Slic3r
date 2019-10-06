@@ -197,11 +197,7 @@ GLCanvas3DManager::GLCanvas3DManager()
 
 GLCanvas3DManager::~GLCanvas3DManager()
 {
-    if (m_context != nullptr)
-    {
-        delete m_context;
-        m_context = nullptr;
-    }
+	this->destroy();
 }
 
 bool GLCanvas3DManager::add(wxGLCanvas* canvas, Bed3D& bed, Camera& camera, GLToolbar& view_toolbar)
@@ -270,6 +266,20 @@ void GLCanvas3DManager::init_gl()
             s_compressed_textures_supported = true;
         else
             s_compressed_textures_supported = false;
+
+        if (! s_gl_info.is_version_greater_or_equal_to(2, 0)) {
+        	// Complain about the OpenGL version.
+        	wxString message = wxString::Format(
+        		_(L("PrusaSlicer requires OpenGL 2.0 capable graphics driver to run correctly, \n"
+        			"while OpenGL version %s, render %s, vendor %s was detected.")), wxString(s_gl_info.get_version()), wxString(s_gl_info.get_renderer()), wxString(s_gl_info.get_vendor()));
+        	message += "\n";
+        	message += _(L("You may need to update your graphics card driver."));
+#ifdef _WIN32
+        	message += "\n";
+        	message += _(L("As a workaround, you may run PrusaSlicer with a software rendered 3D graphics by running prusa-slicer.exe with the --sw_renderer parameter."));
+#endif
+        	wxMessageBox(message, wxString("PrusaSlicer - ") + _(L("Unsupported OpenGL version")), wxOK | wxICON_ERROR);
+        }
     }
 }
 
@@ -282,6 +292,15 @@ bool GLCanvas3DManager::init(wxGLCanvas* canvas)
         return false;
 }
 
+void GLCanvas3DManager::destroy()
+{
+    if (m_context != nullptr)
+    {
+        delete m_context;
+        m_context = nullptr;
+    }
+}
+
 GLCanvas3D* GLCanvas3DManager::get_canvas(wxGLCanvas* canvas)
 {
     CanvasesMap::const_iterator it = do_get_canvas(canvas);
@@ -290,7 +309,21 @@ GLCanvas3D* GLCanvas3DManager::get_canvas(wxGLCanvas* canvas)
 
 wxGLCanvas* GLCanvas3DManager::create_wxglcanvas(wxWindow *parent)
 {
-    int attribList[] = { WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 24, WX_GL_SAMPLE_BUFFERS, GL_TRUE, WX_GL_SAMPLES, 4, 0 };
+    int attribList[] = { 
+    	WX_GL_RGBA,
+    	WX_GL_DOUBLEBUFFER,
+    	// RGB channels each should be allocated with 8 bit depth. One should almost certainly get these bit depths by default.
+      	WX_GL_MIN_RED, 			8,
+      	WX_GL_MIN_GREEN, 		8,
+      	WX_GL_MIN_BLUE, 		8,
+      	// Requesting an 8 bit alpha channel. Interestingly, the NVIDIA drivers would most likely work with some alpha plane, but glReadPixels would not return
+      	// the alpha channel on NVIDIA if not requested when the GL context is created.
+      	WX_GL_MIN_ALPHA, 		8,
+    	WX_GL_DEPTH_SIZE, 		24,
+    	WX_GL_SAMPLE_BUFFERS, 	GL_TRUE,
+    	WX_GL_SAMPLES, 			4,
+    	0
+    };
 
     if (s_multisample == MS_Unknown)
     {
@@ -300,7 +333,7 @@ wxGLCanvas* GLCanvas3DManager::create_wxglcanvas(wxWindow *parent)
     }
 
     if (! can_multisample())
-        attribList[4] = 0;
+        attribList[12] = 0;
 
     return new wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS);
 }
@@ -326,9 +359,7 @@ bool GLCanvas3DManager::init(GLCanvas3D& canvas)
 void GLCanvas3DManager::detect_multisample(int* attribList)
 {
     int wxVersion = wxMAJOR_VERSION * 10000 + wxMINOR_VERSION * 100 + wxRELEASE_NUMBER;
-    const AppConfig* app_config = GUI::get_app_config();
     bool enable_multisample = wxVersion >= 30003;
-
     s_multisample = (enable_multisample && wxGLCanvas::IsDisplaySupported(attribList)) ? MS_Enabled : MS_Disabled;
     // Alternative method: it was working on previous version of wxWidgets but not with the latest, at least on Windows
     // s_multisample = enable_multisample && wxGLCanvas::IsExtensionSupported("WGL_ARB_multisample");

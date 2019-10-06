@@ -612,7 +612,7 @@ void PerimeterGenerator::process()
             double min = 0.2 * perimeter_width * (1 - INSET_OVERLAP_TOLERANCE);
             //be sure we don't gapfill where the perimeters are already touching each other (negative spacing).
             min = std::max(min, double(Flow::new_from_spacing(EPSILON, nozzle_diameter, this->layer_height, false).scaled_width()));
-            double max = 3. * perimeter_spacing;
+            double max = 2. * perimeter_spacing;
             ExPolygons gaps_ex = diff_ex(
                 offset2_ex(gaps, double(-min / 2), double(+min / 2)),
                 offset2_ex(gaps, double(-max / 2), double(+max / 2)),
@@ -621,8 +621,8 @@ void PerimeterGenerator::process()
             for (const ExPolygon &ex : gaps_ex) {
                 //remove too small gaps that are too hard to fill.
                 //ie one that are smaller than an extrusion with width of min and a length of max.
-                if (ex.area() > min*max) {
-                    MedialAxis{ ex, coord_t(max), coord_t(min), coord_t(this->layer_height) }.build(polylines);
+                if (ex.area() > scale_(scale_(this->config->gap_fill_min_area.get_abs_value(unscaled(perimeter_width)*unscaled(perimeter_width))))) {
+                    MedialAxis{ ex, coord_t(max*1.1), coord_t(min), coord_t(this->layer_height) }.build(polylines);
                 }
             }
             if (!polylines.empty()) {

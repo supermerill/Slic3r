@@ -88,7 +88,11 @@ class GUI_App : public wxApp
     size_t          m_em_unit; // width of a "m"-symbol in pixels for current system font 
                                // Note: for 100% Scale m_em_unit = 10 -> it's a good enough coefficient for a size setting of controls
 
-    wxLocale*	    m_wxLocale{ nullptr };
+    std::unique_ptr<wxLocale> 	  m_wxLocale;
+    // System language, from locales, owned by wxWidgets.
+    const wxLanguageInfo		 *m_language_info_system = nullptr;
+    // Best translation language, provided by Windows or OSX, owned by wxWidgets.
+    const wxLanguageInfo		 *m_language_info_best   = nullptr;
 
     std::unique_ptr<ImGuiWrapper> m_imgui;
     std::unique_ptr<PrintHostJobQueue> m_printhost_job_queue;
@@ -132,9 +136,7 @@ public:
     void            update_ui_from_settings();
 
     bool            switch_language();
-    // Load gettext translation files and activate them at the start of the application,
-    // based on the "translation_language" key stored in the application config.
-    bool            load_language();
+    bool            load_language(wxString language, bool initial);
 
     Tab*            get_tab(Preset::Type type);
     ConfigOptionMode get_mode();
@@ -146,9 +148,9 @@ public:
     bool            checked_tab(Tab* tab);
     void            load_current_presets();
 
-    wxString        current_language_code() const { return m_wxLocale != nullptr ? m_wxLocale->GetCanonicalName() : wxString("en_US"); }
+    wxString        current_language_code() const { return m_wxLocale->GetCanonicalName(); }
 	// Translate the language code to a code, for which Prusa Research maintains translations. Defaults to "en_US".
-    wxString      	current_language_code_safe() const;
+    wxString 		current_language_code_safe() const;
 
     virtual bool OnExceptionInMainLoop();
 
@@ -189,8 +191,6 @@ private:
     void            window_pos_restore(wxTopLevelWindow* window, const std::string &name, bool default_maximized = false);
     void            window_pos_sanitize(wxTopLevelWindow* window);
     bool            select_language();
-    void            save_language();
-    std::vector<const wxLanguageInfo*> get_installed_languages();
 #ifdef __WXMSW__
     void            associate_3mf_files();
 #endif // __WXMSW__

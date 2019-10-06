@@ -205,6 +205,8 @@ extern "C" {
 	Slic3rMainFunc slic3r_main = nullptr;
 }
 
+extern "C" {
+
 #ifdef SLIC3R_WRAPPER_NOCONSOLE
 int APIENTRY wWinMain(HINSTANCE /* hInstance */, HINSTANCE /* hPrevInstance */, PWSTR /* lpCmdLine */, int /* nCmdShow */)
 {
@@ -297,4 +299,5 @@ int wmain(int argc, wchar_t **argv)
 	}
 	// argc minus the trailing nullptr of the argv
 	return slic3r_main((int)argv_extended.size() - 1, argv_extended.data());
+}
 }

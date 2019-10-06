@@ -393,7 +393,11 @@ const std::vector<std::string>& Preset::print_options()
 #endif /* HAS_PRESSURE_EQUALIZER */
         "perimeter_speed", "small_perimeter_speed", "external_perimeter_speed", "infill_speed", "solid_infill_speed", 
         "top_solid_infill_speed", "support_material_speed", "support_material_xy_spacing", "support_material_interface_speed",
-        "bridge_speed", "gap_fill", "gap_fill_speed", "travel_speed", "first_layer_speed", "perimeter_acceleration", "infill_acceleration",
+        "bridge_speed",
+        "gap_fill",
+        "gap_fill_min_area",
+        "gap_fill_speed",
+        "travel_speed", "first_layer_speed", "perimeter_acceleration", "infill_acceleration",
         "bridge_acceleration", "first_layer_acceleration", "default_acceleration", "skirts", "skirt_distance", "skirt_height",
         "min_skirt_length", "brim_width", "brim_ears", "brim_ears_max_angle",
         "support_material", "support_material_auto", "support_material_threshold", "support_material_enforce_layers", 
@@ -450,7 +454,7 @@ const std::vector<std::string>& Preset::filament_options()
         , "fan_below_layer_time", "slowdown_below_layer_time", "min_print_speed",
         "start_filament_gcode", "end_filament_gcode",
         // Retract overrides
-        "filament_retract_length", "filament_retract_lift", "filament_retract_lift_above", "filament_retract_lift_below", "filament_retract_speed", "filament_deretract_speed", "filament_retract_restart_extra", "filament_retract_before_travel", 
+        "filament_retract_length", "filament_retract_lift", "filament_retract_lift_above", "filament_retract_lift_below", "filament_retract_speed", "filament_deretract_speed", "filament_retract_restart_extra", "filament_retract_before_travel",
         "filament_retract_layer_change", "filament_wipe", "filament_retract_before_wipe",
         // Profile compatibility
         "compatible_prints", "compatible_prints_condition", "compatible_printers", "compatible_printers_condition", "inherits"
@@ -536,9 +540,10 @@ const std::vector<std::string>& Preset::sla_print_options()
             "pad_wall_thickness",
             "pad_wall_height",
             "pad_max_merge_distance",
-            "pad_edge_radius",
+            // "pad_edge_radius",
             "pad_wall_slope",
             "pad_object_gap",
+            "pad_around_object",
             "pad_object_connector_stride",
             "pad_object_connector_width",
             "pad_object_connector_penetration",
@@ -558,7 +563,8 @@ const std::vector<std::string>& Preset::sla_material_options()
     if (s_opts.empty()) {
         s_opts = {
             "initial_layer_height",
-            "exposure_time", "initial_exposure_time",
+            "exposure_time",
+            "initial_exposure_time",
             "material_correction",
             "material_notes",
             "default_sla_material_profile",
@@ -584,6 +590,8 @@ const std::vector<std::string>& Preset::sla_printer_options()
             "relative_correction",
             "absolute_correction",
             "gamma_correction",
+            "min_exposure_time", "max_exposure_time",
+            "min_initial_exposure_time", "max_initial_exposure_time",
             "print_host", "printhost_apikey", "printhost_cafile",
             "printer_notes",
             "inherits"

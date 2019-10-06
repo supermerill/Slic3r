@@ -300,7 +300,7 @@ class TriangleMesh;
 struct SLAPrintStatistics
 {
     SLAPrintStatistics() { clear(); }
-    std::string                     estimated_print_time;
+    double                          estimated_print_time;
     double                          objects_used_material;
     double                          support_used_material;
     size_t                          slow_layers_count;
@@ -316,7 +316,7 @@ struct SLAPrintStatistics
     std::string             finalize_output_path(const std::string &path_in) const;
 
     void clear() {
-        estimated_print_time.clear();
+        estimated_print_time = 0.;
         objects_used_material = 0.;
         support_used_material = 0.;
         slow_layers_count = 0;
@@ -422,9 +422,6 @@ public:
     const std::vector<PrintLayer>& print_layers() const { return m_printer_input; }
 
 private:
-    using SLAPrinter = sla::SLARasterWriter;
-    using SLAPrinterPtr = std::unique_ptr<SLAPrinter>;
-
     // Implement same logic as in SLAPrintObject
     bool invalidate_step(SLAPrintStep st);
 
@@ -443,7 +440,7 @@ private:
     std::vector<PrintLayer>                 m_printer_input;
 
     // The printer itself
-    SLAPrinterPtr                           m_printer;
+    std::unique_ptr<sla::SLARasterWriter>   m_printer;
 
     // Estimated print time, material consumed.
     SLAPrintStatistics                      m_print_statistics;
@@ -461,6 +458,16 @@ private:
         
         double status() const { return m_st; }
     } m_report_status;
+    
+    sla::SLARasterWriter &init_printer();
+    
+    inline sla::SLARasterWriter::Orientation get_printer_orientation() const
+    {
+        auto ro = m_printer_config.display_orientation.getInt();
+        return ro == sla::SLARasterWriter::roPortrait ?
+                   sla::SLARasterWriter::roPortrait :
+                   sla::SLARasterWriter::roLandscape;
+    }
 
 	friend SLAPrintObject;
 };

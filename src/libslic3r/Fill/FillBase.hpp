@@ -90,6 +90,7 @@ public:
 
     static Fill* new_from_type(const InfillPattern type, const PrintRegionConfig* config);
     static Fill* new_from_type(const std::string &type, const PrintRegionConfig* config);
+    static bool  use_bridge_flow(const InfillPattern type);
 
     void         set_bounding_box(const Slic3r::BoundingBox &bbox) { bounding_box = bbox; }
 

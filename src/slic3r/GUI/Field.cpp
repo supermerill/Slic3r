@@ -138,7 +138,7 @@ bool Field::is_matched(const std::string& string, const std::string& pattern)
 
 static wxString na_value() { return _(L("N/A")); }
 
-void Field::get_value_by_opt_type(wxString& str)
+void Field::get_value_by_opt_type(wxString& str, const bool check_value/* = true*/)
 {
 	switch (m_opt.type) {
 	case coInt:
@@ -150,7 +150,7 @@ void Field::get_value_by_opt_type(wxString& str)
 	case coFloat:{
 		if (m_opt.type == coPercent && !str.IsEmpty() &&  str.Last() == '%') 
 			str.RemoveLast();
-		else if (!str.IsEmpty() && str.Last() == '%')	{
+		else if (check_value && !str.IsEmpty() && str.Last() == '%')	{
 			wxString label = m_Label->GetLabel();
 			if		(label.Last() == '\n')	label.RemoveLast();
 			while	(label.Last() == ' ')	label.RemoveLast();
@@ -169,12 +169,12 @@ void Field::get_value_by_opt_type(wxString& str)
         {
             if (m_opt.nullable && str == na_value())
                 val = ConfigOptionFloatsNullable::nil_value();
-            else if (!str.ToCDouble(&val))
+            else if (check_value && !str.ToCDouble(&val))
             {
                 show_error(m_parent, _(L("Invalid numeric input.")));
                 set_value(double_to_string(val), true);
             }
-            if (m_opt.min > val || val > m_opt.max)
+            if (check_value && (m_opt.min > val || val > m_opt.max))
             {
                 show_error(m_parent, _(L("Input value is out of range")));
                 if (m_opt.min > val) val = m_opt.min;
@@ -189,16 +189,16 @@ void Field::get_value_by_opt_type(wxString& str)
     case coFloatOrPercent: {
         if (m_opt.type == coFloatOrPercent && !str.IsEmpty() &&  str.Last() != '%')
         {
-            double val;
+            double val = 0.;
 			// Replace the first occurence of comma in decimal number.
 			str.Replace(",", ".", false);
-            if (!str.ToCDouble(&val))
+            if (check_value && !str.ToCDouble(&val))
             {
                 show_error(m_parent, _(L("Invalid numeric input.")));
                 set_value(double_to_string(val), true);
             }
-            else if ((m_opt.sidetext.rfind("mm/s") != std::string::npos && val > m_opt.max ||
-                     m_opt.sidetext.rfind("mm ") != std::string::npos && val > 1) && 
+            else if (check_value && ((m_opt.sidetext.rfind("mm/s") != std::string::npos && val > m_opt.max) ||
+                     (m_opt.sidetext.rfind("mm ") != std::string::npos && val > 1)) &&
                      (m_value.empty() || std::string(str.ToUTF8().data()) != boost::any_cast<std::string>(m_value)))
             {
                 const std::string sidetext = m_opt.sidetext.rfind("mm/s") != std::string::npos ? "mm/s" : "mm";
@@ -206,8 +206,8 @@ void Field::get_value_by_opt_type(wxString& str)
                 const wxString msg_text = wxString::Format(_(L("Do you mean %s%% instead of %s %s?\n"
                     "Select YES if you want to change this value to %s%%, \n"
                     "or NO if you are sure that %s %s is a correct value.")), stVal, stVal, sidetext, stVal, stVal, sidetext);
-                auto dialog = new wxMessageDialog(m_parent, msg_text, _(L("Parameter validation")), wxICON_WARNING | wxYES | wxNO);
-                if (dialog->ShowModal() == wxID_YES) {
+                wxMessageDialog dialog(m_parent, msg_text, _(L("Parameter validation")) + ": " + m_opt_id , wxICON_WARNING | wxYES | wxNO);
+                if (dialog.ShowModal() == wxID_YES) {
                     set_value(wxString::Format("%s%%", stVal), false/*true*/);
                     str += "%%";
                 }
@@ -393,6 +393,13 @@ void TextCtrl::set_value(const boost::any& value, bool change_event/* = false*/)
     else
         dynamic_cast<wxTextCtrl*>(window)->SetValue(boost::any_cast<wxString>(value));
     m_disable_change_event = false;
+
+    if (!change_event) {
+        wxString ret_str = static_cast<wxTextCtrl*>(window)->GetValue();
+        // update m_value to correct work of next value_was_changed(), 
+        // but don't check/change inputed value and don't show a warning message
+        get_value_by_opt_type(ret_str, false);
+    }
 }
 
 void TextCtrl::set_last_meaningful_value()
@@ -410,7 +417,7 @@ void TextCtrl::set_na_value()
 boost::any& TextCtrl::get_value()
 {
 	wxString ret_str = static_cast<wxTextCtrl*>(window)->GetValue();
-	// modifies ret_string!
+	// update m_value
 	get_value_by_opt_type(ret_str);
 
 	return m_value;
@@ -437,7 +444,7 @@ void TextCtrl::disable() { dynamic_cast<wxTextCtrl*>(window)->Disable(); dynamic
 #ifdef __WXGTK__
 void TextCtrl::change_field_value(wxEvent& event)
 {
-	if (bChangedValueEvent = event.GetEventType()==wxEVT_KEY_UP)
+	if (bChangedValueEvent = (event.GetEventType()==wxEVT_KEY_UP))
 		on_change_field();
     event.Skip();
 };
@@ -553,7 +560,16 @@ void SpinCtrl::BUILD() {
 		break;
 	}
 
-    const int min_val = m_opt.min == INT_MIN ? 0: m_opt.min;
+    const int min_val = m_opt.min == INT_MIN 
+#ifdef __WXOSX__
+    // We will forcibly set the input value for SpinControl, since the value 
+    // inserted from the keyboard is not updated under OSX.
+    // So, we can't set min control value bigger then 0.
+    // Otherwise, it couldn't be possible to input from keyboard value 
+    // less then min_val.
+    || m_opt.min > 0 
+#endif
+    ? 0 : m_opt.min;
 	const int max_val = m_opt.max < 2147483647 ? m_opt.max : 2147483647;
 
 	auto temp = new wxSpinCtrl(m_parent, wxID_ANY, text_value, wxDefaultPosition, size,
@@ -622,11 +638,24 @@ void SpinCtrl::BUILD() {
 
 void SpinCtrl::propagate_value()
 {
+    if (suppress_propagation)
+        return;
+
+    suppress_propagation = true;
     if (tmp_value == UNDEF_VALUE) {
         on_kill_focus();
 	} else {
+#ifdef __WXOSX__
+        // check input value for minimum
+        if (m_opt.min > 0 && tmp_value < m_opt.min) {
+            wxSpinCtrl* spin = static_cast<wxSpinCtrl*>(window);
+            spin->SetValue(m_opt.min);
+            spin->GetText()->SetInsertionPointEnd();
+        }
+#endif
         on_change_field();
     }
+    suppress_propagation = false;
 }
 
 void SpinCtrl::msw_rescale()
@@ -739,7 +768,7 @@ void Choice::set_selection()
 		size_t idx = 0;
 		for (auto el : m_opt.enum_values)
 		{
-			if (el.compare(text_value) == 0)
+			if (el == text_value)
 				break;
 			++idx;
 		}
@@ -760,7 +789,7 @@ void Choice::set_selection()
 		size_t idx = 0;
 		for (auto el : m_opt.enum_values)
 		{
-			if (el.compare(text_value) == 0)
+			if (el == text_value)
 				break;
 			++idx;
 		}
@@ -775,7 +804,7 @@ void Choice::set_selection()
 		size_t idx = 0;
 		for (auto el : m_opt.enum_values)
 		{
-			if (el.compare(text_value) == 0)
+			if (el == text_value)
 				break;
 			++idx;
 		}
@@ -784,6 +813,7 @@ void Choice::set_selection()
 			field->SetSelection(idx);
 		break;
 	}
+    default: break;
 	}
 }
 
@@ -794,7 +824,7 @@ void Choice::set_value(const std::string& value, bool change_event)  //! Redunda
 	size_t idx=0;
 	for (auto el : m_opt.enum_values)
 	{
-		if (el.compare(value) == 0)
+		if (el == value)
 			break;
 		++idx;
 	}
@@ -850,10 +880,10 @@ void Choice::set_value(const boost::any& value, bool change_event)
 			text_value = wxString::Format(_T("%i"), int(boost::any_cast<int>(value)));
 		else
 			text_value = boost::any_cast<wxString>(value);
-		auto idx = 0;
+        size_t idx = 0;
 		for (auto el : m_opt.enum_values)
 		{
-			if (el.compare(text_value) == 0)
+			if (el == text_value)
 				break;
 			++idx;
 		}
@@ -946,7 +976,7 @@ boost::any& Choice::get_value()
 	wxString ret_str = field->GetValue();	
 
 	// options from right panel
-	std::vector <std::string> right_panel_options{ "support", "scale_unit" };
+	std::vector <std::string> right_panel_options{ "support", "pad", "scale_unit" };
 	for (auto rp_option: right_panel_options)
 		if (m_opt_id == rp_option)
 			return m_value = boost::any(ret_str);
@@ -1050,11 +1080,12 @@ void ColourPicker::BUILD()
 	// Validate the color
 	wxString clr_str(m_opt.get_default_value<ConfigOptionStrings>()->get_at(m_opt_idx));
 	wxColour clr(clr_str);
-	if (! clr.IsOk()) {
+	if (clr_str.IsEmpty() || !clr.IsOk()) {
 		clr = wxTransparentColour;
 	}
 
 	auto temp = new wxColourPickerCtrl(m_parent, wxID_ANY, clr, wxDefaultPosition, size);
+    temp->SetFont(Slic3r::GUI::wxGetApp().normal_font());
 	temp->SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	// 	// recast as a wxWindow to fit the calling convention
@@ -1065,15 +1096,58 @@ void ColourPicker::BUILD()
 	temp->SetToolTip(get_tooltip_text(clr_str));
 }
 
+void ColourPicker::set_undef_value(wxColourPickerCtrl* field)
+{
+    field->SetColour(wxTransparentColour);
+
+    wxButton* btn = dynamic_cast<wxButton*>(field->GetPickerCtrl());
+    wxBitmap bmp = btn->GetBitmap();
+    wxMemoryDC dc(bmp);
+    if (!dc.IsOk()) return;
+    dc.SetTextForeground(*wxWHITE);
+    dc.SetFont(wxGetApp().normal_font());
+
+    const wxRect rect = wxRect(0, 0, bmp.GetWidth(), bmp.GetHeight());
+    dc.DrawLabel("undef", rect, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL);
+
+    dc.SelectObject(wxNullBitmap);
+    btn->SetBitmapLabel(bmp);
+}
+
+void ColourPicker::set_value(const boost::any& value, bool change_event)
+{
+    m_disable_change_event = !change_event;
+    const wxString clr_str(boost::any_cast<wxString>(value));
+    auto field = dynamic_cast<wxColourPickerCtrl*>(window);
+
+    wxColour clr(clr_str);
+    if (clr_str.IsEmpty() || !clr.IsOk())
+        set_undef_value(field);
+    else
+        field->SetColour(clr);
+
+    m_disable_change_event = false;
+}
+
 boost::any& ColourPicker::get_value()
 {
-// 	boost::any m_value;
-
 	auto colour = static_cast<wxColourPickerCtrl*>(window)->GetColour();
-	auto clr_str = wxString::Format(wxT("#%02X%02X%02X"), colour.Red(), colour.Green(), colour.Blue());
-	m_value = clr_str.ToStdString();
-
+    if (colour == wxTransparentColour)
+        m_value = std::string("");
+    else {
+		auto clr_str = wxString::Format(wxT("#%02X%02X%02X"), colour.Red(), colour.Green(), colour.Blue());
+		m_value = clr_str.ToStdString();
+    }
 	return m_value;
+}
+
+void ColourPicker::msw_rescale()
+{
+    Field::msw_rescale();
+
+    wxColourPickerCtrl* field = dynamic_cast<wxColourPickerCtrl*>(window);
+    if (field->GetColour() == wxTransparentColour)
+        set_undef_value(field);
 }
 
 void PointCtrl::BUILD()

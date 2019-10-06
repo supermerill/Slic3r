@@ -17,7 +17,7 @@ namespace GUI {
 
 const double GLGizmoCut::Offset = 10.0;
 const double GLGizmoCut::Margin = 20.0;
-const std::array<float, 3> GLGizmoCut::GrabberColor = { 1.0, 0.5, 0.0 };
+const std::array<float, 4> GLGizmoCut::GrabberColor = { 1.0, 0.5, 0.0, 1.0 };
 
 GLGizmoCut::GLGizmoCut(GLCanvas3D& parent, const std::string& icon_filename, unsigned int sprite_id)
     : GLGizmoBase(parent, icon_filename, sprite_id)
@@ -141,6 +141,7 @@ void GLGizmoCut::on_render_input_window(float x, float y, float bottom_limit)
     m_imgui->set_next_window_pos(x, y, ImGuiCond_Always);
 
     m_imgui->set_next_window_bg_alpha(0.5f);
+
     m_imgui->begin(_(L("Cut")), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
     ImGui::PushItemWidth(m_imgui->scaled(5.0f));

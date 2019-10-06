@@ -366,7 +366,7 @@ void PresetBundle::load_selections(const AppConfig &config, const std::string &p
     this->filament_presets = { filaments.get_selected_preset_name() };
     for (unsigned int i = 1; i < 1000; ++ i) {
         char name[64];
-        sprintf(name, "filament_%d", i);
+        sprintf(name, "filament_%u", i);
         if (! config.has("presets", name))
             break;
         this->filament_presets.emplace_back(remove_ini_suffix(config.get("presets", name)));
@@ -388,11 +388,12 @@ void PresetBundle::export_selections(AppConfig &config)
     config.clear_section("presets");
     config.set("presets", "print",        prints.get_selected_preset_name());
     config.set("presets", "filament",     filament_presets.front());
-	for (int i = 1; i < filament_presets.size(); ++i) {
+    for (unsigned i = 1; i < filament_presets.size(); ++i) {
         char name[64];
-        sprintf(name, "filament_%d", i);
+        sprintf(name, "filament_%u", i);
         config.set("presets", name, filament_presets[i]);
     }
+
     config.set("presets", "sla_print",    sla_prints.get_selected_preset_name());
     config.set("presets", "sla_material", sla_materials.get_selected_preset_name());
     config.set("presets", "printer",      printers.get_selected_preset_name());
@@ -445,6 +446,7 @@ DynamicPrintConfig PresetBundle::full_config() const
 DynamicPrintConfig PresetBundle::full_config_secure() const
 {
     DynamicPrintConfig config = this->full_config();
+    config.erase("print_host");
     config.erase("printhost_apikey");
     config.erase("printhost_cafile");
     return config;
@@ -696,6 +698,7 @@ void PresetBundle::load_config_file_config(const std::string &name_or_path, bool
 		config.option<ConfigOptionString>("default_sla_print_profile", true);
 		config.option<ConfigOptionString>("default_sla_material_profile", true);
 		break;
+    default: break;
 	}
 
     // 1) Create a name from the file name.
@@ -763,8 +766,11 @@ void PresetBundle::load_config_file_config(const std::string &name_or_path, bool
                 }
             }
             // Load the configs into this->filaments and make them active.
-            this->filament_presets.clear();
-            for (size_t i = 0; i < configs.size(); ++ i) {
+            this->filament_presets = std::vector<std::string>(configs.size());
+            // To avoid incorrect selection of the first filament preset (means a value of Preset->m_idx_selected) 
+            // in a case when next added preset take a place of previosly selected preset,
+            // we should add presets from last to first
+            for (int i = (int)configs.size()-1; i >= 0; i--) {
                 DynamicPrintConfig &cfg = configs[i];
                 // Split the "compatible_printers_condition" and "inherits" from the cummulative vectors to separate filament presets.
                 cfg.opt_string("compatible_printers_condition", true) = compatible_printers_condition_values[i + 1];
@@ -774,7 +780,7 @@ void PresetBundle::load_config_file_config(const std::string &name_or_path, bool
                 Preset *loaded = nullptr;
                 if (is_external)
                     loaded = &this->filaments.load_external_preset(name_or_path, name,
-                        (i < old_filament_profile_names->values.size()) ? old_filament_profile_names->values[i] : "",
+                        (i < int(old_filament_profile_names->values.size())) ? old_filament_profile_names->values[i] : "",
                         std::move(cfg), i == 0);
                 else {
                     // Used by the config wizard when creating a custom setup.
@@ -789,7 +795,7 @@ void PresetBundle::load_config_file_config(const std::string &name_or_path, bool
                         new_name, std::move(cfg), i == 0);
                     loaded->save();
                 }
-                this->filament_presets.emplace_back(loaded->name);
+                this->filament_presets[i] = loaded->name;
             }
         }
         // 4) Load the project config values (the per extruder wipe matrix etc).
@@ -801,6 +807,7 @@ void PresetBundle::load_config_file_config(const std::string &name_or_path, bool
         load_preset(this->sla_materials, 1, "sla_material_settings_id");
         load_preset(this->printers,      2, "printer_settings_id");
         break;
+    default: break;
     }
 
 	this->update_compatible(false);
@@ -1256,7 +1263,7 @@ void PresetBundle::update_multi_material_filament_presets()
 
     // Now verify if wiping_volumes_matrix has proper size (it is used to deduce number of extruders in wipe tower generator):
     std::vector<double> old_matrix = this->project_config.option<ConfigOptionFloats>("wiping_volumes_matrix")->values;
-    size_t old_number_of_extruders = int(sqrt(old_matrix.size())+EPSILON);
+    size_t old_number_of_extruders = size_t(sqrt(old_matrix.size())+EPSILON);
     if (num_extruders != old_number_of_extruders) {
             // First verify if purging volumes presets for each extruder matches number of extruders
             std::vector<double>& extruders = this->project_config.option<ConfigOptionFloats>("wiping_volumes_extruders")->values;
@@ -1345,6 +1352,7 @@ void PresetBundle::update_compatible(bool select_other_if_incompatible)
                 [&prefered_sla_material_profile](const std::string& profile_name){ return profile_name == prefered_sla_material_profile; });
 		break;
 	}
+    default: break;
     }
 }
 
@@ -1484,11 +1492,19 @@ void PresetBundle::update_platter_filament_ui(unsigned int idx_extruder, GUI::Pr
      * and scale them in respect to em_unit value
      */
     const float scale_f = ui->em_unit() * 0.1f;
-    const int icon_height       = 16 * scale_f + 0.5f;
-    const int normal_icon_width = 16 * scale_f + 0.5f;
+
+    // To avoid the errors of number rounding for different combination of monitor configuration,
+    // let use scaled 8px, as a smallest icon unit 
+    const int icon_unit         = 8 * scale_f + 0.5f;
+    const int normal_icon_width = 2 * icon_unit;    //16 * scale_f + 0.5f;
+    const int thin_icon_width   = icon_unit;        //8 * scale_f + 0.5f;
+    const int wide_icon_width   = 3 * icon_unit;    //24 * scale_f + 0.5f;
+
     const int space_icon_width  = 2  * scale_f + 0.5f;
-    const int wide_icon_width   = 24 * scale_f + 0.5f;
-    const int thin_icon_width   = 8  * scale_f + 0.5f;
+
+    // To avoid asserts, each added bitmap to wxBitmapCombobox should be the same size, so
+    // set a bitmap height to m_bitmapLock->GetHeight()
+    const int icon_height       = m_bitmapLock->GetHeight();//2 * icon_unit;    //16 * scale_f + 0.5f;
 
 	for (int i = this->filaments().front().is_visible ? 0 : 1; i < int(this->filaments().size()); ++i) {
         const Preset &preset    = this->filaments.preset(i);
@@ -1523,7 +1539,9 @@ void PresetBundle::update_platter_filament_ui(unsigned int idx_extruder, GUI::Pr
             }
             // Paint a lock at the system presets.
             bmps.emplace_back(m_bitmapCache->mkclear(space_icon_width, icon_height));
-            bmps.emplace_back((preset.is_system || preset.is_default) ? *m_bitmapLock : m_bitmapCache->mkclear(normal_icon_width, icon_height));
+            // To avoid asserts, each added bitmap to wxBitmapCombobox should be the same size, so
+            // for nonsystem presets set a width of empty bitmap to m_bitmapLock->GetWidth()
+            bmps.emplace_back((preset.is_system || preset.is_default) ? *m_bitmapLock : m_bitmapCache->mkclear(m_bitmapLock->GetWidth(), icon_height));
 //                 (preset.is_dirty ? *m_bitmapLockOpen : *m_bitmapLock) : m_bitmapCache->mkclear(16, 16));
             bitmap = m_bitmapCache->insert(bitmap_key, bmps);
 		}

@@ -34,10 +34,8 @@ static const std::string CONFIG_UPDATE_WIKI_URL("https://github.com/prusa3d/Prus
 
 // MsgUpdateSlic3r
 
-MsgUpdateSlic3r::MsgUpdateSlic3r(const Semver &ver_current, const Semver &ver_online) :
-	MsgDialog(nullptr, _(L("Update available")), wxString::Format(_(L("New version of %s is available")), SLIC3R_APP_NAME)),
-	ver_current(ver_current),
-	ver_online(ver_online)
+MsgUpdateSlic3r::MsgUpdateSlic3r(const Semver &ver_current, const Semver &ver_online)
+	: MsgDialog(nullptr, _(L("Update available")), wxString::Format(_(L("New version of %s is available")), SLIC3R_APP_NAME))
 {
 	const bool dev_version = ver_online.prerelease() != nullptr;
 
@@ -113,7 +111,9 @@ MsgUpdateConfig::MsgUpdateConfig(const std::vector<Update> &updates) :
 
 		if (! update.comment.empty()) {
 			flex->Add(new wxStaticText(this, wxID_ANY, _(L("Comment:"))), 0, wxALIGN_RIGHT);
-			flex->Add(new wxStaticText(this, wxID_ANY, from_u8(update.comment)));
+			auto *update_comment = new wxStaticText(this, wxID_ANY, from_u8(update.comment));
+			update_comment->Wrap(CONTENT_WIDTH * wxGetApp().em_unit());
+			flex->Add(update_comment);
 		}
 
 		versions->Add(flex);

@@ -13,22 +13,6 @@ namespace Slic3r {
 
 const GCodePreviewData::Color GCodePreviewData::Color::Dummy(0.0f, 0.0f, 0.0f, 0.0f);
 
-GCodePreviewData::Color::Color()
-{
-    rgba[0] = 1.0f;
-    rgba[1] = 1.0f;
-    rgba[2] = 1.0f;
-    rgba[3] = 1.0f;
-}
-
-GCodePreviewData::Color::Color(float r, float g, float b, float a)
-{
-    rgba[0] = r;
-    rgba[1] = g;
-    rgba[2] = b;
-    rgba[3] = a;
-}
-
 std::vector<unsigned char> GCodePreviewData::Color::as_bytes() const
 {
     std::vector<unsigned char> ret;
@@ -137,7 +121,7 @@ GCodePreviewData::LegendItem::LegendItem(const std::string& text, const GCodePre
 {
 }
 
-const GCodePreviewData::Color GCodePreviewData::Extrusion::Default_Extrusion_Role_Colors[Num_Extrusion_Roles] =
+const GCodePreviewData::Color GCodePreviewData::Extrusion::Default_Extrusion_Role_Colors[erCount] =
 {
     Color(0.0f, 0.0f, 0.0f, 1.0f),   // erNone
     Color(1.0f, 0.0f, 0.0f, 1.0f),   // erPerimeter
@@ -156,44 +140,20 @@ const GCodePreviewData::Color GCodePreviewData::Extrusion::Default_Extrusion_Rol
     Color(0.0f, 0.0f, 0.0f, 1.0f)    // erMixed
 };
 
-// todo: merge with Slic3r::ExtrusionRole2String() from GCode.cpp
-const std::string GCodePreviewData::Extrusion::Default_Extrusion_Role_Names[Num_Extrusion_Roles]
-{
-    L("None"),
-    L("Perimeter"),
-    L("External perimeter"),
-    L("Overhang perimeter"),
-    L("Internal infill"),
-    L("Solid infill"),
-    L("Top solid infill"),
-    L("Bridge infill"),
-    L("Gap fill"),
-    L("Skirt"),
-    L("Support material"),
-    L("Support material interface"),
-    L("Wipe tower"),
-    L("Custom"),
-    L("Mixed")
-};
-
 const GCodePreviewData::Extrusion::EViewType GCodePreviewData::Extrusion::Default_View_Type = GCodePreviewData::Extrusion::FeatureType;
 
 void GCodePreviewData::Extrusion::set_default()
 {
     view_type = Default_View_Type;
 
-    ::memcpy((void*)role_colors, (const void*)Default_Extrusion_Role_Colors, Num_Extrusion_Roles * sizeof(Color));
+    ::memcpy((void*)role_colors, (const void*)Default_Extrusion_Role_Colors, erCount * sizeof(Color));
 
-    for (unsigned int i = 0; i < Num_Extrusion_Roles; ++i)
-    {
-        role_names[i] = Default_Extrusion_Role_Names[i];
-    }
+    for (unsigned int i = 0; i < erCount; ++i)
+        role_names[i] = ExtrusionEntity::role_to_string(ExtrusionRole(i));
 
     role_flags = 0;
-    for (unsigned int i = 0; i < Num_Extrusion_Roles; ++i)
-    {
+    for (unsigned int i = 0; i < erCount; ++i)
         role_flags |= 1 << i;
-    }
 }
 
 bool GCodePreviewData::Extrusion::is_role_flag_set(ExtrusionRole role) const
@@ -334,7 +294,7 @@ GCodePreviewData::Color GCodePreviewData::get_volumetric_rate_color(float rate) 
 
 void GCodePreviewData::set_extrusion_role_color(const std::string& role_name, float red, float green, float blue, float alpha)
 {
-    for (unsigned int i = 0; i < Extrusion::Num_Extrusion_Roles; ++i)
+    for (unsigned int i = 0; i < erCount; ++i)
     {
         if (role_name == extrusion.role_names[i])
         {

@@ -32,6 +32,7 @@
 #include "ButtonsDescription.hpp"
 #include "Event.hpp"
 #include "wxExtensions.hpp"
+#include "ConfigManipulation.hpp"
 
 namespace Slic3r {
 namespace GUI {
@@ -218,7 +219,7 @@ protected:
     int                 m_em_unit;
     // To avoid actions with no-completed Tab
     bool                m_complited { false };
-    ConfigOptionMode    m_mode = comSimple;
+    ConfigOptionMode    m_mode = comExpert; // to correct first Tab update_visibility() set mode to Expert
 
 public:
 	PresetBundle*		m_preset_bundle;
@@ -313,11 +314,13 @@ protected:
 	void			update_frequently_changed_parameters();
 	void			fill_icon_descriptions();
 	void			set_tooltips_text();
+
+    ConfigManipulation m_config_manipulation;
+    ConfigManipulation get_config_manipulation();
 };
 
 class TabPrint : public Tab
 {
-    bool is_msg_dlg_already_exist {false};
 public:
 	TabPrint(wxNotebook* parent) : 
 // 		Tab(parent, _(L("Print Settings")), L("print")) {}
@@ -340,6 +343,7 @@ class TabFilament : public Tab
 
     void            add_filament_overrides_page();
     void            update_filament_overrides_page();
+	void 			update_volumetric_flow_preset_hints();
 
     std::map<std::string, wxCheckBox*> m_overrides_options;
 public:
@@ -370,6 +374,7 @@ public:
 	wxButton*	m_serial_test_btn = nullptr;
 	ScalableButton*	m_print_host_test_btn = nullptr;
 	ScalableButton*	m_printhost_browse_btn = nullptr;
+	ScalableButton*	m_reset_to_filament_color = nullptr;
 
 	size_t		m_extruders_count;
 	size_t		m_extruders_count_old = 0;
