@@ -88,8 +88,8 @@ public:
 public:
     virtual ~Fill() {}
 
-    static Fill* new_from_type(const InfillPattern type);
-    static Fill* new_from_type(const std::string &type);
+    static Fill* new_from_type(const InfillPattern type, const PrintRegionConfig* config);
+    static Fill* new_from_type(const std::string &type, const PrintRegionConfig* config);
 
     void         set_bounding_box(const Slic3r::BoundingBox &bbox) { bounding_box = bbox; }
 

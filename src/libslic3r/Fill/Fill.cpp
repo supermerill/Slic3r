@@ -235,7 +235,7 @@ void make_fill(LayerRegion &layerm, ExtrusionEntityCollection &out)
         }
         
         // get filler object
-        std::unique_ptr<Fill> f = std::unique_ptr<Fill>(Fill::new_from_type(fill_pattern));
+        std::unique_ptr<Fill> f = std::unique_ptr<Fill>(Fill::new_from_type(fill_pattern, &layerm.region()->config()));
         f->set_bounding_box(layerm.layer()->object()->bounding_box());
         
         // calculate the actual flow we'll be using for this infill

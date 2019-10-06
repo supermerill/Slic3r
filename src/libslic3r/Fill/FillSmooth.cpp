@@ -47,7 +47,7 @@ namespace Slic3r {
     void FillSmooth::fillExPolygon(const int idx, ExtrusionEntityCollection &eec, const Surface &srf_to_fill, 
         const FillParams &params, const double volume){
         
-        std::unique_ptr<Fill> f2 = std::unique_ptr<Fill>(Fill::new_from_type(fillPattern[idx]));
+        std::unique_ptr<Fill> f2 = std::unique_ptr<Fill>(Fill::new_from_type(fillPattern[idx], config));
         f2->bounding_box = this->bounding_box;
         f2->spacing = this->spacing;
         f2->layer_id = this->layer_id;

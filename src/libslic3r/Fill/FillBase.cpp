@@ -18,7 +18,7 @@
 
 namespace Slic3r {
 
-Fill* Fill::new_from_type(const InfillPattern type)
+Fill* Fill::new_from_type(const InfillPattern type, const PrintRegionConfig* config)
 {
     switch (type) {
     case ipConcentric:          return new FillConcentric();
@@ -39,20 +39,20 @@ Fill* Fill::new_from_type(const InfillPattern type)
     case ipArchimedeanChords:   return new FillArchimedeanChords();
     case ipHilbertCurve:        return new FillHilbertCurve();
     case ipOctagramSpiral:      return new FillOctagramSpiral();
-    case ipSmooth:              return new FillSmooth();
-    case ipSmoothTriple:        return new FillSmoothTriple();
-    case ipSmoothHilbert:       return new FillSmoothHilbert();
+    case ipSmooth:              return new FillSmooth(config);
+    case ipSmoothTriple:        return new FillSmoothTriple(config);
+    case ipSmoothHilbert:       return new FillSmoothHilbert(config);
     case ipRectiWithPerimeter:  return new FillRectilinear2Peri();
     case ipSawtooth:            return new FillRectilinearSawtooth();
     default: throw std::invalid_argument("unknown type");
     }
 }
 
-Fill* Fill::new_from_type(const std::string &type)
+Fill* Fill::new_from_type(const std::string &type, const PrintRegionConfig* config)
 {
     const t_config_enum_values &enum_keys_map = ConfigOptionEnum<InfillPattern>::get_enum_values();
     t_config_enum_values::const_iterator it = enum_keys_map.find(type);
-    return (it == enum_keys_map.end()) ? nullptr : new_from_type(InfillPattern(it->second));
+    return (it == enum_keys_map.end()) ? nullptr : new_from_type(InfillPattern(it->second), config);
 }
 
 Polylines Fill::fill_surface(const Surface *surface, const FillParams &params)
