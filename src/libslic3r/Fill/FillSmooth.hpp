@@ -21,11 +21,11 @@ public:
         rolePass[0] = erSolidInfill;
         rolePass[1] = erTopSolidInfill;
         rolePass[2] = erSolidInfill;
-        percentWidth[0] = 0.9;
-        percentWidth[1] = 2;
+        percentWidth[0] = 1;
+        percentWidth[1] = 4;
         percentWidth[2] = 1.0;
-        percentFlow[0] = 0.7;
-        percentFlow[1] = 0.3;
+        percentFlow[0] = 1.00;
+        percentFlow[1] = 0.10;
         percentFlow[2] = 0.0;
         double extrusionMult = 1.0;
         percentFlow[0] *= extrusionMult;
