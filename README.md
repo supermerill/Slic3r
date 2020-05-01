@@ -32,7 +32,7 @@ The command line interface is a thin wrapper over `libslic3r`.
 * Better **Thin walls** (anchored inside the print, no more random bits at the ends).
 * Options to change holes dimensions and/or geometry, to print them at the right size.
 * Better overhangs (add perimeters if needed, slice them in opposite direction each layer).
-* Brim rework: many more options (inside, outside ounly, 'ears')
+* Brim rework: many more options (inside, outside only, 'ears')
 * Some new seam options, to help hide them.
 * Can join perimeters into a big one to avoid travel moves.
 * Many other little options and corrections (like the filled concentric pattern).
