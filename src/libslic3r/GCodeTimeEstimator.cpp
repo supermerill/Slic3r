@@ -1231,6 +1231,7 @@ namespace Slic3r {
             (dialect == gcfMarlin) ||
             (dialect == gcfKlipper) ||
             (dialect == gcfSmoothie) ||
+            (dialect == gcfLerdge) ||
             (dialect == gcfRepRap))
         {
             if (line.has_value('S', value))
@@ -1369,7 +1370,7 @@ namespace Slic3r {
 
         // see http://reprap.org/wiki/G-code#M203:_Set_maximum_feedrate
         // http://smoothieware.org/supported-g-codes
-        float factor = (dialect == gcfMarlin || dialect == gcfSmoothie) ? 1.0f : MMMIN_TO_MMSEC;
+        float factor = (dialect == gcfMarlin || dialect == gcfSmoothie || dialect == gcfLerdge) ? 1.0f : MMMIN_TO_MMSEC;
 
         if (line.has_x())
             set_axis_max_feedrate(X, line.x() * factor);

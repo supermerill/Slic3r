@@ -1478,6 +1478,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("mach3");
     def->enum_values.push_back("machinekit");
     def->enum_values.push_back("smoothie");
+    def->enum_labels.push_back("lerdge");
     def->enum_values.push_back("no-extrusion");
     def->enum_labels.push_back("RepRap/Sprinter");
     def->enum_labels.push_back("Repetier");
@@ -1489,6 +1490,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_labels.push_back("Mach3/LinuxCNC");
     def->enum_labels.push_back("Machinekit");
     def->enum_labels.push_back("Smoothie");
+    def->enum_labels.push_back("Lerdge");
     def->enum_labels.push_back(L("No extrusion"));
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionEnum<GCodeFlavor>(gcfRepRap));
@@ -4238,8 +4240,9 @@ std::string FullPrintConfig::validate()
         this->gcode_flavor.value != gcfRepRap &&
         this->gcode_flavor.value != gcfMarlin &&
         this->gcode_flavor.value != gcfMachinekit &&
-        this->gcode_flavor.value != gcfRepetier)
-        return "--use-firmware-retraction is only supported by Marlin, Smoothie, Repetier and Machinekit firmware";
+        this->gcode_flavor.value != gcfRepetier &&
+        this->gcode_flavor.value != gcfLerdge)
+        return "--use-firmware-retraction is only supported by Marlin, Smoothie, Repetier, Machinekit and Lerdge firmware";
 
     if (this->use_firmware_retraction.value)
         for (unsigned char wipe : this->wipe.values)

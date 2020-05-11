@@ -22,7 +22,7 @@ void GCodeWriter::apply_print_config(const PrintConfig &print_config)
     this->config.apply(print_config, true);
     m_extrusion_axis = this->config.get_extrusion_axis();
     m_single_extruder_multi_material = print_config.single_extruder_multi_material.value;
-    m_max_acceleration = std::lrint((print_config.gcode_flavor.value == gcfMarlin || print_config.gcode_flavor.value == gcfKlipper) ?
+    m_max_acceleration = std::lrint((print_config.gcode_flavor.value == gcfMarlin || print_config.gcode_flavor.value == gcfLerdge || print_config.gcode_flavor.value == gcfKlipper) ?
         print_config.machine_max_acceleration_extruding.values.front() : 0);
 }
 
@@ -49,7 +49,7 @@ std::string GCodeWriter::preamble()
         gcode << "G90 ; use absolute coordinates\n";
     }
     if (FLAVOR_IS(gcfRepRap) || FLAVOR_IS(gcfMarlin) || FLAVOR_IS(gcfTeacup) || FLAVOR_IS(gcfRepetier) || FLAVOR_IS(gcfSmoothie)
-		 || FLAVOR_IS(gcfKlipper)) {
+		 || FLAVOR_IS(gcfKlipper) || FLAVOR_IS(gcfLerdge)) {
         if (this->config.use_relative_e_distances) {
             gcode << "M83 ; use relative distances for extrusion\n";
         } else {

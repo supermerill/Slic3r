@@ -824,7 +824,7 @@ namespace DoExport {
 	    // If the following block is enabled for other firmwares than the Marlin, then the function
 	    // this->print_machine_envelope(file, print);
 	    // shall be adjusted as well to produce a G-code block compatible with the particular firmware flavor.
-	    if (config.gcode_flavor.value == gcfMarlin) {
+	    if (config.gcode_flavor.value == gcfMarlin || config.gcode_flavor.value == gcfLerdge) {
 	        normal_time_estimator.set_max_acceleration((float)config.machine_max_acceleration_extruding.values[0]);
 	        normal_time_estimator.set_retract_acceleration((float)config.machine_max_acceleration_retracting.values[0]);
 	        normal_time_estimator.set_minimum_feedrate((float)config.machine_min_extruding_rate.values[0]);
@@ -1661,7 +1661,7 @@ static bool custom_gcode_sets_temperature(const std::string &gcode, const int mc
 // Do not process this piece of G-code by the time estimator, it already knows the values through another sources.
 void GCode::print_machine_envelope(FILE *file, Print &print)
 {
-    if (print.config().gcode_flavor.value == gcfMarlin) {
+    if (print.config().gcode_flavor.value == gcfMarlin || print.config().gcode_flavor.value == gcfLerdge) {
         fprintf(file, "M201 X%d Y%d Z%d E%d ; sets maximum accelerations, mm/sec^2\n",
             int(print.config().machine_max_acceleration_x.values.front() + 0.5),
             int(print.config().machine_max_acceleration_y.values.front() + 0.5),

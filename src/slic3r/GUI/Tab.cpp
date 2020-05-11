@@ -2771,8 +2771,8 @@ PageShp TabPrinter::build_kinematics_page()
 {
     auto page = add_options_page(_(L("Machine limits")), "cog", true);
     ConfigOptionsGroupShp optgroup;
-    if (m_config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value != gcfMarlin) {
-        optgroup = page->new_optgroup(_(L("not-marlin firmware compensation"))); 
+    if (m_config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value != gcfMarlin && m_config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value != gcfLerdge) {
+        optgroup = page->new_optgroup(_(L("not-marlin/lerdge firmware compensation"))); 
         optgroup->append_single_option_line("time_estimation_compensation");
     }
 
