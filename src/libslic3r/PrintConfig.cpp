@@ -1478,7 +1478,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("mach3");
     def->enum_values.push_back("machinekit");
     def->enum_values.push_back("smoothie");
-    def->enum_labels.push_back("lerdge");
+    def->enum_values.push_back("lerdge");
     def->enum_values.push_back("no-extrusion");
     def->enum_labels.push_back("RepRap/Sprinter");
     def->enum_labels.push_back("Repetier");
