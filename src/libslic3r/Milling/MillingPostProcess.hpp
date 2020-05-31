@@ -4,6 +4,7 @@
 #include "../libslic3r.h"
 #include "../ExPolygonCollection.hpp"
 #include "../Polygon.hpp"
+#include "../BoundingBox.hpp"
 #include "../Layer.hpp"
 #include "../PrintConfig.hpp"
 #include "../SurfaceCollection.hpp"

@@ -94,7 +94,7 @@ public:
 	bool 		empty() const;
 	// Validate the print. Returns a {PrintValidationError::None,empty string} if valid, returns an error message if invalid.
 	// Call validate before calling start().
-	std::pair<PrintValidationError, std::string> validate();
+	std::pair<PrintBase::PrintValidationError, std::string> validate();
 
 	// Set the export path of the G-code.
 	// Once the path is set, the G-code 
