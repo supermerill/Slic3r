@@ -25,6 +25,7 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/path.hpp>
 #include "wxExtensions.hpp"
@@ -1083,7 +1084,8 @@ void Tab::update_preset_description_line()
         }
     }
 
-    m_parent_preset_description_line->SetText(description_line, false);
+    if (m_parent_preset_description_line)
+        m_parent_preset_description_line->SetText(description_line, false);
 
     if (m_detach_preset_btn)
         m_detach_preset_btn->Show(parent && parent->is_system && !preset.is_default);
@@ -1140,7 +1142,7 @@ bool Tab::create_pages(std::string setting_type_name, int idx_page)
         std::cout << "create settings  " << setting_type_name << "\n";
 
 #ifdef __WXMSW__
-    bool first_page = true;
+    bool no_page_yet = true;
     /* Workaround for correct layout of controls inside the created page:
      * In some _strange_ way we should we should imitate page resizing.
      */
@@ -1159,13 +1161,12 @@ bool Tab::create_pages(std::string setting_type_name, int idx_page)
     bool logs = false;
 
     //read file
-    std::ifstream filestream(ui_layout_file.c_str());
+    //std::ifstream filestream(ui_layout_file.c_str());
+    boost::filesystem::ifstream filestream(ui_layout_file);
     std::string full_line;
     while (std::getline(filestream, full_line)) {
-        if (full_line.size() < 4 || full_line[0] == '#') continue;
         //remove spaces
-        while (full_line.size() > 1 && (full_line.front() == ' ' || full_line.front() == '\t')) full_line = full_line.substr(1, full_line.size() - 1);
-        while (full_line.size() > 1 && (full_line.back() == ' ' || full_line.back() == '\t')) full_line = full_line.substr(0, full_line.size() - 1);
+        boost::algorithm::trim(full_line);
         if (full_line.size() < 4 || full_line[0] == '#') continue;
         //get main command
         if (boost::starts_with(full_line, "logs"))
@@ -1175,9 +1176,9 @@ bool Tab::create_pages(std::string setting_type_name, int idx_page)
         else if (boost::starts_with(full_line, "page"))
         {
 #ifdef __WXMSW__
-            if(!first_page)
+            if(!no_page_yet)
                 layout_page(current_page);
-            first_page = true;
+            no_page_yet = false;
 #endif
             if (in_line) {
                 current_group->append_line(current_line);
@@ -1667,12 +1668,13 @@ bool Tab::create_pages(std::string setting_type_name, int idx_page)
             std::wcout << "File DOES NOT exist!\n";
     }*/
 #ifdef __WXMSW__
-    layout_page(current_page);
+    if (!no_page_yet)
+        layout_page(current_page);
 #endif
 
     if(logs) std::cout << "END create settings  " << setting_type_name << "\n";
 
-    return true;
+    return !no_page_yet;
 }
 
 void TabPrint::build()
@@ -1700,10 +1702,10 @@ void TabPrint::update()
 
     m_config_manipulation.update_print_fff_config(m_config, true);
 
-    if (m_recommended_thin_wall_thickness_description_line != nullptr)
+    if (m_recommended_thin_wall_thickness_description_line)
         m_recommended_thin_wall_thickness_description_line->SetText(
             from_u8(PresetHints::recommended_thin_wall_thickness(*m_preset_bundle)));
-    if(m_top_bottom_shell_thickness_explanation != nullptr)
+    if(m_top_bottom_shell_thickness_explanation)
         m_top_bottom_shell_thickness_explanation->SetText(
             from_u8(PresetHints::top_bottom_shell_thickness_explanation(*m_preset_bundle)));
     Layout();
@@ -1725,10 +1727,10 @@ void TabPrint::update()
 
 void TabPrint::OnActivate()
 {
-    if (m_recommended_thin_wall_thickness_description_line != nullptr)
+    if (m_recommended_thin_wall_thickness_description_line)
         m_recommended_thin_wall_thickness_description_line->SetText(
             from_u8(PresetHints::recommended_thin_wall_thickness(*m_preset_bundle)));
-    if(m_top_bottom_shell_thickness_explanation != nullptr)
+    if(m_top_bottom_shell_thickness_explanation)
         m_top_bottom_shell_thickness_explanation->SetText(
         from_u8(PresetHints::top_bottom_shell_thickness_explanation(*m_preset_bundle)));
     Tab::OnActivate();
@@ -1756,7 +1758,7 @@ void TabFilament::add_filament_overrides_page()
             check_box->Bind(wxEVT_CHECKBOX, [this, optgroup, opt_key, opt_index](wxCommandEvent& evt) {
                 const bool is_checked = evt.IsChecked();
                 Field* field = optgroup->get_fieldc(opt_key, opt_index);
-                if (field != nullptr) {
+                if (field) {
                     field->toggle(is_checked);
                     if (is_checked)
                         field->set_last_meaningful_value();
@@ -1830,7 +1832,7 @@ void TabFilament::update_filament_overrides_page()
         m_overrides_options[opt_key]->SetValue(is_checked);
 
         Field* field = optgroup->get_fieldc(opt_key, extruder_idx);
-        if (field != nullptr)
+        if (field)
             field->toggle(is_checked);
     }
 }
@@ -1859,7 +1861,8 @@ void TabFilament::update_volumetric_flow_preset_hints()
     } catch (std::exception &ex) {
         text = _(L("Volumetric flow hints not available")) + "\n\n" + from_u8(ex.what());
     }
-    m_volumetric_speed_description_line->SetText(text);
+    if(m_volumetric_speed_description_line)
+        m_volumetric_speed_description_line->SetText(text);
 }
 
 void TabFilament::update()
@@ -1870,7 +1873,8 @@ void TabFilament::update()
     m_update_cnt++;
 
     wxString text = from_u8(PresetHints::cooling_description(m_presets->get_edited_preset()));
-    m_cooling_description_line->SetText(text);
+    if(m_cooling_description_line)
+        m_cooling_description_line->SetText(text);
     this->update_volumetric_flow_preset_hints();
     Layout();
 
@@ -1878,7 +1882,9 @@ void TabFilament::update()
     bool fan_always_on = cooling || m_config->opt_bool("fan_always_on", 0);
 
     //get_field("max_fan_speed")->toggle(m_config->opt_int("fan_below_layer_time", 0) > 0);
-    get_field("min_print_speed")->toggle(m_config->opt_int("slowdown_below_layer_time", 0) > 0);
+    Field* min_print_speed_field = get_field("min_print_speed");
+    if(min_print_speed_field)
+        min_print_speed_field->toggle(m_config->opt_int("slowdown_below_layer_time", 0) > 0);
 
     // hidden 'cooling', it's now deactivated.
     //for (auto el : { "max_fan_speed", "fan_below_layer_time", "slowdown_below_layer_time", "min_print_speed" })
@@ -1888,7 +1894,9 @@ void TabFilament::update()
     //for (auto el : { "min_fan_speed", "disable_fan_first_layers" })
     //    get_field(el)->toggle(fan_always_on);
 
-    get_field("max_fan_speed")->toggle(m_config->opt_int("fan_below_layer_time", 0) > 0 || m_config->opt_int("slowdown_below_layer_time", 0) > 0);
+    Field* max_fan_speed_field = get_field("max_fan_speed");
+    if (max_fan_speed_field)
+        max_fan_speed_field->toggle(m_config->opt_int("fan_below_layer_time", 0) > 0 || m_config->opt_int("slowdown_below_layer_time", 0) > 0);
 
     update_filament_overrides_page();
 
@@ -2234,7 +2242,7 @@ PageShp TabPrinter::build_kinematics_page()
  * */
 void TabPrinter::build_unregular_pages()
 {
-    size_t		n_before_extruders = 2;			//	Count of pages before Extruder pages
+    size_t		n_before_extruders = std::min(size_t(2), m_pages.size());			//	Count of pages before Extruder pages
     bool changed = false;
 
     /* ! Freeze/Thaw in this function is needed to avoid call OnPaint() for erased pages
@@ -2314,7 +2322,8 @@ void TabPrinter::build_unregular_pages()
     for (size_t extruder_idx = m_extruders_count_old; extruder_idx < m_extruders_count; ++extruder_idx) {
 
         if (this->create_pages("extruder.ui", extruder_idx)) {
-            std::rotate(m_pages.begin() + n_before_extruders + extruder_idx, m_pages.end() - 1, m_pages.end());
+            if (m_pages.size() > n_before_extruders + 1)
+                std::rotate(m_pages.begin() + n_before_extruders + extruder_idx, m_pages.end() - 1, m_pages.end());
             changed = true;
         }
 
@@ -2425,10 +2434,12 @@ void TabPrinter::update_fff()
 //	Freeze();
 
     bool en;
-    auto serial_speed = get_field("serial_speed");
-    if (serial_speed != nullptr) {
+    Field* field = get_field("serial_speed");
+    if (field) {
         en = !m_config->opt_string("serial_port").empty();
-        get_field("serial_speed")->toggle(en);
+        field = get_field("serial_speed");
+        if (field)
+            field->toggle(en);
         if (m_config->opt_int("serial_speed") != 0 && en)
             m_serial_test_btn->Enable();
         else
@@ -2437,25 +2448,34 @@ void TabPrinter::update_fff()
 
     {
         std::unique_ptr<PrintHost> host(PrintHost::get_print_host(m_config));
-        m_print_host_test_btn->Enable(!m_config->opt_string("print_host").empty() && host->can_test());
-        m_printhost_browse_btn->Enable(host->has_auto_discovery());
+        if(m_print_host_test_btn)
+            m_print_host_test_btn->Enable(!m_config->opt_string("print_host").empty() && host->can_test());
+        if(m_printhost_browse_btn)
+            m_printhost_browse_btn->Enable(host->has_auto_discovery());
     }
 
     bool have_multiple_extruders = m_extruders_count > 1;
-    get_field("toolchange_gcode")->toggle(have_multiple_extruders);
-    get_field("single_extruder_multi_material")->toggle(have_multiple_extruders);
+    field = get_field("toolchange_gcode");
+    if (field)
+        field->toggle(have_multiple_extruders);
+    field = get_field("single_extruder_multi_material");
+    if (field)
+        field->toggle(have_multiple_extruders);
 
     bool is_marlin_flavor = m_config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value == gcfMarlin;
 
     {
         Field *sm = get_field("silent_mode");
-        if (! is_marlin_flavor)
-            // Disable silent mode for non-marlin firmwares.
-            get_field("silent_mode")->toggle(false);
-        if (is_marlin_flavor)
-            sm->enable();
-        else
-            sm->disable();
+        if (sm) {
+            if (!is_marlin_flavor) {
+                // Disable silent mode for non-marlin firmwares.
+                sm->toggle(false);
+            }
+            if (is_marlin_flavor)
+                sm->enable();
+            else
+                sm->disable();
+        }
     }
     if (m_config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value == gcfKlipper)
         GCodeWriter::PausePrintCode = "PAUSE";
@@ -2477,32 +2497,47 @@ void TabPrinter::update_fff()
 
         // when using firmware retraction, firmware decides retraction length
         bool use_firmware_retraction = m_config->opt_bool("use_firmware_retraction");
-        get_field("retract_length", i)->toggle(!use_firmware_retraction);
+        field = get_field("retract_length", i);
+        if(field)
+            field->toggle(!use_firmware_retraction);
 
         // user can customize travel length if we have retraction length or we"re using
         // firmware retraction
-        get_field("retract_before_travel", i)->toggle(have_retract_length || use_firmware_retraction);
+        field = get_field("retract_before_travel", i);
+        if (field)
+            field->toggle(have_retract_length || use_firmware_retraction);
 
         // user can customize other retraction options if retraction is enabled
         bool retraction = (have_retract_length || use_firmware_retraction);
         std::vector<std::string> vec = { "retract_lift", "retract_layer_change" };
-        for (auto el : vec)
-            get_field(el, i)->toggle(retraction);
+        for (auto el : vec) {
+            field = get_field(el, i);
+            if (field)
+                field->toggle(retraction);
+        }
 
         // retract lift above / below only applies if using retract lift
         vec.resize(0);
         vec = { "retract_lift_above", "retract_lift_below", "retract_lift_not_last_layer" };
-        for (auto el : vec)
-            get_field(el, i)->toggle(retraction && m_config->opt_float("retract_lift", i) > 0);
+        for (auto el : vec) {
+            field = get_field(el, i);
+            if (field)
+                field->toggle(retraction && m_config->opt_float("retract_lift", i) > 0);
+        }
 
         // some options only apply when not using firmware retraction
         vec.resize(0);
         vec = { "retract_speed", "deretract_speed", "retract_before_wipe", "retract_restart_extra", "wipe" };
-        for (auto el : vec)
-            get_field(el, i)->toggle(retraction && !use_firmware_retraction);
+        for (auto el : vec) {
+            field = get_field(el, i);
+            if (field)
+                field->toggle(retraction && !use_firmware_retraction);
+        }
 
         bool wipe = m_config->opt_bool("wipe", i);
-        get_field("retract_before_wipe", i)->toggle(wipe);
+        field = get_field("retract_before_wipe", i);
+        if (field)
+            field->toggle(wipe);
 
         if (use_firmware_retraction && wipe) {
             wxMessageDialog dialog(parent(),
@@ -2523,16 +2558,22 @@ void TabPrinter::update_fff()
             load_config(new_conf);
         }
 
-        get_field("retract_length_toolchange", i)->toggle(have_multiple_extruders);
+        field = get_field("retract_length_toolchange", i);
+        if (field)
+            field->toggle(have_multiple_extruders);
 
         bool toolchange_retraction = m_config->opt_float("retract_length_toolchange", i) > 0;
-        get_field("retract_restart_extra_toolchange", i)->toggle
-            (have_multiple_extruders && toolchange_retraction);
+        field = get_field("retract_restart_extra_toolchange", i);
+        if (field)
+            field->toggle(have_multiple_extruders && toolchange_retraction);
     }
     if (m_has_single_extruder_MM_page) {
         bool have_advanced_wipe_volume = m_config->opt_bool("wipe_advanced");
-        for (auto el : { "wipe_advanced_nozzle_melted_volume", "wipe_advanced_multiplier", "wipe_advanced_algo" })
-            get_field(el)->toggle(have_advanced_wipe_volume);
+        for (auto el : { "wipe_advanced_nozzle_melted_volume", "wipe_advanced_multiplier", "wipe_advanced_algo" }) {
+            Field *field = get_field(el);
+            if (field)
+                field->toggle(have_advanced_wipe_volume);
+        }
     }
 //    Thaw();
 }
