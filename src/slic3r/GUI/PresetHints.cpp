@@ -319,6 +319,9 @@ std::string PresetHints::recommended_thin_wall_thickness(const PresetBundle &pre
         *print_config.opt<ConfigOptionFloatOrPercent>("perimeter_extrusion_width"), 
         nozzle_diameter, layer_height, false);
 
+    //set spacing
+    external_perimeter_flow.spacing_ratio = print_config.opt<ConfigOptionPercent>("external_perimeter_overlap")->get_abs_value(1);
+    perimeter_flow.spacing_ratio = print_config.opt<ConfigOptionPercent>("perimeter_overlap")->get_abs_value(1);
     
     if (num_perimeters > 0) {
         int num_lines = std::min(num_perimeters, 6);

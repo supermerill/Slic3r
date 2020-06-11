@@ -54,16 +54,18 @@ group:Advanced
 		setting:seam_position
 		setting:seam_travel
 	end_line
-	line:External Perimeter
-		setting:external_perimeters_first
-		setting:external_perimeters_vase
-		setting:external_perimeters_nothole
-		setting:external_perimeters_hole
-	end_line
 	line:Looping perimeter
 		setting:perimeter_loop
 		setting:perimeter_loop_seam
 	end_line
+group: External perimeter first
+	setting:label$Activate:external_perimeters_first
+	line:Apply on
+		setting:external_perimeters_nothole
+		setting:external_perimeters_hole
+	end_line
+	setting:external_perimeters_vase
+	setting:perimeter_bonding
 
 page:Slicing:layers
 group:Layer height
@@ -230,9 +232,12 @@ group:Extrusion width
 	setting:top_infill_extrusion_width
 	setting:support_material_extrusion_width
 group:Overlap
+	line:Perimeter overlap
+		setting:label$External:external_perimeter_overlap
+		setting:label$Inner:perimeter_overlap
+	end_line
 	setting:infill_overlap
 	setting:bridge_overlap
-	setting:external_perimeter_overlap
 group:Flow
 	line:Flow ratio
 		setting:bridge_flow_ratio

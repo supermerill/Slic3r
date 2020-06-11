@@ -172,7 +172,7 @@ float Flow::spacing() const
     float min_flow_spacing = this->width - this->height * (1. - 0.25 * PI);
     float res = this->width - PERIMETER_LINE_OVERLAP_FACTOR * (this->width - min_flow_spacing);
 #else
-    float res = float(this->bridge ? (this->width + BRIDGE_EXTRA_SPACING_MULT * nozzle_diameter) : (this->width - this->height * (1. - 0.25 * PI)));
+    float res = float(this->bridge ? (this->width + BRIDGE_EXTRA_SPACING_MULT * nozzle_diameter) : (this->width - this->height * (1. - 0.25 * PI) * spacing_ratio));
 #endif
 //    assert(res > 0.f);
 	if (res <= 0.f)

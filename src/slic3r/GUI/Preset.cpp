@@ -536,6 +536,8 @@ const std::vector<std::string>& Preset::print_options()
         "print_extrusion_multiplier",
         "external_perimeter_cut_corners",
         "external_perimeter_overlap",
+        "perimeter_bonding",
+        "perimeter_overlap",
         "milling_after_z",
         "milling_post_process",
         "milling_extra_size",

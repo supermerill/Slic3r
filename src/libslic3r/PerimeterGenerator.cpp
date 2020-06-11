@@ -37,6 +37,10 @@ namespace Slic3r {
 
 void PerimeterGenerator::process()
 {
+    //set spacing
+    this->perimeter_flow.spacing_ratio = this->object_config->perimeter_overlap.get_abs_value(1);
+    this->ext_perimeter_flow.spacing_ratio = this->object_config->external_perimeter_overlap.get_abs_value(1);
+
     // other perimeters
     this->_mm3_per_mm               = this->perimeter_flow.mm3_per_mm();
     coord_t perimeter_width         = this->perimeter_flow.scaled_width();
@@ -50,22 +54,30 @@ void PerimeterGenerator::process()
     coord_t ext_perimeter_spacing   = this->ext_perimeter_flow.scaled_spacing();
     //spacing between external perimeter and the second
     coord_t ext_perimeter_spacing2  = this->ext_perimeter_flow.scaled_spacing(this->perimeter_flow);
-    //external_perimeter_overlap effect: change distance between the extrenal periemter and the other ones.
-    if (this->config->external_perimeter_overlap.get_abs_value(1) != 1) {
-        //choose between the normal spacing and "don't touch it".
-        ext_perimeter_spacing2 =
-            ext_perimeter_spacing2 * this->config->external_perimeter_overlap.get_abs_value(1)
-            + (ext_perimeter_width + perimeter_width) * 0.5f * (1 - this->config->external_perimeter_overlap.get_abs_value(1));
-    }
-    
+
     // overhang perimeters
-    this->_mm3_per_mm_overhang      = this->overhang_flow.mm3_per_mm();
-    
+    this->_mm3_per_mm_overhang = this->overhang_flow.mm3_per_mm();
+
     // solid infill
-    coord_t solid_infill_spacing    = this->solid_infill_flow.scaled_spacing();
+    coord_t solid_infill_spacing = this->solid_infill_flow.scaled_spacing();
+
+    //infill / perimeter
+    coord_t înfill_peri_overlap = (coord_t)scale_(this->config->get_abs_value("infill_overlap", unscale<coordf_t>(perimeter_spacing + solid_infill_spacing) / 2));
+    // infill gap to add vs periemter (useful if using perimeter bonding)
+    coord_t infill_gap = 0;
+
 
     // nozzle diameter
     const double nozzle_diameter = this->print_config->nozzle_diameter.get_at(this->config->perimeter_extruder - 1);
+
+    // perimeter conding set.
+    if (this->perimeter_flow.spacing_ratio == 1
+        && this->ext_perimeter_flow.spacing_ratio == 1
+        && this->config->external_perimeters_first
+        && this->object_config->perimeter_bonding.value > 0) {
+        infill_gap = (1 - this->object_config->perimeter_bonding.get_abs_value(1)) * ext_perimeter_spacing;
+        ext_perimeter_spacing2 -= infill_gap;
+    }
     
     // Calculate the minimum required spacing between two adjacent traces.
     // This should be equal to the nominal flow spacing but we experiment
@@ -88,7 +100,7 @@ void PerimeterGenerator::process()
         this->_lower_slices_p = offset(*this->lower_slices, double(scale_(config->overhangs_width.get_abs_value(nozzle_diameter))));
     }
 
-    // have to grown the periemters if mill post-process
+    // have to grown the perimeters if mill post-process
     MillingPostProcess miller(this->slices, this->lower_slices, config, object_config, print_config);
     bool have_to_grow_for_miller =  miller.can_be_milled(layer) && config->milling_extra_size.get_abs_value(1) > 0;
     ExPolygons unmillable;
@@ -218,7 +230,6 @@ void PerimeterGenerator::process()
                                     //it's not dangerous as it will be intersected by 'unsupported' later
                                     //FIXME: add overlap in this->fill_surfaces->append
                                     //FIXME: it overlap inside unsuppported not-bridgeable area!
-                                    double overlap = scale_(this->config->get_abs_value("infill_overlap", unscale<double>(perimeter_spacing)));
 
                                     //bridgeable_simplified = offset2_ex(bridgeable_simplified, (double)-perimeter_spacing, (double)perimeter_spacing * 2);
                                     //ExPolygons unbridgeable = offset_ex(diff_ex(unsupported, bridgeable_simplified), perimeter_spacing * 3 / 2);
@@ -391,7 +402,7 @@ void PerimeterGenerator::process()
                 if ( this->config->extra_perimeters_overhangs && !last.empty() && !overhangs_unsupported.empty()) {
                     overhangs_unsupported = intersection_ex(overhangs_unsupported, last, true);
                     if (overhangs_unsupported.size() > 0) {
-                        //please don't stop adding periemter yet.
+                        //please don't stop adding perimeter yet.
                         has_overhang = true;
                     }
                 }
@@ -456,9 +467,9 @@ void PerimeterGenerator::process()
                             ExPolygons thin = offset_ex(half_thin, double(min_width / 2));
                             assert(thin.size() <= 1);
                             if (thin.empty()) continue;
-                            coord_t overlap = (coord_t)scale_(this->config->thin_walls_overlap.get_abs_value(this->ext_perimeter_flow.nozzle_diameter));
+                            coord_t thin_walls_overlap = (coord_t)scale_(this->config->thin_walls_overlap.get_abs_value(this->ext_perimeter_flow.nozzle_diameter));
                             ExPolygons anchor = intersection_ex(offset_ex(half_thin, double(min_width / 2) +
-                                (float)(overlap), jtSquare), no_thin_zone, true);
+                                (float)(thin_walls_overlap), jtSquare), no_thin_zone, true);
                             ExPolygons bounds = union_ex(thin, anchor, true);
                             for (ExPolygon &bound : bounds) {
                                 if (!intersection_ex(thin[0], bound).empty()) {
@@ -472,7 +483,7 @@ void PerimeterGenerator::process()
                                             min_width, coord_t(this->layer->height) };
                                         ma.use_bounds(bound)
                                             .use_min_real_width((coord_t)scale_(this->ext_perimeter_flow.nozzle_diameter))
-                                            .use_tapers(overlap)
+                                            .use_tapers(thin_walls_overlap)
                                             .build(thin_walls);
                                     }
                                     break;
@@ -818,7 +829,7 @@ void PerimeterGenerator::process()
                 last = diff_ex(to_polygons(last), gap_fill.polygons_covered_by_width(10.f));
             }
         }
-        //TODO: if a gapfill extrusion is a loop and with width always >= periemter width then change the type to perimeter and put it at the right place in the loops vector.
+        //TODO: if a gapfill extrusion is a loop and with width always >= perimeter width then change the type to perimeter and put it at the right place in the loops vector.
 
         // create one more offset to be used as boundary for fill
         // we offset by half the perimeter spacing (to get to the actual infill boundary)
@@ -832,9 +843,8 @@ void PerimeterGenerator::process()
                 // two or more loops?
                 perimeter_spacing / 2;
         // only apply infill overlap if we actually have one perimeter
-        coord_t overlap = 0;
-        if (inset > 0) {
-            overlap = (coord_t)scale_(this->config->get_abs_value("infill_overlap", unscale<coordf_t>(inset + solid_infill_spacing / 2)));
+        if (inset == 0) {
+            înfill_peri_overlap = 0;
         }
         // simplify infill contours according to resolution
         Polygons not_filled_p;
@@ -846,14 +856,14 @@ void PerimeterGenerator::process()
         // append infill areas to fill_surfaces
         //auto it_surf = this->fill_surfaces->surfaces.end();
         ExPolygons infill_exp = offset2_ex(not_filled_exp,
-            -inset - min_perimeter_infill_spacing / 2 + overlap,
+            -inset - min_perimeter_infill_spacing / 2 + înfill_peri_overlap - infill_gap,
             (float)min_perimeter_infill_spacing / 2);
         this->fill_surfaces->append(infill_exp, stPosInternal | stDensSparse);
             
-        if (overlap != 0) {
+        if (înfill_peri_overlap != 0) {
             ExPolygons polyWithoutOverlap = offset2_ex(
                 not_filled_exp,
-                -inset - min_perimeter_infill_spacing / 2,
+                -inset - infill_gap - min_perimeter_infill_spacing / 2,
                 (float) min_perimeter_infill_spacing / 2);
             this->fill_no_overlap.insert(this->fill_no_overlap.end(), polyWithoutOverlap.begin(), polyWithoutOverlap.end());
         }

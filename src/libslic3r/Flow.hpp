@@ -65,6 +65,8 @@ public:
     float nozzle_diameter;
     // Is it a bridge?
     bool  bridge;
+    // % of spacing taken into account 1=>all/default, 0=> width=spacing
+    float spacing_ratio = 1;
     
     Flow(float _w, float _h, float _nd, bool _bridge = false) :
         width(_w), height(_h), nozzle_diameter(_nd), bridge(_bridge) {}

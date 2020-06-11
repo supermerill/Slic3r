@@ -729,11 +729,44 @@ void PrintConfigDef::init_fff_params()
     def->label = L("external perimeter overlap");
     def->full_label = L("Ext. peri. overlap");
     def->category = OptionCategory::width;
-    def->tooltip = L("This perimeter allow you to reduce the overlap between the perimeters and the external one, to reduce the impact of the perimeters artifacts."
+    def->tooltip = L("This setting allow you to reduce the overlap between the perimeters and the external one, to reduce the impact of the perimeters artifacts."
+        " 100% means that no gaps is left, and 0% means that the external perimeter isn't contributing to the overlap with the 'inner' one."
         "\nIt's very experimental, please report about the usefulness. It may be removed if there is no use of it.");
     def->sidetext = L("%");
+    def->min = 0;
+    def->max = 100;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionPercent(100));
+
+    def = this->add("perimeter_overlap", coPercent);
+    def->label = L("perimeter overlap");
+    def->full_label = L("Perimeter overlap");
+    def->category = OptionCategory::width;
+    def->tooltip = L("This setting allow you to reduce the overlap between the perimeters, to reduce the impact of the perimeters artifacts."
+        " 100% means that no gaps is left, and 0% means that perimeters are not touching each other anymore."
+        "\nIt's very experimental, please report about the usefulness. It may be removed if there is no use for it.");
+    def->sidetext = L("%");
+    def->min = 0;
+    def->max = 100;
+    def->mode = comExpert;
+    def->set_default_value(new ConfigOptionPercent(100));
+
+    def = this->add("perimeter_bonding", coPercent);
+    def->label = L("Better bonding");
+    def->full_label = L("Perimeter bonding");
+    def->category = OptionCategory::perimeter;
+    def->tooltip = L("This setting may degrad a bit the quality of your external perimeter, in exchange for a better bonding between perimeters."
+        "Use it if you have great difficulties with perimeter bonding, for example with high temperature filaments."
+        "\nThis percentage is the % of overlap between perimeters, a bit like perimeter_overlap and external_perimeter_overlap, but in reverse."
+        " You have to set perimeter_overlap and external_perimeter_overlap to 100%, or this setting has no effect."
+        " 0: no effect, 50%: half of the nozzle will be over an already extruded perimeter while extruding a new one"
+        ", unless it's an external ones)."
+        "\nIt's very experimental, please report about the usefulness. It may be removed if there is no use for it.");
+    def->sidetext = L("%");
+    def->min = 0;
+    def->max = 50;
+    def->mode = comExpert;
+    def->set_default_value(new ConfigOptionPercent(0));
 
     def = this->add("external_perimeter_speed", coFloatOrPercent);
     def->label = L("External");
@@ -2022,7 +2055,7 @@ void PrintConfigDef::init_fff_params()
     def->label = L("minimum top width for infill");
     def->category = OptionCategory::speed;
     def->tooltip = L("If a top surface has to be printed and it's partially covered by an other layer, it won't be considered at a top layer where his width is below this value."
-        " This can be useful to not let the 'one perimeter on top' trigger on surface that should be covered only by periemters."
+        " This can be useful to not let the 'one perimeter on top' trigger on surface that should be covered only by perimeters."
         " This value can be a mm or a % of the perimeter extrusion width.");
     def->sidetext = L("mm or %");
     def->ratio_over = "perimeter_extrusion_width";
