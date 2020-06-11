@@ -1436,7 +1436,7 @@ void ObjectList::show_settings(const wxDataViewItem settings_item)
 wxMenu* ObjectList::append_submenu_add_generic(wxMenu* menu, const ModelVolumeType type) {
     auto sub_menu = new wxMenu;
 
-    if (wxGetApp().get_mode() == comExpert && type != ModelVolumeType::INVALID) {
+    if ( (wxGetApp().get_mode() == comExpert || wxGetApp().app_config->get("objects_always_expert") == "1") && type != ModelVolumeType::INVALID) {
     append_menu_item(sub_menu, wxID_ANY, _(L("Load")) + " " + dots, "",
         [this, type](wxCommandEvent&) { load_subobject(type); }, "", menu);
     sub_menu->AppendSeparator();
@@ -1466,13 +1466,13 @@ void ObjectList::append_menu_items_add_volume(wxMenu* menu)
 
     wxWindow* parent = wxGetApp().plater();
 
-    if (mode == comAdvanced) {
+    if (mode == comAdvanced && wxGetApp().app_config->get("objects_always_expert") != "1") {
         append_menu_item(menu, wxID_ANY, _(ADD_VOLUME_MENU_ITEMS[int(ModelVolumeType::MODEL_PART)].first), "",
             [this](wxCommandEvent&) { load_subobject(ModelVolumeType::MODEL_PART); }, 
             ADD_VOLUME_MENU_ITEMS[int(ModelVolumeType::MODEL_PART)].second, nullptr,
             [this]() { return is_instance_or_object_selected(); }, parent);
     }
-    if (mode == comSimple) {
+    if (mode == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1") {
         append_menu_item(menu, wxID_ANY, _(ADD_VOLUME_MENU_ITEMS[int(ModelVolumeType::SUPPORT_ENFORCER)].first), "",
             [this](wxCommandEvent&) { load_generic_subobject(L("Box"), ModelVolumeType::SUPPORT_ENFORCER); },
             ADD_VOLUME_MENU_ITEMS[int(ModelVolumeType::SUPPORT_ENFORCER)].second, nullptr,
@@ -1485,7 +1485,7 @@ void ObjectList::append_menu_items_add_volume(wxMenu* menu)
         return;
     }
     
-    for (size_t type = (mode == comExpert ? 0 : 1) ; type < ADD_VOLUME_MENU_ITEMS.size(); type++)
+    for (size_t type = (mode == comExpert || wxGetApp().app_config->get("objects_always_expert") == "1" ? 0 : 1) ; type < ADD_VOLUME_MENU_ITEMS.size(); type++)
     {
         auto& item = ADD_VOLUME_MENU_ITEMS[type];
 
@@ -1565,7 +1565,7 @@ wxMenuItem* ObjectList::append_menu_item_settings(wxMenu* menu_)
         return nullptr;
 
     const ConfigOptionMode mode = wxGetApp().get_mode();
-    if (mode == comSimple)
+    if (mode == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1")
         return nullptr;
 
     // Create new items for settings popupmenu
@@ -1583,7 +1583,7 @@ wxMenuItem* ObjectList::append_menu_item_settings(wxMenu* menu_)
                                     (item_type == itUndef && selection.is_single_full_object()); 
     create_freq_settings_popupmenu(menu, is_object_settings);
 
-    if (mode == comAdvanced)
+    if (mode == comAdvanced && wxGetApp().app_config->get("objects_always_expert") != "1")
         return nullptr;
 
     menu->SetSecondSeparator();

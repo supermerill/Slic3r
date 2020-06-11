@@ -100,6 +100,13 @@ void PreferencesDialog::build()
 	option = Option (def,"show_incompatible_presets");
 	m_optgroup_general->append_single_option_line(option);
 
+    def.label = L("Main GUI always in expert mode");
+    def.type = coBool;
+    def.tooltip = L("If enabled, the gui will be in expert mode even if the simple or advanced mode is selected (but not the setting tabs).");
+    def.set_default_value(new ConfigOptionBool{ app_config->get("objects_always_expert") == "1" });
+    option = Option(def, "objects_always_expert");
+    m_optgroup_general->append_single_option_line(option);
+
 	m_optgroup_paths = std::make_shared<ConfigOptionsGroup>(this, _(L("General")));
 	m_optgroup_paths->title_width = 10;
 	m_optgroup_paths->m_on_change = [this](t_config_option_key opt_key, boost::any value) {
@@ -129,12 +136,12 @@ void PreferencesDialog::build()
 		m_values[opt_key] = boost::any_cast<bool>(value) ? "1" : "0";
 	};
 
-	def.label = L("Use perspective camera");
-	def.type = coBool;
-	def.tooltip = L("If enabled, use perspective camera. If not enabled, use orthographic camera.");
-	def.set_default_value(new ConfigOptionBool{ app_config->get("use_perspective_camera") == "1" });
-	option = Option(def, "use_perspective_camera");
-	m_optgroup_camera->append_single_option_line(option);
+    def.label = L("Use perspective camera");
+    def.type = coBool;
+    def.tooltip = L("If enabled, use perspective camera. If not enabled, use orthographic camera.");
+    def.set_default_value(new ConfigOptionBool{ app_config->get("use_perspective_camera") == "1" });
+    option = Option(def, "use_perspective_camera");
+    m_optgroup_camera->append_single_option_line(option);
 
 	def.label = L("Use free camera");
 	def.type = coBool;

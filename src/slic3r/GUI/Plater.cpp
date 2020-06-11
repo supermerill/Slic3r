@@ -1044,7 +1044,7 @@ void Sidebar::update_mode_sizer() const
 void Sidebar::update_reslice_btn_tooltip() const
 {
     wxString tooltip = wxString("Slice") + " [" + GUI::shortkey_ctrl_prefix() + "R]";
-    if (m_mode != comSimple)
+    if (m_mode != comSimple || wxGetApp().app_config->get("objects_always_expert") == "1")
         tooltip += wxString("\n") + _(L("Hold Shift to Slice & Export G-code"));
     p->btn_reslice->SetToolTip(tooltip);
 }
@@ -1133,7 +1133,7 @@ void Sidebar::update_objects_list_extruder_column(size_t extruders_count)
 void Sidebar::show_info_sizer()
 {
     if (!p->plater->is_single_full_object_selection() ||
-        m_mode < comExpert ||
+        (m_mode < comExpert && wxGetApp().app_config->get("objects_always_expert") != "1") ||
         p->plater->model().objects.empty()) {
         p->object_info->Show(false);
         return;
@@ -1378,7 +1378,7 @@ void Sidebar::update_mode()
 
     wxWindowUpdateLocker noUpdates(this);
 
-    p->object_list->get_sizer()->Show(m_mode > comSimple);
+    p->object_list->get_sizer()->Show(m_mode > comSimple || wxGetApp().app_config->get("objects_always_expert") == "1");
 
     p->object_list->unselect_objects();
     p->object_list->update_selections();
@@ -2458,7 +2458,7 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
                     }
                 }
             }
-            else if ((wxGetApp().get_mode() == comSimple) && (type_3mf || type_any_amf) && model_has_advanced_features(model)) {
+            else if ((wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") == "0") && (type_3mf || type_any_amf) && model_has_advanced_features(model)) {
                 wxMessageDialog msg_dlg(q, _(L("This file cannot be loaded in a simple mode. Do you want to switch to an advanced mode?"))+"\n",
                     _(L("Detected advanced data")), wxICON_WARNING | wxYES | wxNO);
                 if (msg_dlg.ShowModal() == wxID_YES)
@@ -3220,7 +3220,7 @@ unsigned int Plater::priv::update_background_process(bool force_validation, bool
         sidebar->set_btn_label(ActionButtonType::abExport, _(label_btn_export));
         sidebar->set_btn_label(ActionButtonType::abSendGCode, _(label_btn_send));
 
-        const wxString slice_string = background_process.running() && wxGetApp().get_mode() == comSimple ?
+        const wxString slice_string = background_process.running() && wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1" ?
                                       _(L("Slicing")) + dots : _(L("Slice now"));
         sidebar->set_btn_label(ActionButtonType::abReslice, slice_string);
 
@@ -3799,11 +3799,11 @@ void Plater::priv::on_process_completed(wxCommandEvent &evt)
 	
 
     if (canceled) {
-        if (wxGetApp().get_mode() == comSimple)
+        if (wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1")
             sidebar->set_btn_label(ActionButtonType::abReslice, "Slice now");
         show_action_buttons(true);
     }
-    else if (this->writing_to_removable_device || wxGetApp().get_mode() == comSimple)
+    else if (this->writing_to_removable_device || (wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1"))
 		show_action_buttons(false);
     this->writing_to_removable_device = false;
 }
@@ -3887,7 +3887,7 @@ void Plater::priv::on_right_click(RBtnEvent& evt)
              * Suppress to show those items for a Simple mode
              */
             const MenuIdentifier id = printer_technology == ptSLA ? miObjectSLA : miObjectFFF;
-            if (wxGetApp().get_mode() == comSimple) {
+            if (wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1") {
                 if (menu->FindItem(_(L("Add instance"))) != wxNOT_FOUND)
                 {
                     /* Detach an items from the menu, but don't delete them
@@ -4120,7 +4120,7 @@ bool Plater::priv::complit_init_object_menu()
         [this](wxCommandEvent&) { split_volume(); }, "split_parts_SMALL",   &object_menu, [this]() { return can_split(); }, q);
 
     append_submenu(&object_menu, split_menu, wxID_ANY, _(L("Split")), _(L("Split the selected object")), "",
-        [this]() { return can_split() && wxGetApp().get_mode() > comSimple; }, q);
+        [this]() { return can_split() && wxGetApp().get_mode() > comSimple || wxGetApp().app_config->get("objects_always_expert") == "1"; }, q);
     object_menu.AppendSeparator();
 
     // Layers Editing for object
@@ -4611,7 +4611,7 @@ void Plater::priv::update_after_undo_redo(const UndoRedo::Snapshot& snapshot, bo
 
     wxGetApp().obj_list()->update_after_undo_redo();
 
-    if (wxGetApp().get_mode() == comSimple && model_has_advanced_features(this->model)) {
+    if (wxGetApp().get_mode() == comSimple && model_has_advanced_features(this->model) && wxGetApp().app_config->get("objects_always_expert") != "1") {
         // If the user jumped to a snapshot that require user interface with advanced features, switch to the advanced mode without asking.
         // There is a little risk of surprising the user, as he already must have had the advanced or expert mode active for such a snapshot to be taken.
         Slic3r::GUI::wxGetApp().save_mode(comAdvanced);
@@ -5200,7 +5200,7 @@ void Plater::reslice()
 
     if (p->background_process.running())
     {
-        if (wxGetApp().get_mode() == comSimple)
+        if (wxGetApp().get_mode() == comSimple && wxGetApp().app_config->get("objects_always_expert") != "1")
             p->sidebar->set_btn_label(ActionButtonType::abReslice, _(L("Slicing")) + dots);
         else
         {

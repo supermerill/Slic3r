@@ -4692,7 +4692,7 @@ bool GLCanvas3D::_init_main_toolbar()
     item.tooltip = _utf8(L("Add instance")) + " [+]";
     item.sprite_id = 6;
     item.left.action_callback = [this]() { if (m_canvas != nullptr) wxPostEvent(m_canvas, SimpleEvent(EVT_GLTOOLBAR_MORE)); };
-    item.visibility_callback = []()->bool { return wxGetApp().get_mode() != comSimple; };
+    item.visibility_callback = []()->bool { return wxGetApp().get_mode() != comSimple || wxGetApp().app_config->get("objects_always_expert") == "1"; };
     item.enabling_callback = []()->bool { return wxGetApp().plater()->can_increase_instances(); };
 
     if (!m_main_toolbar.add_item(item))
@@ -4703,7 +4703,7 @@ bool GLCanvas3D::_init_main_toolbar()
     item.tooltip = _utf8(L("Remove instance")) + " [-]";
     item.sprite_id = 7;
     item.left.action_callback = [this]() { if (m_canvas != nullptr) wxPostEvent(m_canvas, SimpleEvent(EVT_GLTOOLBAR_FEWER)); };
-    item.visibility_callback = []()->bool { return wxGetApp().get_mode() != comSimple; };
+    item.visibility_callback = []()->bool { return wxGetApp().get_mode() != comSimple || wxGetApp().app_config->get("objects_always_expert") == "1"; };
     item.enabling_callback = []()->bool { return wxGetApp().plater()->can_decrease_instances(); };
     if (!m_main_toolbar.add_item(item))
         return false;
@@ -4716,7 +4716,7 @@ bool GLCanvas3D::_init_main_toolbar()
     item.tooltip = _utf8(L("Split to objects"));
     item.sprite_id = 8;
     item.left.action_callback = [this]() { if (m_canvas != nullptr) wxPostEvent(m_canvas, SimpleEvent(EVT_GLTOOLBAR_SPLIT_OBJECTS)); };
-    item.visibility_callback = GLToolbarItem::Default_Visibility_Callback;
+    item.visibility_callback = []()->bool { return wxGetApp().get_mode() != comSimple; };
     item.enabling_callback = []()->bool { return wxGetApp().plater()->can_split_to_objects(); };
     if (!m_main_toolbar.add_item(item))
         return false;

@@ -91,6 +91,9 @@ void AppConfig::set_defaults()
     if (get("use_perspective_camera").empty())
         set("use_perspective_camera", "1");
 
+    if (get("objects_always_expert").empty())
+        set("objects_always_expert", "1");
+
     if (get("use_free_camera").empty())
         set("use_free_camera", "0");
 
