@@ -148,7 +148,20 @@ void PrintConfigDef::init_common_params()
                    "the API Key or the password required for authentication.");
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString(""));
+    
+    def = this->add("repetier_slug", coString);
+    def->label = L("Repetier Printer");
+    def->tooltip = L("Name of the Repetier printer");
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionString(""));
 
+    def = this->add("repetier_group", coString);
+    def->label = L("Repetier Group");
+    def->tooltip = L("Name of the Repetier group that the G-code file will be sent to.");
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionString(""));
+
+    
     def = this->add("printhost_cafile", coString);
     def->label = L("HTTPS CA File");
     def->category = OptionCategory::general;
@@ -2277,10 +2290,12 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("duet");
     def->enum_values.push_back("flashair");
     def->enum_values.push_back("astrobox");
+    def->enum_values.push_back("repetier");
     def->enum_labels.push_back("OctoPrint");
     def->enum_labels.push_back("Duet");
     def->enum_labels.push_back("FlashAir");
     def->enum_labels.push_back("AstroBox");
+    def->enum_labels.push_back("Repetier");
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionEnum<PrintHostType>(htOctoPrint));
 

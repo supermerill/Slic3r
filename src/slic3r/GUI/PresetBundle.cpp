@@ -526,6 +526,8 @@ DynamicPrintConfig PresetBundle::full_config_secure() const
     DynamicPrintConfig config = this->full_config();
     config.erase("print_host");
     config.erase("printhost_apikey");
+    config.erase("repetier_slug");
+    config.erase("repetier_group");
     config.erase("printhost_cafile");
     return config;
 }
