@@ -2066,7 +2066,7 @@ Plater::priv::priv(Plater *q, MainFrame *main_frame)
         "complete_objects_one_skirt",
         "duplicate_distance", "extruder_clearance_radius", "skirts", "skirt_distance", "skirt_height",
         "brim_width", "variable_layer_height", "serial_port", "serial_speed", "host_type", "print_host",
-        "printhost_apikey", "printhost_cafile", "repetier_slug", "repetier_group", "nozzle_diameter", "single_extruder_multi_material",
+        "printhost_apikey", "printhost_cafile", "repetier_slug", "nozzle_diameter", "single_extruder_multi_material",
         "wipe_tower", "wipe_tower_x", "wipe_tower_y", "wipe_tower_width", "wipe_tower_rotation_angle", "wipe_tower_brim",
         "extruder_colour", "filament_colour", "max_print_height", "printer_model", "printer_technology",
         // These values are necessary to construct SlicingParameters by the Canvas3D variable layer height editor.
@@ -5295,10 +5295,14 @@ void Plater::send_gcode()
     }
     default_output_file = fs::path(Slic3r::fold_utf8_to_ascii(default_output_file.string()));
 
-    PrintHostSendDialog dlg(default_output_file, upload_job.printhost->can_start_print());
+    wxArrayString groups;
+    upload_job.printhost->get_groups(groups);
+    
+    PrintHostSendDialog dlg(default_output_file, upload_job.printhost->can_start_print(), groups);
     if (dlg.ShowModal() == wxID_OK) {
         upload_job.upload_data.upload_path = dlg.filename();
         upload_job.upload_data.start_print = dlg.start_print();
+        upload_job.upload_data.group       = dlg.group();
 
         p->export_gcode(fs::path(), false, std::move(upload_job));
     }

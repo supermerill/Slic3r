@@ -20,6 +20,9 @@ struct PrintHostUpload
 {
     boost::filesystem::path source_path;
     boost::filesystem::path upload_path;
+    
+    std::string group;
+    
     bool start_print = false;
 };
 
@@ -42,6 +45,7 @@ public:
     virtual bool can_test() const = 0;
     virtual bool can_start_print() const = 0;
     virtual std::string get_host() const = 0;
+    virtual bool get_groups(wxArrayString& groups) const = 0;
 
     static PrintHost* get_print_host(DynamicPrintConfig *config);
 

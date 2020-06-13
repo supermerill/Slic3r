@@ -29,6 +29,7 @@ public:
     bool can_test() const override { return true; }
     bool can_start_print() const override { return false; }
     std::string get_host() const override { return host; }
+    bool get_groups(wxArrayString& groups) const override;
 
 protected:
     virtual bool validate_version_text(const boost::optional<std::string> &version_text) const;
@@ -38,7 +39,6 @@ private:
     std::string apikey;
     std::string cafile;
     std::string slug;
-    std::string group;
 
     void set_auth(Http &http) const;
     std::string make_url(const std::string &path) const;

@@ -1991,6 +1991,26 @@ void TabPrinter::build_printhost(ConfigOptionsGroup *optgroup)
 
         return sizer;
     };
+    
+    auto repetier_slug_browse = [=](wxWindow* parent) {
+        add_scaled_button(parent, &m_repetier_slug_browse_btn, "printers", _(L("Printers")) + " "+ dots, wxBU_LEFT | wxBU_EXACTFIT);
+        ScalableButton* btn = m_repetier_slug_browse_btn;
+        btn->SetFont(Slic3r::GUI::wxGetApp().normal_font());
+
+        auto sizer = new wxBoxSizer(wxHORIZONTAL);
+        sizer->Add(btn);
+
+        btn->Bind(wxEVT_BUTTON, [=](wxCommandEvent &e) {
+            BonjourDialog dialog(parent, tech);
+            if (dialog.show_and_lookup()) {
+                optgroup->set_value("repetier_slug", std::move(dialog.get_selected()), true);
+                optgroup->get_field("repetier_slug")->field_changed();
+            }
+        });
+
+        return sizer;
+    };
+
 
     // Set a wider width for a better alignment
     Option option = optgroup->get_option("print_host");
@@ -2002,13 +2022,11 @@ void TabPrinter::build_printhost(ConfigOptionsGroup *optgroup)
     option = optgroup->get_option("printhost_apikey");
     option.opt.width = Field::def_width_wider();
     optgroup->append_single_option_line(option);
+    
     option = optgroup->get_option("repetier_slug");
     option.opt.width = Field::def_width_wider();
     optgroup->append_single_option_line(option);
-    option = optgroup->get_option("repetier_group");
-    option.opt.width = Field::def_width_wider();
-    optgroup->append_single_option_line(option);
-
+    
     const auto ca_file_hint = _utf8(L("HTTPS CA file is optional. It is only needed if you use HTTPS with a self-signed certificate."));
 
     if (Http::ca_file_supported()) {
@@ -2614,13 +2632,10 @@ void TabPrinter::update_fff()
     bool is_repetier = m_config->option<ConfigOptionEnum<PrintHostType>>("host_type")->value == htRepetier;
     {
         Field *rs = get_field("repetier_slug");
-        Field *rg = get_field("repetier_group");
         if (is_repetier) {
             rs->enable();
-            rg->enable();
         } else {
             rs->disable();
-            rg->disable();
         }
     }
 

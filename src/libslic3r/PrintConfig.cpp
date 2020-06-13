@@ -154,13 +154,6 @@ void PrintConfigDef::init_common_params()
     def->tooltip = L("Name of the Repetier printer");
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString(""));
-
-    def = this->add("repetier_group", coString);
-    def->label = L("Repetier Group");
-    def->tooltip = L("Name of the Repetier group that the G-code file will be sent to.");
-    def->mode = comAdvanced;
-    def->set_default_value(new ConfigOptionString(""));
-
     
     def = this->add("printhost_cafile", coString);
     def->label = L("HTTPS CA File");

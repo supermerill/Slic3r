@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <exception>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -27,8 +28,7 @@ Repetier::Repetier(DynamicPrintConfig *config) :
     host(config->opt_string("print_host")),
     apikey(config->opt_string("printhost_apikey")),
     cafile(config->opt_string("printhost_cafile")),
-    slug(config->opt_string("repetier_slug")),
-    group(config->opt_string("repetier_group"))
+    slug(config->opt_string("repetier_slug"))
 {}
 
 const char* Repetier::get_name() const { return "Repetier"; }
@@ -106,19 +106,20 @@ bool Repetier::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, Error
 
     auto url = make_url((boost::format("printer/model/%1%") % slug).str());
 
-    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: Uploading file %2% at %3%, filename: %4%, path: %5%, print: %6%")
+    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: Uploading file %2% at %3%, filename: %4%, path: %5%, print: %6%, group: %7%")
         % name
         % upload_data.source_path
         % url
         % upload_filename.string()
         % upload_parent_path.string()
-        % upload_data.start_print;
+        % upload_data.start_print
+        % upload_data.group;
 
     auto http = Http::post(std::move(url));
     set_auth(http);
     
-    if (! group.empty()) {
-        http.form_add("group", group);
+    if (! upload_data.group.empty() && upload_data.group != _utf8(L("Default"))) {
+        http.form_add("group", upload_data.group);
     }
     
     http.form_add("a", "upload")
@@ -169,6 +170,47 @@ std::string Repetier::make_url(const std::string &path) const
     } else {
         return (boost::format("http://%1%/%2%") % host % path).str();
     }
+}
+
+bool Repetier::get_groups(wxArrayString& groups) const
+{
+    bool res = true;
+    
+    const char *name = get_name();
+    auto url = make_url((boost::format("printer/api/%1%") % slug).str());
+
+    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: Get groups at: %2%") % name % url;
+
+    auto http = Http::get(std::move(url));
+    set_auth(http);
+    http.form_add("a", "listModelGroups");
+    http.on_error([&](std::string body, std::string error, unsigned status) {
+            BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Error getting version: %2%, HTTP %3%, body: `%4%`") % name % error % status % body;
+        })
+        .on_complete([&, this](std::string body, unsigned) {
+            BOOST_LOG_TRIVIAL(debug) << boost::format("%1%: Got groups: %2%") % name % body;
+
+            try {
+                std::stringstream ss(body);
+                pt::ptree ptree;
+                pt::read_json(ss, ptree);
+
+                BOOST_FOREACH(boost::property_tree::ptree::value_type &v, ptree.get_child("groupNames.")) {
+                    if (v.second.data() == "#") {
+                        groups.push_back(_utf8(L("Default")));
+                    } else {
+                        groups.push_back(v.second.data());
+                    }
+                }
+            }
+            catch (const std::exception &) {
+                //msg = "Could not parse server response";
+                res = false;
+            }
+        })
+        .perform_sync();
+
+    return res;
 }
 
 }

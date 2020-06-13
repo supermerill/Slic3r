@@ -27,7 +27,8 @@ public:
 	bool can_test() const override { return true; }
 	bool can_start_print() const override { return true; }
 	std::string get_host() const override { return host; }
-
+    bool get_groups(wxArrayString& groups) const override { return false; }
+    
 private:
 	std::string host;
 	std::string password;

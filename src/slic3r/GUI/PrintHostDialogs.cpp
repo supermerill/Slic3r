@@ -28,11 +28,13 @@ namespace GUI {
 
 static const char *CONFIG_KEY_PATH  = "printhost_path";
 static const char *CONFIG_KEY_PRINT = "printhost_print";
+static const char *CONFIG_KEY_GROUP = "repetier_group";
 
-PrintHostSendDialog::PrintHostSendDialog(const fs::path &path, bool can_start_print)
+PrintHostSendDialog::PrintHostSendDialog(const fs::path &path, bool can_start_print, wxArrayString& groups)
     : MsgDialog(nullptr, _(L("Send G-Code to printer host")), _(L("Upload to Printer Host with the following filename:")), wxID_NONE)
     , txt_filename(new wxTextCtrl(this, wxID_ANY))
     , box_print(can_start_print ? new wxCheckBox(this, wxID_ANY, _(L("Start printing after upload"))) : nullptr)
+    , combo_groups(!groups.IsEmpty() ? new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, groups, wxCB_READONLY) : nullptr)
 {
 #ifdef __APPLE__
     txt_filename->OSXDisableAllSmartSubstitutions();
@@ -49,6 +51,18 @@ PrintHostSendDialog::PrintHostSendDialog(const fs::path &path, bool can_start_pr
         content_sizer->Add(box_print, 0, wxBOTTOM, 2*VERT_SPACING);
         box_print->SetValue(app_config->get("recent", CONFIG_KEY_PRINT) == "1");
     }
+    
+    if (combo_groups != nullptr) {
+        auto *label_group = new wxStaticText(this, wxID_ANY, _(L("Group")));
+        content_sizer->Add(label_group);
+        
+        content_sizer->Add(combo_groups, 0, wxBOTTOM, 2*VERT_SPACING);
+        
+        wxString recent_group = from_u8(app_config->get("recent", CONFIG_KEY_GROUP));
+        if (recent_group.Length() > 0) {
+            combo_groups->SetValue(recent_group);
+        }
+    }
 
     btn_sizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL));
 
@@ -64,7 +78,7 @@ PrintHostSendDialog::PrintHostSendDialog(const fs::path &path, bool can_start_pr
 
     txt_filename->SetValue(recent_path);
     txt_filename->SetFocus();
-
+    
     Fit();
 
     Bind(wxEVT_SHOW, [=](const wxShowEvent &) {
@@ -86,6 +100,16 @@ bool PrintHostSendDialog::start_print() const
     return box_print != nullptr ? box_print->GetValue() : false;
 }
 
+std::string PrintHostSendDialog::group() const
+{
+     if (combo_groups == nullptr) {
+         return "";
+     } else {
+         wxString group = combo_groups->GetValue();
+         return into_u8(group);
+    }
+}
+
 void PrintHostSendDialog::EndModal(int ret)
 {
     if (ret == wxID_OK) {
@@ -96,9 +120,15 @@ void PrintHostSendDialog::EndModal(int ret)
 			path.clear();
 		else
             path = path.SubString(0, last_slash);
+                
 		AppConfig *app_config = wxGetApp().app_config;
 		app_config->set("recent", CONFIG_KEY_PATH, into_u8(path));
         app_config->set("recent", CONFIG_KEY_PRINT, start_print() ? "1" : "0");
+        
+        if (combo_groups != nullptr) {
+            wxString group = combo_groups->GetValue();
+            app_config->set("recent", CONFIG_KEY_GROUP, into_u8(group));
+        }
     }
 
     MsgDialog::EndModal(ret);
