@@ -41,12 +41,13 @@ bool Repetier::test(wxString &msg) const
     const char *name = get_name();
 
     bool res = true;
-    auto url = make_url("printer/info");
+    auto url = make_url("printer/version");
 
-    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: Get version at: %2%") % name % url;
+    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: List version at: %2%") % name % url;
 
     auto http = Http::get(std::move(url));
     set_auth(http);
+    
     http.on_error([&](std::string body, std::string error, unsigned status) {
             BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Error getting version: %2%, HTTP %3%, body: `%4%`") % name % error % status % body;
             res = false;
@@ -59,12 +60,21 @@ bool Repetier::test(wxString &msg) const
                 std::stringstream ss(body);
                 pt::ptree ptree;
                 pt::read_json(ss, ptree);
-
-                const auto text = ptree.get_optional<std::string>("name");
-                res = validate_version_text(text);
-                if (! res) {
-                    msg = GUI::from_u8((boost::format(_utf8(L("Mismatched type of print host: %s"))) % (text ? *text : "Repetier")).str());
+                
+                /*
+                const auto error = ptree.get_optional<std::string>("error");
+                if (error) {
+                    msg = GUI::from_u8((boost::format(_utf8(L("%s"))) % error).str());
+                    res = false;
+                } else {
+                    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, ptree.get_child("data.")) {
+                        const auto slug = v.second.get<std::string>("slug");
+                        slugs.push_back(slug);
+                    }
+                    
+                    //res = !printers.empty();
                 }
+                 */
             }
             catch (const std::exception &) {
                 res = false;
@@ -83,7 +93,7 @@ wxString Repetier::get_test_ok_msg () const
 
 wxString Repetier::get_test_failed_msg (wxString &msg) const
 {
-    return GUI::from_u8((boost::format("%s: %s\n\n%s")
+        return GUI::from_u8((boost::format("%s: %s\n\n%s")
         % _utf8(L("Could not connect to Repetier"))
         % std::string(msg.ToUTF8())
         % _utf8(L("Note: Repetier version at least 0.90.0 is required."))).str());
@@ -205,6 +215,52 @@ bool Repetier::get_groups(wxArrayString& groups) const
             }
             catch (const std::exception &) {
                 //msg = "Could not parse server response";
+                res = false;
+            }
+        })
+        .perform_sync();
+
+    return res;
+}
+
+bool Repetier::get_printers(wxArrayString& printers) const
+{
+    const char *name = get_name();
+
+    bool res = true;
+    auto url = make_url("printer/list");
+
+    BOOST_LOG_TRIVIAL(info) << boost::format("%1%: List printers at: %2%") % name % url;
+
+    auto http = Http::get(std::move(url));
+    set_auth(http);
+    
+    auto &slugs = printers;
+    http.on_error([&](std::string body, std::string error, unsigned status) {
+            BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Error listing printers: %2%, HTTP %3%, body: `%4%`") % name % error % status % body;
+            res = false;
+        })
+        .on_complete([&, this](std::string body, unsigned) {
+            BOOST_LOG_TRIVIAL(debug) << boost::format("%1%: Got printers: %2%") % name % body;
+
+            try {
+                std::stringstream ss(body);
+                pt::ptree ptree;
+                pt::read_json(ss, ptree);
+                
+                const auto error = ptree.get_optional<std::string>("error");
+                if (error) {
+                    res = false;
+                } else {
+                    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, ptree.get_child("data.")) {
+                        const auto slug = v.second.get<std::string>("slug");
+                        printers.push_back(slug);
+                    }
+                    
+                    //res = !printers.empty();
+                }
+            }
+            catch (const std::exception &) {
                 res = false;
             }
         })
