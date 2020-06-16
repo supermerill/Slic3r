@@ -28,7 +28,7 @@ Repetier::Repetier(DynamicPrintConfig *config) :
     host(config->opt_string("print_host")),
     apikey(config->opt_string("printhost_apikey")),
     cafile(config->opt_string("printhost_cafile")),
-    slug(config->opt_string("repetier_slug"))
+    slug(config->opt_string("printhost_slug"))
 {}
 
 const char* Repetier::get_name() const { return "Repetier"; }
@@ -41,7 +41,7 @@ bool Repetier::test(wxString &msg) const
     const char *name = get_name();
 
     bool res = true;
-    auto url = make_url("printer/version");
+    auto url = make_url("printer/info");
 
     BOOST_LOG_TRIVIAL(info) << boost::format("%1%: List version at: %2%") % name % url;
 
@@ -61,20 +61,11 @@ bool Repetier::test(wxString &msg) const
                 pt::ptree ptree;
                 pt::read_json(ss, ptree);
                 
-                /*
-                const auto error = ptree.get_optional<std::string>("error");
-                if (error) {
-                    msg = GUI::from_u8((boost::format(_utf8(L("%s"))) % error).str());
-                    res = false;
-                } else {
-                    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, ptree.get_child("data.")) {
-                        const auto slug = v.second.get<std::string>("slug");
-                        slugs.push_back(slug);
-                    }
-                    
-                    //res = !printers.empty();
+                const auto text = ptree.get_optional<std::string>("name");
+                res = validate_version_text(text);
+                if (! res) {
+                    msg = GUI::from_u8((boost::format(_utf8(L("Mismatched type of print host: %s"))) % (text ? *text : "Repetier")).str());
                 }
-                 */
             }
             catch (const std::exception &) {
                 res = false;

@@ -2745,7 +2745,7 @@ void GCode::append_full_config(const Print &print, std::string &str)
 		"print_host",
 		"printhost_apikey",
 		"printhost_cafile",
-		"repetier_slug"
+		"printhost_slug"
 	};
     assert(std::is_sorted(banned_keys.begin(), banned_keys.end()));
 	auto is_banned = [banned_keys](const std::string &key) {

@@ -149,9 +149,9 @@ void PrintConfigDef::init_common_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString(""));
     
-    def = this->add("repetier_slug", coString);
-    def->label = L("Repetier Printer");
-    def->tooltip = L("Name of the Repetier printer");
+    def = this->add("printhost_slug", coString);
+    def->label = L("Printer");
+    def->tooltip = L("Name of the printer");
     def->gui_type = "select_open";
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString(""));

@@ -1993,8 +1993,8 @@ void TabPrinter::build_printhost(ConfigOptionsGroup *optgroup)
     };
 
     auto print_host_printers = [this](wxWindow* parent) {
-        add_scaled_button(parent, &m_repetier_slug_browse_btn, "browse", _(L("Refresh Printers")), wxBU_LEFT | wxBU_EXACTFIT);
-        ScalableButton* btn = m_repetier_slug_browse_btn;
+        add_scaled_button(parent, &m_printhost_slug_browse_btn, "browse", _(L("Refresh Printers")), wxBU_LEFT | wxBU_EXACTFIT);
+        ScalableButton* btn = m_printhost_slug_browse_btn;
         btn->SetFont(Slic3r::GUI::wxGetApp().normal_font());
 
         auto sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -2015,7 +2015,7 @@ void TabPrinter::build_printhost(ConfigOptionsGroup *optgroup)
     option.opt.width = Field::def_width_wider();
     optgroup->append_single_option_line(option);
     
-    option = optgroup->get_option("repetier_slug");
+    option = optgroup->get_option("printhost_slug");
     option.opt.width = Field::def_width_wider();
     Line slug_line = optgroup->create_single_option_line(option);
     slug_line.append_widget(print_host_printers);
@@ -2138,7 +2138,7 @@ void TabPrinter::update_printers()
     std::unique_ptr<PrintHost> host(PrintHost::get_print_host(m_config));
     
     wxArrayString printers;
-    Field *rs = get_field("repetier_slug");
+    Field *rs = get_field("printhost_slug");
     if (!host->get_printers(printers)) {
         std::vector<std::string> slugs;
         
@@ -2521,9 +2521,9 @@ void TabPrinter::update_fff()
             m_print_host_test_btn->Enable(!m_config->opt_string("print_host").empty() && host->can_test());
         if(m_printhost_browse_btn)
             m_printhost_browse_btn->Enable(host->has_auto_discovery());
-        m_repetier_slug_browse_btn->Enable(host->can_support_multiple_printers());
+        m_printhost_slug_browse_btn->Enable(host->can_support_multiple_printers());
     
-        Field *rs = get_field("repetier_slug");
+        Field *rs = get_field("printhost_slug");
         if (host->can_support_multiple_printers()) {
             update_printers();
             rs->enable();

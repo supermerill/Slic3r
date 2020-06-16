@@ -1277,7 +1277,7 @@ public:
     ConfigOptionString              print_host;
     ConfigOptionString              printhost_apikey;
     ConfigOptionString              printhost_cafile;
-    ConfigOptionString              repetier_slug;
+    ConfigOptionString              printhost_slug;
     ConfigOptionString              serial_port;
     ConfigOptionInt                 serial_speed;
 
@@ -1288,7 +1288,7 @@ protected:
         OPT_PTR(print_host);
         OPT_PTR(printhost_apikey);
         OPT_PTR(printhost_cafile);
-        OPT_PTR(repetier_slug);
+        OPT_PTR(printhost_slug);
         OPT_PTR(serial_port);
         OPT_PTR(serial_speed);
     }

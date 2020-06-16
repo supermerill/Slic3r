@@ -613,7 +613,7 @@ const std::vector<std::string>& Preset::printer_options()
             "bed_shape", "bed_custom_texture", "bed_custom_model", "z_offset", "gcode_flavor", "use_relative_e_distances", "serial_port", "serial_speed",
             "use_firmware_retraction", "use_volumetric_e", "variable_layer_height",
             "min_length",
-            "host_type", "print_host", "printhost_apikey", "printhost_cafile", "repetier_slug",
+            "host_type", "print_host", "printhost_apikey", "printhost_cafile", "printhost_slug",
             "single_extruder_multi_material", "start_gcode", "end_gcode", "before_layer_gcode", "layer_gcode", "toolchange_gcode",
             "feature_gcode",
             "between_objects_gcode", "printer_vendor", "printer_model", "printer_variant", "printer_notes", "cooling_tube_retraction",
@@ -751,7 +751,7 @@ const std::vector<std::string>& Preset::sla_printer_options()
             "gamma_correction",
             "min_exposure_time", "max_exposure_time",
             "min_initial_exposure_time", "max_initial_exposure_time",
-            "print_host", "printhost_apikey", "printhost_cafile", "repetier_slug",
+            "print_host", "printhost_apikey", "printhost_cafile", "printhost_slug",
             "printer_notes",
             "inherits",
             "thumbnails",
@@ -891,18 +891,18 @@ static ProfileHostParams profile_host_params_same_or_anonymized(const DynamicPri
 	auto opt_print_host_old 	  = cfg_old.option<ConfigOptionString>("print_host");
 	auto opt_printhost_apikey_old = cfg_old.option<ConfigOptionString>("printhost_apikey");
 	auto opt_printhost_cafile_old = cfg_old.option<ConfigOptionString>("printhost_cafile");
-    auto opt_repetier_slug_old    = cfg_old.option<ConfigOptionString>("repetier_slug");
+    auto opt_printhost_slug_old    = cfg_old.option<ConfigOptionString>("printhost_slug");
 
 	auto opt_print_host_new 	  = cfg_new.option<ConfigOptionString>("print_host");
 	auto opt_printhost_apikey_new = cfg_new.option<ConfigOptionString>("printhost_apikey");
 	auto opt_printhost_cafile_new = cfg_new.option<ConfigOptionString>("printhost_cafile");
-    auto opt_repetier_slug_new    = cfg_new.option<ConfigOptionString>("repetier_slug");
+    auto opt_printhost_slug_new    = cfg_new.option<ConfigOptionString>("printhost_slug");
 
 	// If the new print host data is undefined, use the old data.
 	bool new_print_host_undefined = (opt_print_host_new 		== nullptr || opt_print_host_new		->empty()) &&
 									(opt_printhost_apikey_new 	== nullptr || opt_printhost_apikey_new	->empty()) &&
 									(opt_printhost_cafile_new 	== nullptr || opt_printhost_cafile_new	->empty()) &&
-                                    (opt_repetier_slug_new      == nullptr || opt_repetier_slug_new     ->empty());
+                                    (opt_printhost_slug_new     == nullptr || opt_printhost_slug_new    ->empty());
 	if (new_print_host_undefined)
 		return ProfileHostParams::Anonymized;
 
@@ -911,7 +911,7 @@ static ProfileHostParams profile_host_params_same_or_anonymized(const DynamicPri
 			   (l != nullptr && r != nullptr && l->value == r->value);
 	};
 	return (opt_same(opt_print_host_old, opt_print_host_new) && opt_same(opt_printhost_apikey_old, opt_printhost_apikey_new) &&
-            opt_same(opt_printhost_cafile_old, opt_printhost_cafile_new) && opt_same(opt_repetier_slug_old, opt_repetier_slug_new))
+            opt_same(opt_printhost_cafile_old, opt_printhost_cafile_new) && opt_same(opt_printhost_slug_old, opt_printhost_slug_new))
 		    ? ProfileHostParams::Same : ProfileHostParams::Different;
 }
 
@@ -924,7 +924,7 @@ static bool profile_print_params_same(const DynamicPrintConfig &cfg_old, const D
                              "compatible_printers", "compatible_printers_condition", "inherits",
                              "print_settings_id", "filament_settings_id", "sla_print_settings_id", "sla_material_settings_id", "printer_settings_id",
                              "printer_model", "printer_variant", "default_print_profile", "default_filament_profile", "default_sla_print_profile", "default_sla_material_profile",
-                             "print_host", "printhost_apikey", "repetier_slug", "printhost_cafile" })
+                             "print_host", "printhost_apikey", "printhost_slug", "printhost_cafile" })
         diff.erase(std::remove(diff.begin(), diff.end(), key), diff.end());
     // Preset with the same name as stored inside the config exists.
     return diff.empty() && profile_host_params_same_or_anonymized(cfg_old, cfg_new) != ProfileHostParams::Different;
@@ -974,7 +974,7 @@ Preset& PresetCollection::load_external_preset(
 	    	opt_update("print_host");
 	    	opt_update("printhost_apikey");
 	    	opt_update("printhost_cafile");
-            opt_update("repetier_slug");
+            opt_update("printhost_slug");
 	    }
     }
     // Update the "inherits" field.
