@@ -534,6 +534,7 @@ void GLCanvas3D::LayersEditing::adjust_layer_height_profile()
 {
 	this->update_slicing_parameters();
 	PrintObject::update_layer_height_profile(*m_model_object, *m_slicing_parameters, m_layer_height_profile);
+	if (m_slicing_parameters->z_step > EPSILON) this->strength = m_slicing_parameters->z_step;
 	Slic3r::adjust_layer_height_profile(*m_slicing_parameters, m_layer_height_profile, this->last_z, this->strength, this->band_width, this->last_action);
 	m_layer_height_profile_modified = true;
     m_layers_texture.valid = false;
