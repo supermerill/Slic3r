@@ -3130,12 +3130,20 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionInts { 200 });
 
     def = this->add("thin_perimeters", coBool);
-    def->label = L("Overlapping perimeters");
-    def->full_label = L("Overlapping perimeters");
+    def->label = L("Overlapping external perimeter");
+    def->full_label = L("Overlapping external perimeter");
     def->category = OptionCategory::perimeter;
-    def->tooltip = L("Allow external perimeter to overlap each other to avoid the use of thin walls. Note that their flow isn't adjusted and so it will result in over-extruding and undefined behavior.");
+    def->tooltip = L("Allow outermost perimeter to overlap itself to avoid the use of thin walls. Note that their flow isn't adjusted and so it will result in over-extruding and undefined behavior.");
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionBool(true));
+
+    def = this->add("thin_perimeters_all", coBool);
+    def->label = L("Overlapping all perimeters");
+    def->full_label = L("Overlapping all perimeters");
+    def->category = OptionCategory::perimeter;
+    def->tooltip = L("Allow all perimeters to overlap, instead of just external ones.");
+    def->mode = comExpert;
+    def->set_default_value(new ConfigOptionBool(false));
 
     def = this->add("thin_walls", coBool);
     def->label = L("");

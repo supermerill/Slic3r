@@ -409,6 +409,9 @@ void PerimeterGenerator::process()
                     }
                 }
 
+                // allow this perimeter to overlap itself?
+                bool thin_perimeter = this->config->thin_perimeters && (i == 0 || this->config->thin_perimeters_all);
+
                 // Calculate next onion shell of perimeters.
                 //this variable stored the next onion
                 ExPolygons next_onion;
@@ -416,7 +419,7 @@ void PerimeterGenerator::process()
                     // compute next onion
                         // the minimum thickness of a single loop is:
                         // ext_width/2 + ext_spacing/2 + spacing/2 + width/2
-                    if (this->config->thin_perimeters)
+                    if (thin_perimeter)
                         next_onion = offset_ex(
                             last,
                             -(float)(ext_perimeter_width / 2));
@@ -496,10 +499,7 @@ void PerimeterGenerator::process()
                         // it's a bit like re-add thin area in to perimeter area.
                         // it can over-extrude a bit, but it's for a better good.
                         {
-
-
-
-                            if(config->thin_perimeters)
+                            if (thin_perimeter)
                                 next_onion = union_ex(next_onion, offset_ex(diff_ex(last, thins, true),
                                     -(float)(ext_perimeter_width / 2)));
                             else
@@ -512,7 +512,7 @@ void PerimeterGenerator::process()
                     //FIXME Is this offset correct if the line width of the inner perimeters differs
                     // from the line width of the infill?
                     coord_t good_spacing = (i == 1) ? ext_perimeter_spacing2 : perimeter_spacing;
-                    if (!this->config->thin_perimeters){
+                    if (!thin_perimeter) {
                         // This path will ensure, that the perimeters do not overfill, as in 
                         // prusa3d/Slic3r GH #32, but with the cost of rounding the perimeters
                         // excessively, creating gaps, which then need to be filled in by the not very 

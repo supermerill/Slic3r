@@ -29,7 +29,10 @@ group:Quality
 		setting:label$:avoid_crossing_perimeters
 		setting:label$not on first layer:avoid_crossing_not_first_layer
 	end_line
-	setting:thin_perimeters
+	line:Overlapping external perimeter
+		setting:label$:thin_perimeters
+		setting:label$also for all perimeters:thin_perimeters_all
+	end_line
 	line:Thin walls
 		setting:thin_walls
 		setting:width$5:thin_walls_min_width

@@ -438,7 +438,7 @@ const std::vector<std::string>& Preset::print_options()
         "allow_empty_layers",
         "avoid_crossing_perimeters", 
         "avoid_crossing_not_first_layer",
-        "thin_perimeters",
+        "thin_perimeters", "thin_perimeters_all",
         "thin_walls", "overhangs", 
         "overhangs_width",
         "overhangs_reverse",

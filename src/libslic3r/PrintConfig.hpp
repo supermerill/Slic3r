@@ -685,6 +685,7 @@ public:
     ConfigOptionFloatOrPercent      solid_infill_speed;
     // Detect thin walls.
     ConfigOptionBool                thin_perimeters;
+    ConfigOptionBool                thin_perimeters_all;
     ConfigOptionBool                thin_walls;
     ConfigOptionFloatOrPercent      thin_walls_min_width;
     ConfigOptionFloatOrPercent      thin_walls_overlap;
@@ -769,6 +770,7 @@ protected:
         OPT_PTR(solid_infill_every_layers);
         OPT_PTR(solid_infill_speed);
         OPT_PTR(thin_perimeters);
+        OPT_PTR(thin_perimeters_all);
         OPT_PTR(thin_walls);
         OPT_PTR(thin_walls_min_width);
         OPT_PTR(thin_walls_overlap);

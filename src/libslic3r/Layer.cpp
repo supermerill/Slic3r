@@ -165,6 +165,7 @@ void Layer::make_perimeters()
                 && config.thin_walls_min_width      == other_config.thin_walls_min_width
                 && config.thin_walls_overlap        == other_config.thin_walls_overlap
                 && config.thin_perimeters           == other_config.thin_perimeters
+                && config.thin_perimeters_all       == other_config.thin_perimeters_all
                 && config.infill_overlap            == other_config.infill_overlap
                 && config.perimeter_loop            == other_config.perimeter_loop) {
                 layerms.push_back(other_layerm);
