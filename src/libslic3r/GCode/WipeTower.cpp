@@ -25,6 +25,8 @@ TODO LIST
 #include "BoundingBox.hpp"
 #include "Flow.hpp"
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 #if defined(__linux) || defined(__GNUC__ )
 #include <strings.h>
 #endif /* __linux */
