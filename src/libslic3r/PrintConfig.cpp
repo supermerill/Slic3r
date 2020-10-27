@@ -863,8 +863,8 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionBool(false));
 
     def = this->add("external_perimeters_nothole", coBool);
-    def->label = L("only for outter side");
-    def->full_label = L("ext peri first for outter side");
+    def->label = L("only for outer side");
+    def->full_label = L("ext peri first for outer side");
     def->category = OptionCategory::perimeter;
     def->tooltip = L("Only do the vase trick on the external side. Useful when the thikness is too low.");
     def->mode = comExpert;
@@ -3720,8 +3720,8 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionFloat(10.));
 
     def = this->add("xy_size_compensation", coFloat);
-    def->label = L("Outter");
-    def->full_label = L("Outter XY size compensation");
+    def->label = L("Outer");
+    def->full_label = L("Outer XY size compensation");
     def->category = OptionCategory::slicing;
     def->tooltip = L("The object will be grown/shrunk in the XY plane by the configured value "
         "(negative = inwards, positive = outwards). This might be useful for fine-tuning sizes."
