@@ -378,9 +378,12 @@ std::string GCodeWriter::toolchange(unsigned int tool_id)
     std::ostringstream gcode;
     if (this->multiple_extruders) {
         if (FLAVOR_IS(gcfKlipper)) {
-            gcode << this->toolchange_prefix() << "extruder";
-            if (tool_id > 0)
-                gcode << tool_id;
+			bool multiple_tools = this->multiple_extruders && !m_single_extruder_multi_material;
+			if (multiple_tools) {
+				gcode << this->toolchange_prefix() << "extruder";
+				if (tool_id > 0)
+					gcode << tool_id;
+			}
         } else {
             gcode << this->toolchange_prefix() << tool_id;
         }
