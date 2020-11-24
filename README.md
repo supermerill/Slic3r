@@ -1,4 +1,6 @@
 
+[![you can get this shield at shields.io](https://img.shields.io/discord/771316156203270154?color=7289da&logo=discord&logoColor=white)](https://discord.gg/ygBBdRRwJY)
+
 # SuperSlicer
 
 **A PrusaSlicer fork (which is a slic3r fork)** (previously Slic3r++)
