@@ -28,6 +28,7 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/path.hpp>
@@ -438,6 +439,17 @@ Slic3r::GUI::PageShp Tab::add_options_page(const wxString& title, const std::str
     return page;
 }
 
+// Names of categories is save in English always. We translate them only for UI.
+// But category "Extruder n" can't be translated regularly (using _()), so
+// just for this category we should splite the title and translate "Extruder" word separately
+wxString Tab::translate_category(const wxString& title, Preset::Type preset_type)
+{
+    if (preset_type == Preset::TYPE_PRINTER && title.Contains("Extruder ")) {
+        return _("Extruder") + title.SubString(8, title.Last());
+    }
+    return _(title);
+}
+
 void Tab::OnActivate()
 {
     wxWindowUpdateLocker noUpdates(this);
@@ -515,7 +527,7 @@ void Tab::update_labels_colour()
         auto title = m_treectrl->GetItemText(cur_item);
         for (auto page : m_pages)
         {
-            if (_(page->title()) != title)
+            if (translate_category(page->title(), m_type) != title)
                 continue;
 
             const wxColor *clr = !page->m_is_nonsys_values ? &m_sys_label_clr :
@@ -746,7 +758,7 @@ void Tab::update_changed_tree_ui()
         auto title = m_treectrl->GetItemText(cur_item);
         for (auto page : m_pages)
         {
-            if (_(page->title()) != title)
+            if (translate_category(page->title(), m_type) != title)
                 continue;
             bool sys_page = true;
             bool modified_page = false;
@@ -1143,7 +1155,7 @@ void Tab::update_wiping_button_visibility() {
 
 void Tab::activate_option(const std::string& opt_key, const wxString& category)
 {
-    wxString page_title = _(category);
+    wxString page_title = translate_category(category, m_type);
 
     auto cur_item = m_treectrl->GetFirstVisibleItem();
     if (!cur_item || !m_treectrl->IsVisible(cur_item))
@@ -2189,6 +2201,165 @@ void TabFilament::build()
     load_initial_data();
     if (create_pages("filament.ui")) return;
 
+    auto page = add_options_page(L("Filament"), "spool.png");
+        auto optgroup = page->new_optgroup(L("Filament"));
+        optgroup->append_single_option_line("filament_colour");
+        optgroup->append_single_option_line("filament_diameter");
+        optgroup->append_single_option_line("extrusion_multiplier");
+        optgroup->append_single_option_line("filament_density");
+        optgroup->append_single_option_line("filament_cost");
+        optgroup->append_single_option_line("filament_spool_weight");
+
+        optgroup->m_on_change = [this, optgroup](t_config_option_key opt_key, boost::any value)
+        {
+            update_dirty();
+            if (opt_key == "filament_spool_weight") {
+                // Change of this option influences for an update of "Sliced Info"
+                wxGetApp().sidebar().update_sliced_info_sizer();
+                wxGetApp().sidebar().Layout();
+            }
+            else
+                on_value_change(opt_key, value);
+        };
+
+        optgroup = page->new_optgroup(L("Temperature"));
+        Line line = { L("Nozzle"), "" };
+        line.append_option(optgroup->get_option("first_layer_temperature"));
+        line.append_option(optgroup->get_option("temperature"));
+        optgroup->append_line(line);
+
+        line = { L("Bed"), "" };
+        line.append_option(optgroup->get_option("first_layer_bed_temperature"));
+        line.append_option(optgroup->get_option("bed_temperature"));
+        optgroup->append_line(line);
+
+    page = add_options_page(L("Cooling"), "cooling");
+        wxString category_path = "cooling_127569#";
+        optgroup = page->new_optgroup(L("Enable"));
+        optgroup->append_single_option_line("fan_always_on");
+        optgroup->append_single_option_line("cooling");
+
+        line = { "", "" };
+        line.full_width = 1;
+        line.widget = [this](wxWindow* parent) {
+            return description_line_widget(parent, &m_cooling_description_line);
+        };
+        optgroup->append_line(line);
+
+        optgroup = page->new_optgroup(L("Fan settings"));
+        line = { L("Fan speed"), "" };
+        line.label_path = category_path + "fan-settings";
+        line.append_option(optgroup->get_option("min_fan_speed"));
+        line.append_option(optgroup->get_option("max_fan_speed"));
+        optgroup->append_line(line);
+
+        optgroup->append_single_option_line("bridge_fan_speed", category_path + "fan-settings");
+        optgroup->append_single_option_line("disable_fan_first_layers", category_path + "fan-settings");
+
+        optgroup = page->new_optgroup(L("Cooling thresholds"), 25);
+        optgroup->append_single_option_line("fan_below_layer_time", category_path + "cooling-thresholds");
+        optgroup->append_single_option_line("slowdown_below_layer_time", category_path + "cooling-thresholds");
+        optgroup->append_single_option_line("min_print_speed", category_path + "cooling-thresholds");
+
+    page = add_options_page(L("Advanced"), "wrench");
+        optgroup = page->new_optgroup(L("Filament properties"));
+        // Set size as all another fields for a better alignment
+        Option option = optgroup->get_option("filament_type");
+        option.opt.width = Field::def_width();
+        optgroup->append_single_option_line(option);
+        optgroup->append_single_option_line("filament_soluble");
+
+        optgroup = page->new_optgroup(L("Print speed override"));
+        optgroup->append_single_option_line("filament_max_volumetric_speed", "max-volumetric-speed_127176");
+
+        line = { "", "" };
+        line.full_width = 1;
+        line.widget = [this](wxWindow* parent) {
+            return description_line_widget(parent, &m_volumetric_speed_description_line);
+        };
+        optgroup->append_line(line);
+
+        optgroup = page->new_optgroup(L("Wipe tower parameters"));
+        optgroup->append_single_option_line("filament_minimal_purge_on_wipe_tower");
+
+        optgroup = page->new_optgroup(L("Toolchange parameters with single extruder MM printers"));
+        optgroup->append_single_option_line("filament_loading_speed_start");
+        optgroup->append_single_option_line("filament_loading_speed");
+        optgroup->append_single_option_line("filament_unloading_speed_start");
+        optgroup->append_single_option_line("filament_unloading_speed");
+        optgroup->append_single_option_line("filament_load_time");
+        optgroup->append_single_option_line("filament_unload_time");
+        optgroup->append_single_option_line("filament_toolchange_delay");
+        optgroup->append_single_option_line("filament_cooling_moves");
+        optgroup->append_single_option_line("filament_cooling_initial_speed");
+        optgroup->append_single_option_line("filament_cooling_final_speed");
+
+        create_line_with_widget(optgroup.get(), "filament_ramming_parameters", wxEmptyString, [this](wxWindow* parent) {
+            auto ramming_dialog_btn = new wxButton(parent, wxID_ANY, _(L("Ramming settings"))+dots, wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+            ramming_dialog_btn->SetFont(Slic3r::GUI::wxGetApp().normal_font());
+            ramming_dialog_btn->SetSize(ramming_dialog_btn->GetBestSize());
+            auto sizer = new wxBoxSizer(wxHORIZONTAL);
+            sizer->Add(ramming_dialog_btn);
+
+            ramming_dialog_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent& e) {
+                RammingDialog dlg(this,(m_config->option<ConfigOptionStrings>("filament_ramming_parameters"))->get_at(0));
+                if (dlg.ShowModal() == wxID_OK) {
+                    load_key_value("filament_ramming_parameters", dlg.get_parameters());
+                    update_changed_ui();
+                }
+            });
+            return sizer;
+        });
+
+
+    add_filament_overrides_page();
+
+
+        const int gcode_field_height = 15; // 150
+        const int notes_field_height = 25; // 250
+
+    page = add_options_page(L("Custom G-code"), "cog");
+        optgroup = page->new_optgroup(L("Start G-code"), 0);
+        option = optgroup->get_option("start_filament_gcode");
+        option.opt.full_width = true;
+        option.opt.is_code = true;
+        option.opt.height = gcode_field_height;// 150;
+        optgroup->append_single_option_line(option);
+
+        optgroup = page->new_optgroup(L("End G-code"), 0);
+        option = optgroup->get_option("end_filament_gcode");
+        option.opt.full_width = true;
+        option.opt.is_code = true;
+        option.opt.height = gcode_field_height;// 150;
+        optgroup->append_single_option_line(option);
+
+    page = add_options_page(L("Notes"), "note.png");
+        optgroup = page->new_optgroup(L("Notes"), 0);
+        optgroup->label_width = 0;
+        option = optgroup->get_option("filament_notes");
+        option.opt.full_width = true;
+        option.opt.height = notes_field_height;// 250;
+        optgroup->append_single_option_line(option);
+
+    page = add_options_page(L("Dependencies"), "wrench.png");
+        optgroup = page->new_optgroup(L("Profile dependencies"));
+        create_line_with_widget(optgroup.get(), "compatible_printers", wxEmptyString, [this](wxWindow* parent) {
+            return compatible_widget_create(parent, m_compatible_printers);
+        });
+
+        option = optgroup->get_option("compatible_printers_condition");
+        option.opt.full_width = true;
+        optgroup->append_single_option_line(option);
+
+        create_line_with_widget(optgroup.get(), "compatible_prints", wxEmptyString, [this](wxWindow* parent) {
+            return compatible_widget_create(parent, m_compatible_prints);
+        });
+
+        option = optgroup->get_option("compatible_prints_condition");
+        option.opt.full_width = true;
+        optgroup->append_single_option_line(option);
+
+        build_preset_description_line(optgroup.get());
 }
 
 // Reload current config (aka presets->edited_preset->config) into the UI fields.
@@ -2578,7 +2749,11 @@ void TabPrinter::build_unregular_pages()
     }
 
     // Build missed extruder pages
-    for (size_t extruder_idx = m_extruders_count_old; extruder_idx < m_extruders_count; ++extruder_idx) {
+    for (auto extruder_idx = m_extruders_count_old; extruder_idx < m_extruders_count; ++extruder_idx) {
+        //# build page
+        const wxString& page_name = wxString::Format("Extruder %d", int(extruder_idx + 1));
+        auto page = add_options_page(page_name, "funnel", true);
+        m_pages.insert(m_pages.begin() + n_before_extruders + extruder_idx, page);
 
         if (this->create_pages("extruder.ui", extruder_idx)) {
             if (m_pages.size() > n_before_extruders + 1)
@@ -3017,7 +3192,7 @@ void Tab::rebuild_page_tree()
     {
         if (!p->get_show())
             continue;
-        auto itemId = m_treectrl->AppendItem(rootItem, _(p->title()), p->iconID());
+        auto itemId = m_treectrl->AppendItem(rootItem, translate_category(p->title(), m_type), p->iconID());
         m_treectrl->SetItemTextColour(itemId, p->get_item_colour());
         if (p->title() == selected)
             item = itemId;
@@ -3356,7 +3531,7 @@ bool Tab::tree_sel_change_delayed()
     const auto sel_item = m_treectrl->GetSelection();
     const auto selection = sel_item ? m_treectrl->GetItemText(sel_item) : "";
     for (auto p : m_pages)
-        if (_(p->title()) == selection)
+        if (translate_category(p->title(), m_type) == selection)
         {
             page = p.get();
             m_is_nonsys_values = page->m_is_nonsys_values;

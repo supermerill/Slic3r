@@ -1086,7 +1086,11 @@ wxDEFINE_EVENT(EVT_GLCANVAS_MOUSE_DRAGGING_FINISHED, SimpleEvent);
 wxDEFINE_EVENT(EVT_GLCANVAS_UPDATE_BED_SHAPE, SimpleEvent);
 wxDEFINE_EVENT(EVT_GLCANVAS_TAB, SimpleEvent);
 wxDEFINE_EVENT(EVT_GLCANVAS_RESETGIZMOS, SimpleEvent);
+#if ENABLE_ARROW_KEYS_WITH_SLIDERS
+wxDEFINE_EVENT(EVT_GLCANVAS_MOVE_SLIDERS, wxKeyEvent);
+#else
 wxDEFINE_EVENT(EVT_GLCANVAS_MOVE_LAYERS_SLIDER, wxKeyEvent);
+#endif // ENABLE_ARROW_KEYS_WITH_SLIDERS
 wxDEFINE_EVENT(EVT_GLCANVAS_EDIT_COLOR_CHANGE, wxKeyEvent);
 wxDEFINE_EVENT(EVT_GLCANVAS_JUMP_TO, wxKeyEvent);
 wxDEFINE_EVENT(EVT_GLCANVAS_UNDO, SimpleEvent);
@@ -1099,23 +1103,48 @@ wxDEFINE_EVENT(EVT_GLCANVAS_RELOAD_FROM_DISK, SimpleEvent);
 
 const double GLCanvas3D::DefaultCameraZoomToBoxMarginFactor = 1.25;
 
-static GLCanvas3D::ArrangeSettings load_arrange_settings()
+void GLCanvas3D::load_arrange_settings()
 {
-    GLCanvas3D::ArrangeSettings settings;
+    std::string dist_fff_str =
+        wxGetApp().app_config->get("arrange", "min_object_distance_fff");
 
-    std::string dist_str =
-        wxGetApp().app_config->get("arrange", "min_object_distance");
+    std::string dist_fff_seq_print_str =
+        wxGetApp().app_config->get("arrange", "min_object_distance_fff_seq_print");
 
-    std::string en_rot_str =
-        wxGetApp().app_config->get("arrange", "enable_rotation");
+    std::string dist_sla_str =
+        wxGetApp().app_config->get("arrange", "min_object_distance_sla");
 
-    if (!dist_str.empty())
-        settings.distance = std::stof(dist_str);
+    std::string en_rot_fff_str =
+        wxGetApp().app_config->get("arrange", "enable_rotation_fff");
 
-    if (!en_rot_str.empty())
-        settings.enable_rotation = (en_rot_str == "1" || en_rot_str == "yes");
+    std::string en_rot_fff_seqp_str =
+        wxGetApp().app_config->get("arrange", "enable_rotation_fff_seq_print");
 
-    return settings;
+    std::string en_rot_sla_str =
+        wxGetApp().app_config->get("arrange", "enable_rotation_sla");
+
+    if (!dist_fff_str.empty())
+        m_arrange_settings_fff.distance = std::stof(dist_fff_str);
+
+    if (!dist_fff_seq_print_str.empty())
+        m_arrange_settings_fff_seq_print.distance = std::stof(dist_fff_seq_print_str);
+
+    if (!dist_sla_str.empty())
+        m_arrange_settings_sla.distance = std::stof(dist_sla_str);
+
+    if (!en_rot_fff_str.empty())
+        m_arrange_settings_fff.enable_rotation = (en_rot_fff_str == "1" || en_rot_fff_str == "yes");
+
+    if (!en_rot_fff_seqp_str.empty())
+        m_arrange_settings_fff_seq_print.enable_rotation = (en_rot_fff_seqp_str == "1" || en_rot_fff_seqp_str == "yes");
+
+    if (!en_rot_sla_str.empty())
+        m_arrange_settings_sla.enable_rotation = (en_rot_sla_str == "1" || en_rot_sla_str == "yes");
+}
+
+PrinterTechnology GLCanvas3D::current_printer_technology() const
+{
+    return m_process->current_printer_technology();
 }
 
 GLCanvas3D::GLCanvas3D(wxGLCanvas* canvas)
@@ -1160,7 +1189,7 @@ GLCanvas3D::GLCanvas3D(wxGLCanvas* canvas)
 #endif // ENABLE_RETINA_GL
     }
 
-    m_arrange_settings = load_arrange_settings();
+    load_arrange_settings();
 
     m_selection.set_volumes(&m_volumes.volumes);
 }
@@ -2417,10 +2446,15 @@ void GLCanvas3D::on_char(wxKeyEvent& evt)
         post_event(SimpleEvent(EVT_GLCANVAS_ARRANGE));
     };
 
+    auto action_question_mark = [this]() {
+        post_event(SimpleEvent(EVT_GLCANVAS_QUESTION_MARK));
+    };
+
 //#ifdef __APPLE__
 //    ctrlMask |= wxMOD_RAW_CONTROL;
 //#endif /* __APPLE__ */
     if ((evt.GetModifiers() & ctrlMask) != 0) {
+        // CTRL is pressed
         switch (keyCode) {
 #ifdef __APPLE__
         case 'a':
@@ -2508,7 +2542,8 @@ void GLCanvas3D::on_char(wxKeyEvent& evt)
 		default:            evt.Skip();
         }
     }
-    else  if ((evt.GetModifiers() & shiftMask) != 0) {
+    else if ((evt.GetModifiers() & shiftMask) != 0) {
+        // SHIFT is pressed
         switch (keyCode) {
         case '+': { action_plus(evt); break; }
         case 'A':
@@ -2519,6 +2554,7 @@ void GLCanvas3D::on_char(wxKeyEvent& evt)
                 post_event(wxKeyEvent(EVT_GLCANVAS_JUMP_TO, evt));
             break;
         }
+        case '?': { action_question_mark(); break; }
         default:
             evt.Skip();
         }
@@ -2547,7 +2583,7 @@ void GLCanvas3D::on_char(wxKeyEvent& evt)
                     else
                         post_event(Event<int>(EVT_GLCANVAS_INCREASE_INSTANCES, -1)); 
                     break; }
-        case '?': { post_event(SimpleEvent(EVT_GLCANVAS_QUESTION_MARK)); break; }
+        case '?': { action_question_mark(); break; }
         case 'A':
         case 'a': { action_a(); break; }
         case 'B':
@@ -2826,7 +2862,11 @@ void GLCanvas3D::on_key(wxKeyEvent& evt)
                         keyCode == WXK_UP ||
                         keyCode == WXK_DOWN) {
                         if (dynamic_cast<Preview*>(m_canvas->GetParent()) != nullptr)
+#if ENABLE_ARROW_KEYS_WITH_SLIDERS
+                            post_event(wxKeyEvent(EVT_GLCANVAS_MOVE_SLIDERS, evt));
+#else
                             post_event(wxKeyEvent(EVT_GLCANVAS_MOVE_LAYERS_SLIDER, evt));
+#endif // ENABLE_ARROW_KEYS_WITH_SLIDERS
                     }
                 }
             }
@@ -3897,32 +3937,58 @@ bool GLCanvas3D::_render_arrange_menu(float pos_x)
     imgui->set_next_window_pos(x, m_main_toolbar.get_height(), ImGuiCond_Always, 0.5f, 0.0f);
 
     imgui->begin(_L("Arrange options"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-    ArrangeSettings settings = m_arrange_settings;
+
+    ArrangeSettings settings = get_arrange_settings();
+    ArrangeSettings &settings_out = get_arrange_settings();
 
     auto &appcfg = wxGetApp().app_config;
+    PrinterTechnology ptech = m_process->current_printer_technology();
 
     bool settings_changed = false;
+    float dist_min = 0.f;
+    std::string dist_key = "min_object_distance", rot_key = "enable_rotation";
+    std::string postfix;
 
-    if (imgui->slider_float(_L("Gap size"), &settings.distance, 0.f, 100.f)) {
-        m_arrange_settings.distance = settings.distance;
+    if (ptech == ptSLA) {
+        dist_min     = 0.f;
+        postfix      = "_sla";
+    } else if (ptech == ptFFF) {
+        auto co_opt = m_config->option<ConfigOptionBool>("complete_objects");
+        if (co_opt && co_opt->value) {
+            dist_min     = float(min_object_distance(*m_config));
+            postfix      = "_fff_seq_print";
+        } else {
+            dist_min     = 0.f;
+            postfix     = "_fff";
+        }
+    }
+
+    dist_key += postfix;
+    rot_key  += postfix;
+
+    imgui->text(_L("Use CTRL+left mouse key to enter text edit mode:"));
+
+    if (imgui->slider_float(_L("Clearance size"), &settings.distance, dist_min, 100.0f, "%5.2f") || dist_min > settings.distance) {
+        settings.distance = std::max(dist_min, settings.distance);
+        settings_out.distance = settings.distance;
+        appcfg->set("arrange", dist_key.c_str(), std::to_string(settings_out.distance));
         settings_changed = true;
     }
 
     if (imgui->checkbox(_L("Enable rotations (slow)"), settings.enable_rotation)) {
-        m_arrange_settings.enable_rotation = settings.enable_rotation;
+        settings_out.enable_rotation = settings.enable_rotation;
+        appcfg->set("arrange", rot_key.c_str(), settings_out.enable_rotation? "1" : "0");
         settings_changed = true;
     }
 
     ImGui::Separator();
 
     if (imgui->button(_L("Reset"))) {
-        m_arrange_settings = ArrangeSettings{};
+        settings_out = ArrangeSettings{};
+        settings_out.distance = std::max(dist_min, settings_out.distance);
+        appcfg->set("arrange", dist_key.c_str(), std::to_string(settings_out.distance));
+        appcfg->set("arrange", rot_key.c_str(), settings_out.enable_rotation? "1" : "0");
         settings_changed = true;
-    }
-
-    if (settings_changed) {
-        appcfg->set("arrange", "min_object_distance", std::to_string(m_arrange_settings.distance));
-        appcfg->set("arrange", "enable_rotation", m_arrange_settings.enable_rotation? "1" : "0");
     }
 
     ImGui::SameLine();

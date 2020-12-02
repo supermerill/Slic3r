@@ -145,10 +145,10 @@ void ArrangeJob::prepare()
 void ArrangeJob::process()
 {
     static const auto arrangestr = _(L("Arranging"));
-    
-    GLCanvas3D::ArrangeSettings settings =
-        m_plater->canvas3D()->get_arrange_settings();
-    
+
+    const GLCanvas3D::ArrangeSettings &settings =
+        static_cast<const GLCanvas3D*>(m_plater->canvas3D())->get_arrange_settings();
+
     double min_dist_computed = PrintConfig::min_object_distance(&m_plater->current_print()->full_print_config());
     arrangement::ArrangeParams params;
     params.min_obj_distance = scaled(std::max(double(settings.distance), min_dist_computed * 2 ));

@@ -397,6 +397,7 @@ static inline void set_extra_lift(const Layer& layer, const Print& print, GCodeW
     // Otherwise, leave control to the user completely.
     std::string toolchange_gcode_str;
         const std::string& toolchange_gcode = gcodegen.config().toolchange_gcode.value;
+//        m_max_layer_z = std::max(m_max_layer_z, tcr.print_z);
         if (! toolchange_gcode.empty()) {
             DynamicConfig config;
             int previous_extruder_id = gcodegen.writer().tool() ? (int)gcodegen.writer().tool()->id() : -1;
@@ -404,6 +405,7 @@ static inline void set_extra_lift(const Layer& layer, const Print& print, GCodeW
             config.set_key_value("next_extruder",     new ConfigOptionInt((int)new_extruder_id));
             config.set_key_value("layer_num",         new ConfigOptionInt(gcodegen.m_layer_index));
             config.set_key_value("layer_z",           new ConfigOptionFloat(tcr.print_z));
+//            config.set_key_value("max_layer_z", new ConfigOptionFloat(m_max_layer_z));
             toolchange_gcode_str = gcodegen.placeholder_parser_process("toolchange_gcode", toolchange_gcode, new_extruder_id, &config);
             check_add_eol(toolchange_gcode_str);
         }
@@ -1111,11 +1113,12 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     DoExport::init_gcode_processor(print.config(), m_processor, m_silent_time_estimator_enabled);
 
     // resets analyzer's tracking data
-    m_last_height = 0.0f;
-    m_last_layer_z = 0.0f;
+    m_last_height  = 0.f;
+    m_last_layer_z = 0.f;
+    m_max_layer_z  = 0.f;
 #if ENABLE_GCODE_VIEWER_DATA_CHECKING
-    m_last_mm3_per_mm = 0.0;
-    m_last_width = 0.0f;
+    m_last_mm3_per_mm = 0.;
+    m_last_width   = 0.f;
 #endif // ENABLE_GCODE_VIEWER_DATA_CHECKING
     m_fan_mover.release();
 
@@ -1604,7 +1607,8 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     {
         DynamicConfig config;
         config.set_key_value("layer_num", new ConfigOptionInt(m_layer_index));
-        config.set_key_value("layer_z", new ConfigOptionFloat(m_writer.get_position()(2) - m_config.z_offset.value));
+        config.set_key_value("layer_z",   new ConfigOptionFloat(m_writer.get_position()(2) - m_config.z_offset.value));
+        config.set_key_value("max_layer_z", new ConfigOptionFloat(m_max_layer_z));
         config.set_key_value("current_extruder_id", new ConfigOptionInt((int)m_writer.tool()->id()));
         if (m_writer.tool_is_extruder()) {
             if (print.config().single_extruder_multi_material) {
@@ -2163,6 +2167,7 @@ void GCode::process_layer(
     gcode += buf;
     // update caches
     m_last_layer_z = static_cast<float>(print_z);
+    m_max_layer_z  = std::max(m_max_layer_z, m_last_layer_z);
     m_last_height = height;
 
     // Set new layer - this will change Z and force a retraction if retract_layer_change is enabled.
@@ -2172,6 +2177,7 @@ void GCode::process_layer(
         config.set_key_value("previous_layer_z", new ConfigOptionFloat(previous_print_z));
         config.set_key_value("layer_num", new ConfigOptionInt(m_layer_index + 1));
         config.set_key_value("layer_z", new ConfigOptionFloat(print_z));
+        config.set_key_value("max_layer_z", new ConfigOptionFloat(m_max_layer_z));
         gcode += this->placeholder_parser_process("before_layer_gcode",
             print.config().before_layer_gcode.value, m_writer.tool()->id(), &config)
             + "\n";
@@ -2186,6 +2192,7 @@ void GCode::process_layer(
         gcode += this->placeholder_parser_process("layer_gcode",
             print.config().layer_gcode.value, m_writer.tool()->id(), &config)
             + "\n";
+        config.set_key_value("max_layer_z", new ConfigOptionFloat(m_max_layer_z));
     }
 
     if (! first_layer && ! m_second_layer_things_done) {
@@ -4053,6 +4060,7 @@ std::string GCode::set_extruder(unsigned int extruder_id, double print_z, bool n
         config.set_key_value("next_extruder",     new ConfigOptionInt((int)extruder_id));
         config.set_key_value("layer_num",         new ConfigOptionInt(m_layer_index));
         config.set_key_value("layer_z",           new ConfigOptionFloat(print_z));
+        config.set_key_value("max_layer_z",       new ConfigOptionFloat(m_max_layer_z));
         toolchange_gcode_parsed = placeholder_parser_process("toolchange_gcode", toolchange_gcode, extruder_id, &config);
         gcode += toolchange_gcode_parsed;
         check_add_eol(gcode);
