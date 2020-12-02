@@ -9,6 +9,8 @@
 #include <string>
 #include "libslic3r/GCode/GCodeProcessor.hpp"
 
+#include "GCodeViewer.hpp"
+
 class wxNotebook;
 class wxGLCanvas;
 class wxBoxSizer;
@@ -102,13 +104,20 @@ class Preview : public wxPanel
     std::function<void()> m_schedule_background_process;
 
     unsigned int m_number_extruders;
-    std::string m_preferred_color_mode;
+    std::string m_preferred_color_mode; // neutered / deprecated, ready to remove
+    //fields to see what color to display
+    GCodeViewer::EViewType m_last_choice = GCodeViewer::EViewType::FeatureType;
+    bool m_has_switched_to_color = false;
+    bool m_has_switched_to_extruders = false;
 
     bool m_loaded;
 
     DoubleSlider::Control* m_layers_slider{ nullptr };
     DoubleSlider::Control* m_moves_slider{ nullptr };
 
+
+    enum ScreenWidth { large, medium, tiny };
+    ScreenWidth m_width_screen = ScreenWidth::large;
 public:
     enum class OptionType : unsigned int
     {
@@ -127,8 +136,8 @@ public:
         Legend
     };
 
-    Preview(wxWindow* parent, Model* model, DynamicPrintConfig* config, BackgroundSlicingProcess* process, 
-        GCodeProcessor::Result* gcode_result, std::function<void()> schedule_background_process = []() {});
+Preview(wxWindow* parent, Model* model, DynamicPrintConfig* config, BackgroundSlicingProcess* process, 
+    GCodeProcessor::Result* gcode_result, std::function<void()> schedule_background_process = []() {});
     virtual ~Preview();
 
     wxGLCanvas* get_wxglcanvas() { return m_canvas_widget; }

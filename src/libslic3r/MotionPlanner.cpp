@@ -62,11 +62,11 @@ Polyline MotionPlanner::shortest_path(const Point &from, const Point &to)
         return Polyline(from, to);
     
     // Are both points in the same island?
-    int island_idx_from = -1;
-    int island_idx_to   = -1;
-    int island_idx      = -1;
+    int32_t island_idx_from = -1;
+    int32_t island_idx_to = -1;
+    int32_t island_idx = -1;
     for (MotionPlannerEnv &island : m_islands) {
-        int idx = &island - m_islands.data();
+        int32_t idx = (int32_t)( &island - m_islands.data() );
         if (island.island_contains(from))
             island_idx_from = idx;
         if (island.island_contains(to))
@@ -124,7 +124,7 @@ Polyline MotionPlanner::shortest_path(const Point &from, const Point &to)
     {
         // grow our environment slightly in order for simplify_by_visibility()
         // to work best by considering moves on boundaries valid as well
-        ExPolygonCollection grown_env(offset_ex(env.m_env.expolygons, float(+SCALED_EPSILON)));
+        ExPolygonCollection grown_env(offset_ex(env.m_env.expolygons, double(+SCALED_EPSILON)));
         
         if (island_idx == -1) {
             /*  If 'from' or 'to' are not inside our env, they were connected using the 

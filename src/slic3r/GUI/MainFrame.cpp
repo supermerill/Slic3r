@@ -105,7 +105,7 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
     default:
     case GUI_App::EAppMode::Editor:
         m_taskbar_icon = std::make_unique<PrusaSlicerTaskBarIcon>(wxTBI_DOCK);
-        m_taskbar_icon->SetIcon(wxIcon(Slic3r::var("PrusaSlicer_128px.png"), wxBITMAP_TYPE_PNG), "PrusaSlicer");
+        m_taskbar_icon->SetIcon(wxIcon(Slic3r::var("Slic3r_128px.png"), wxBITMAP_TYPE_PNG), "SuperSlicer");
         break;
     case GUI_App::EAppMode::GCodeViewer:
         m_taskbar_icon = std::make_unique<GCodeViewerTaskBarIcon>(wxTBI_DOCK);
@@ -121,7 +121,7 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
         wxFileName::SplitPath(wxStandardPaths::Get().GetExecutablePath(), &src_path, nullptr, nullptr, wxPATH_NATIVE);
         switch (wxGetApp().get_app_mode()) {
         default:
-        case GUI_App::EAppMode::Editor:      { src_path += "\\prusa-slicer.exe"; break; }
+        case GUI_App::EAppMode::Editor:      { src_path += "\\SuperSlicer.exe"; break; }
         case GUI_App::EAppMode::GCodeViewer: { src_path += "\\prusa-gcodeviewer.exe"; break; }
         }
         wxIconLocation icon_location;
@@ -134,7 +134,7 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
     default:
     case GUI_App::EAppMode::Editor:
     {
-        SetIcon(wxIcon(Slic3r::var("PrusaSlicer_128px.png"), wxBITMAP_TYPE_PNG));
+        SetIcon(wxIcon(Slic3r::var("Slic3r_128px.png"), wxBITMAP_TYPE_PNG));
         break;
     }
     case GUI_App::EAppMode::GCodeViewer:
@@ -146,13 +146,13 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
 #endif // _WIN32
 
 	// initialize status bar
-    m_statusbar = std::make_shared<ProgressStatusBar>(this);
+	m_statusbar = std::make_shared<ProgressStatusBar>(this);
     m_statusbar->set_font(GUI::wxGetApp().normal_font());
     if (wxGetApp().is_editor())
-        m_statusbar->embed(this);
+	m_statusbar->embed(this);
     m_statusbar->set_status_text(_L("Version") + " " +
-        SLIC3R_VERSION + " - " +
-        _L("Remember to check for updates at https://github.com/prusa3d/PrusaSlicer/releases"));
+        SLIC3R_VERSION +
+        _L("Remember to check for updates at https://github.com/supermerill/SuperSlicer/releases"));
 
     // initialize tabpanel and menubar
     init_tabpanel();
@@ -187,7 +187,7 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_S
     sizer->Add(m_main_sizer, 1, wxEXPAND);
     SetSizer(sizer);
     // initialize layout from config
-    update_layout();
+        update_layout();
     sizer->SetSizeHints(this);
     Fit();
 
@@ -404,7 +404,7 @@ void MainFrame::update_layout()
 //        m_tabpanel->SetMinSize(size);
 //    }
 //#endif
-
+    
 #ifdef __APPLE__
     m_plater->sidebar().change_top_border_for_mode_sizer(m_layout != ESettingsLayout::Old);
 #endif
@@ -418,8 +418,8 @@ void MainFrame::shutdown()
 {
 #ifdef _WIN32
 	if (m_hDeviceNotify) {
-		::UnregisterDeviceNotification(HDEVNOTIFY(m_hDeviceNotify));
-		m_hDeviceNotify = nullptr;
+	::UnregisterDeviceNotification(HDEVNOTIFY(m_hDeviceNotify));
+	m_hDeviceNotify = nullptr;
 	}
  	if (m_ulSHChangeNotifyRegister) {
         SHChangeNotifyDeregister(m_ulSHChangeNotifyRegister);
@@ -430,6 +430,9 @@ void MainFrame::shutdown()
     if (m_plater != nullptr) {
         m_plater->stop_jobs();
 
+        //close calibration dialog if opened
+        wxGetApp().change_calibration_dialog(nullptr, nullptr);
+
         // Unbinding of wxWidgets event handling in canvases needs to be done here because on MAC,
         // when closing the application using Command+Q, a mouse event is triggered after this lambda is completed,
         // causing a crash
@@ -439,6 +442,8 @@ void MainFrame::shutdown()
         // see: https://github.com/prusa3d/PrusaSlicer/issues/3964
         m_plater->reset_canvas_volumes();
     }
+
+
 
     // Weird things happen as the Paint messages are floating around the windows being destructed.
     // Avoid the Paint messages by hiding the main window.
@@ -451,11 +456,11 @@ void MainFrame::shutdown()
         m_settings_dialog.Close();
 
     if (m_plater != nullptr) {
-        // Stop the background thread (Windows and Linux).
-        // Disconnect from a 3DConnextion driver (OSX).
-        m_plater->get_mouse3d_controller().shutdown();
-        // Store the device parameter database back to appconfig.
-        m_plater->get_mouse3d_controller().save_config(*wxGetApp().app_config);
+	// Stop the background thread (Windows and Linux).
+	// Disconnect from a 3DConnextion driver (OSX).
+    m_plater->get_mouse3d_controller().shutdown();
+	// Store the device parameter database back to appconfig.
+    m_plater->get_mouse3d_controller().save_config(*wxGetApp().app_config);
     }
 
     // Stop the background thread of the removable drive manager, so that no new updates will be sent to the Plater.
@@ -502,9 +507,9 @@ void MainFrame::update_title()
     	}
     }
 
-    title += wxString(build_id);
+    title += wxString(SLIC3R_APP_NAME) + "_" + wxString(SLIC3R_VERSION) ;
     if (wxGetApp().is_editor())
-        title += (" " + _L("based on Slic3r"));
+        title += (" " + _L("based on PrusaSlicer & Slic3r"));
 
     SetTitle(title);
 }
@@ -554,7 +559,7 @@ void MainFrame::init_tabpanel()
     Bind(EVT_TAB_PRESETS_CHANGED, &MainFrame::on_presets_changed, this); // #ys_FIXME_to_delete
 
     if (wxGetApp().is_editor())
-        create_preset_tabs();
+    create_preset_tabs();
 
     if (m_plater) {
         // load initial config
@@ -759,8 +764,8 @@ bool MainFrame::can_change_view() const
     case ESettingsLayout::New: { return m_plater->IsShown(); }
     case ESettingsLayout::Dlg: { return true; }
     case ESettingsLayout::Old: { 
-        int page_id = m_tabpanel->GetSelection();
-        return page_id != wxNOT_FOUND && dynamic_cast<const Slic3r::GUI::Plater*>(m_tabpanel->GetPage((size_t)page_id)) != nullptr;
+    int page_id = m_tabpanel->GetSelection();
+    return page_id != wxNOT_FOUND && dynamic_cast<const Slic3r::GUI::Plater*>(m_tabpanel->GetPage((size_t)page_id)) != nullptr;
     }
     case ESettingsLayout::GCodeViewer: { return true; }
     }
@@ -805,8 +810,8 @@ void MainFrame::on_dpi_changed(const wxRect& suggested_rect)
 
     // update Tabs
     if (m_layout != ESettingsLayout::Dlg) // Do not update tabs if the Settings are in the separated dialog
-        for (auto tab : wxGetApp().tabs_list)
-            tab->msw_rescale();
+    for (auto tab : wxGetApp().tabs_list)
+        tab->msw_rescale();
 
     wxMenuBar* menu_bar = this->GetMenuBar();
     for (size_t id = 0; id < menu_bar->GetMenuCount(); id++)
@@ -867,34 +872,39 @@ static const wxString sep_space = "";
 static wxMenu* generate_help_menu()
 {
     wxMenu* helpMenu = new wxMenu();
-    append_menu_item(helpMenu, wxID_ANY, _L("Prusa 3D &Drivers"), _L("Open the Prusa3D drivers download page in your browser"),
-        [](wxCommandEvent&) { wxGetApp().open_web_page_localized("https://www.prusa3d.com/downloads"); });
-    append_menu_item(helpMenu, wxID_ANY, _L("Software &Releases"), _L("Open the software releases page in your browser"),
-        [](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/prusa3d/PrusaSlicer/releases"); });
-//#        my $versioncheck = $self->_append_menu_item($helpMenu, "Check for &Updates...", "Check for new Slic3r versions", sub{
-//#            wxTheApp->check_version(1);
-//#        });
-//#        $versioncheck->Enable(wxTheApp->have_version_check);
-    append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("%s &Website"), SLIC3R_APP_NAME),
-        wxString::Format(_L("Open the %s website in your browser"), SLIC3R_APP_NAME),
-        [](wxCommandEvent&) { wxGetApp().open_web_page_localized("https://www.prusa3d.com/slicerweb"); });
-//        append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("%s &Manual"), SLIC3R_APP_NAME),
-//                                             wxString::Format(_L("Open the %s manual in your browser"), SLIC3R_APP_NAME),
-//            [this](wxCommandEvent&) { wxLaunchDefaultBrowser("http://manual.slic3r.org/"); });
+    append_menu_item(helpMenu, wxID_ANY, _L("SuperSlicer Releases"), _L("Open the SuperSlicer releases page in your browser"),
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://github.com/supermerill/SuperSlicer/releases"); });
+    append_menu_item(helpMenu, wxID_ANY, _L("SuperSlicer wiki"), _L("Open the SuperSlicer wiki in your browser"),
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://github.com/supermerill/SuperSlicer/wiki"); });
+    append_menu_item(helpMenu, wxID_ANY, _L("SuperSlicer website"), _L("Open the SuperSlicer website in your browser"),
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://github.com/supermerill/SuperSlicer"); });
+    append_menu_item(helpMenu, wxID_ANY, _L("Prusa Edition website"), _L("Open the Prusa Edition website in your browser"),
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://github.com/prusa3d/PrusaSlicer"); });
+    //#        my $versioncheck = $self->_append_menu_item($helpMenu, "Check for &Updates...", "Check for new Slic3r versions", sub{
+    //#            wxTheApp->check_version(1);
+    //#        });
+    //#        $versioncheck->Enable(wxTheApp->have_version_check);
+    append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("Slic3r Website")),
+        wxString::Format(_L("Open the Slic3r website in your browser")),
+        //            [this](wxCommandEvent&) { wxGetApp().open_web_page_localized("https://www.prusa3d.com/slicerweb"); });
+        //        append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("%s &Manual"), SLIC3R_APP_NAME),
+        //                                             wxString::Format(_L("Open the %s manual in your browser"), SLIC3R_APP_NAME),
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://manual.slic3r.org/"); });
     helpMenu->AppendSeparator();
     append_menu_item(helpMenu, wxID_ANY, _L("System &Info"), _L("Show system information"),
         [](wxCommandEvent&) { wxGetApp().system_info(); });
     append_menu_item(helpMenu, wxID_ANY, _L("Show &Configuration Folder"), _L("Show user configuration folder (datadir)"),
         [](wxCommandEvent&) { Slic3r::GUI::desktop_open_datadir_folder(); });
     append_menu_item(helpMenu, wxID_ANY, _L("Report an I&ssue"), wxString::Format(_L("Report an issue on %s"), SLIC3R_APP_NAME),
-        [](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/prusa3d/slic3r/issues/new"); });
+        [](wxCommandEvent&) { wxLaunchDefaultBrowser("http://github.com/supermerill/SuperSlicer/issues/new"); });
+
     if (wxGetApp().is_editor())
         append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("&About %s"), SLIC3R_APP_NAME), _L("Show about dialog"),
             [](wxCommandEvent&) { Slic3r::GUI::about(); });
     else
         append_menu_item(helpMenu, wxID_ANY, wxString::Format(_L("&About %s"), GCODEVIEWER_APP_NAME), _L("Show about dialog"),
             [](wxCommandEvent&) { Slic3r::GUI::about(); });
-    helpMenu->AppendSeparator();
+        helpMenu->AppendSeparator();
     append_menu_item(helpMenu, wxID_ANY, _L("Keyboard Shortcuts") + sep + "&?", _L("Show the list of the keyboard shortcuts"),
         [](wxCommandEvent&) { wxGetApp().keyboard_shortcuts(); });
 #if ENABLE_THUMBNAIL_GENERATOR_DEBUG
@@ -1205,6 +1215,45 @@ void MainFrame::init_menubar_as_editor()
             []() { return true; }, [this]() { return m_plater->is_sidebar_collapsed(); }, this);
     }
 
+    // calibration menu
+    wxMenu* calibrationMenu = nullptr;
+    if (wxGetApp().is_editor())
+    {
+        calibrationMenu = new wxMenu();
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Introduction")), _(L("How to use this menu and calibrations.")),
+            [this](wxCommandEvent&) { wxGetApp().html_dialog(); });
+        calibrationMenu->AppendSeparator();
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Bed/Extruder levelling")), _(L("Create a test print to help you to level your printer bed.")),
+            [this](wxCommandEvent&) { wxGetApp().bed_leveling_dialog(); });
+        calibrationMenu->AppendSeparator();
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Filament Flow calibration")), _(L("Create a test print to help you to set your filament extrusion multiplier.")),
+            [this](wxCommandEvent&) { wxGetApp().flow_ratio_dialog(); });
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Filament temperature calibration")), _(L("Create a test print to help you to set your filament temperature.")),
+            [this](wxCommandEvent&) { wxGetApp().filament_temperature_dialog(); });
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Extruder retraction calibration")), _(L("Create a test print to help you to set your retraction length.")),
+            [this](wxCommandEvent&) { wxGetApp().calibration_retraction_dialog(); });
+        calibrationMenu->AppendSeparator();
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Bridge flow calibration")), _(L("Create a test print to help you to set your bridge flow ratio.")),
+            [this](wxCommandEvent&) { wxGetApp().bridge_tuning_dialog(); });
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Ironing pattern calibration")), _(L("Create a test print to help you to set your over-bridge flow ratio and ironing pattern.")),
+            [this](wxCommandEvent&) { wxGetApp().over_bridge_dialog(); });
+        calibrationMenu->AppendSeparator();
+        append_menu_item(calibrationMenu, wxID_ANY, _(L("Calibration cube")), _(L("Print a calibration cube, for various calibration goals.")),
+            [this](wxCommandEvent&) { wxGetApp().calibration_cube_dialog(); });
+    }
+
+    // objects menu
+    wxMenu* generationMenu = nullptr;
+    if (wxGetApp().is_editor())
+    {
+        generationMenu  = new wxMenu();
+        append_menu_item(generationMenu, wxID_ANY, _(L("FreeCad python script")), _(L("Create an object by writing little easy script.")),
+            [this](wxCommandEvent&) { wxGetApp().freecad_script_dialog(); });
+        append_menu_item(generationMenu, wxID_ANY, _(L("Script help page")), _(L("How to use the FreeCad python script window.")),
+            [this](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/supermerill/SuperSlicer/wiki/FreePySCAD-script-window"); });
+
+    }
+
     // Help menu
     auto helpMenu = generate_help_menu();
 
@@ -1216,6 +1265,8 @@ void MainFrame::init_menubar_as_editor()
     if (editMenu) m_menubar->Append(editMenu, _L("&Edit"));
     m_menubar->Append(windowMenu, _L("&Window"));
     if (viewMenu) m_menubar->Append(viewMenu, _L("&View"));
+    if (calibrationMenu) m_menubar->Append(calibrationMenu, _L("C&alibration"));
+    if (generationMenu) m_menubar->Append(generationMenu, _L("&Generate"));
     // Add additional menus from C++
     wxGetApp().add_config_menu(m_menubar);
     m_menubar->Append(helpMenu, _L("&Help"));
@@ -1247,7 +1298,7 @@ void MainFrame::init_menubar_as_gcodeviewer()
         append_menu_item(fileMenu, wxID_ANY, _L("Export &toolpaths as OBJ") + dots, _L("Export toolpaths as OBJ"),
             [this](wxCommandEvent&) { if (m_plater != nullptr) m_plater->export_toolpaths_to_obj(); }, "export_plater", nullptr,
             [this]() {return can_export_toolpaths(); }, this);
-        append_menu_item(fileMenu, wxID_ANY, _L("Open &PrusaSlicer") + dots, _L("Open PrusaSlicer"),
+        append_menu_item(fileMenu, wxID_ANY, _L("Open &SuperSlicer") + dots, _L("Open SuperSlicer"),
             [this](wxCommandEvent&) { start_new_slicer(); }, "", nullptr,
             [this]() {return true; }, this);
         fileMenu->AppendSeparator();
@@ -1389,12 +1440,12 @@ void MainFrame::quick_slice(const int qs)
         if (dlg.ShowModal() != wxID_OK)
             return;
         output_file = dlg.GetPath();
-    }
+        }
 
     // show processbar dialog
     m_progress_dialog = new wxProgressDialog(_L("Slicing") + dots,
-        // TRN "Processing input_file_basename"
-        from_u8((boost::format(_utf8(L("Processing %s"))) % (input_file_basename + dots)).str()),
+    // TRN "Processing input_file_basename"
+                                             from_u8((boost::format(_utf8(L("Processing %s"))) % (input_file_basename + dots)).str()),
         100, nullptr, wxPD_AUTO_HIDE);
     m_progress_dialog->Pulse();
     {
@@ -1440,7 +1491,7 @@ void MainFrame::repair_stl()
         if (dlg.ShowModal() != wxID_OK)
             return;
         input_file = dlg.GetPath();
-    }
+        }
 
     wxString output_file = input_file;
     {
@@ -1450,7 +1501,7 @@ void MainFrame::repair_stl()
         if (dlg.ShowModal() != wxID_OK)
             return;
         output_file = dlg.GetPath();
-    }
+        }
 
     auto tmesh = new Slic3r::TriangleMesh();
     tmesh->ReadSTLFile(input_file.ToUTF8().data());
@@ -1487,11 +1538,11 @@ void MainFrame::export_config()
 // Load a config file containing a Print, Filament & Printer preset.
 void MainFrame::load_config_file()
 {
-    if (!wxGetApp().check_unsaved_changes())
-        return;
+        if (!wxGetApp().check_unsaved_changes())
+            return;
     wxFileDialog dlg(this, _L("Select configuration to load:"),
-        !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
-        "config.ini", "INI files (*.ini, *.gcode)|*.ini;*.INI;*.gcode;*.g", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+            !m_last_config.IsEmpty() ? get_dir_name(m_last_config) : wxGetApp().app_config->get_last_dir(),
+            "config.ini", "INI files (*.ini, *.gcode)|*.ini;*.INI;*.gcode;*.g", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	wxString file;
     if (dlg.ShowModal() == wxID_OK)
         file = dlg.GetPath();
@@ -1510,7 +1561,7 @@ bool MainFrame::load_config_file(const std::string &path)
         show_error(this, ex.what());
         return false;
     }
-    wxGetApp().load_current_presets();
+	wxGetApp().load_current_presets();
     return true;
 }
 
@@ -1557,7 +1608,7 @@ void MainFrame::load_configbundle(wxString file/* = wxEmptyString, const bool re
         if (dlg.ShowModal() != wxID_OK)
             return;
         file = dlg.GetPath();
-	}
+		}
 
     wxGetApp().app_config->update_config_dir(get_dir_name(file));
 
@@ -1587,11 +1638,11 @@ void MainFrame::load_config(const DynamicPrintConfig& config)
 		this->plater()->set_printer_technology(printer_technology);
 	}
 #if 0
-	for (auto tab : wxGetApp().tabs_list)
+    for (auto tab : wxGetApp().tabs_list)
 		if (tab->supports_printer_technology(printer_technology)) {
 			if (tab->type() == Slic3r::Preset::TYPE_PRINTER)
 				static_cast<TabPrinter*>(tab)->update_pages();
-			tab->load_config(config);
+        tab->load_config(config);
 		}
     if (m_plater)
         m_plater->on_config_change(config);
@@ -1750,6 +1801,7 @@ void MainFrame::on_value_changed(wxCommandEvent& event)
         m_plater->on_config_change(*tab->get_config()); // propagate config change events to the plater
         if (opt_key == "extruders_count") {
             auto value = event.GetInt();
+            //to update filaments gui
             m_plater->on_extruders_change(value);
         }
     }
@@ -1838,7 +1890,7 @@ SettingsDialog::SettingsDialog(MainFrame* mainframe)
         SetIcon(wxIcon(szExeFileName, wxBITMAP_TYPE_ICO));
     }
 #else
-    SetIcon(wxIcon(var("PrusaSlicer_128px.png"), wxBITMAP_TYPE_PNG));
+    SetIcon(wxIcon(var("Slic3r_128px.png"), wxBITMAP_TYPE_PNG));
 #endif // _WIN32
 
     this->Bind(wxEVT_SHOW, [this](wxShowEvent& evt) {

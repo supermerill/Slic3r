@@ -39,7 +39,8 @@ class OG_CustomCtrl :public wxPanel
         const Line&       og_line;
 
         bool draw_just_act_buttons  { false };
-        bool is_visible             { true };
+        std::vector<bool> is_visible;
+        bool is_line_visible { true };
         bool is_focused             { false };
 
         CtrlLine(   wxCoord         height,
@@ -54,7 +55,7 @@ class OG_CustomCtrl :public wxPanel
 
         void    render(wxDC& dc, wxCoord v_pos);
         wxCoord draw_mode_bmp(wxDC& dc, wxCoord v_pos);
-        wxCoord draw_text      (wxDC& dc, wxPoint pos, const wxString& text, const wxColour* color, int width, bool is_url = false);
+        wxCoord draw_text      (wxDC& dc, wxPoint pos, const wxString& text, const wxColour* color, int width, bool is_url = false, bool align_right = false);
         wxPoint draw_blinking_bmp(wxDC& dc, wxPoint pos, bool is_blinking);
         wxCoord draw_act_bmps(wxDC& dc, wxPoint pos, const wxBitmap& bmp_undo_to_sys, const wxBitmap& bmp_undo, bool is_blinking, size_t rect_id = 0);
         bool    launch_browser() const;

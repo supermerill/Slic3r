@@ -22,7 +22,7 @@
 #include <boost/log/trivial.hpp>
 
 
-// Store the print/filament/printer presets into a "presets" subdirectory of the Slic3rPE config dir.
+// Store the print/filament/printer presets into a "presets" subdirectory of the SuperSlicer config dir.
 // This breaks compatibility with the upstream Slic3r if the --datadir is used to switch between the two versions.
 // #define SLIC3R_PROFILE_USE_PRESETS_SUBDIR
 
@@ -500,6 +500,7 @@ DynamicPrintConfig PresetBundle::full_config_secure() const
     config.erase("print_host");
     config.erase("printhost_apikey");
     config.erase("printhost_cafile");
+    config.erase("printhost_port");
     return config;
 }
 
@@ -1084,8 +1085,17 @@ size_t PresetBundle::load_configbundle(const std::string &path, unsigned int fla
     namespace pt = boost::property_tree;
     pt::ptree tree;
     boost::nowide::ifstream ifs(path);
-    pt::read_ini(ifs, tree);
-
+//#ifdef __WXMSW__
+    try {
+        pt::read_ini(ifs, tree);
+    }catch(const std::exception& ex) {
+        std::stringstream ss;
+        ss << "Error when reading bundle file " << path << ", error: " << ex.what();
+        throw std::exception(ss.str().c_str());
+    }
+//#else
+//        pt::read_ini(ifs, tree);
+//#endif
     const VendorProfile *vendor_profile = nullptr;
     if (flags & (LOAD_CFGBNDLE_SYSTEM | LOAD_CFGBUNDLE_VENDOR_ONLY)) {
         auto vp = VendorProfile::from_ini(tree, path);

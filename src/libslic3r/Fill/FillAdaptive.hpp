@@ -65,7 +65,7 @@ protected:
 	    unsigned int                     thickness_layers,
 	    const std::pair<float, Point>   &direction,
 	    ExPolygon                        expolygon,
-	    Polylines                       &polylines_out) override;
+	    Polylines                       &polylines_out) const override;
 	bool no_sort() const override { return true; }
 };
 

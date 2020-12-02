@@ -1,7 +1,7 @@
 
-# Building PrusaSlicer on Mac OS
+# Building SuperSlicer on Mac OS
 
-To build PrusaSlicer on Mac OS, you will need the following software:
+To build SuperSlicer on Mac OS, you will need the following software:
 
 - XCode
 - CMake
@@ -11,10 +11,21 @@ To build PrusaSlicer on Mac OS, you will need the following software:
 XCode is available through Apple's App Store, the other three tools are available on
 [brew](https://brew.sh/) (use `brew install cmake git gettext` to install them).
 
+### How to build
+
+You can follow the [script](https://github.com/supermerill/SuperSlicer/blob/master/.github/workflows/ccpp_mac.yml) the build server use to create the ubuntu release.
+
+You have to execute each command at the right of the 'run: ' tags, in the directory that is at the right of the previous 'working-directory:' tag.
+
+You can stop after the `make slic3r` as the rest of the commands are for building the .dmg
+
+# Old doc, not up-to-date:
+
+
 ### Dependencies
 
-PrusaSlicer comes with a set of CMake scripts to build its dependencies, it lives in the `deps` directory.
-Open a terminal window and navigate to PrusaSlicer sources directory and then to `deps`.
+SuperSlicer comes with a set of CMake scripts to build its dependencies, it lives in the `deps` directory.
+Open a terminal window and navigate to SuperSlicer sources directory and then to `deps`.
 Use the following commands to build the dependencies:
 
     mkdir build
@@ -32,10 +43,10 @@ FIXME The Cereal serialization library needs a tiny patch on some old OSX clang 
 https://github.com/USCiLab/cereal/issues/339#issuecomment-246166717
 
 
-### Building PrusaSlicer
+### Building SuperSlicer
 
-If dependencies are built without errors, you can proceed to build PrusaSlicer itself.
-Go back to top level PrusaSlicer sources directory and use these commands:
+If dependencies are built without errors, you can proceed to build SuperSlicer itself.
+Go back to top level SuperSlicer sources directory and use these commands:
 
     mkdir build
     cd build
@@ -44,7 +55,7 @@ Go back to top level PrusaSlicer sources directory and use these commands:
 The `CMAKE_PREFIX_PATH` is the path to the dependencies bundle but with `/usr/local` appended - if you set a custom path
 using the `DESTDIR` option, you will need to change this accordingly. **Warning:** the `CMAKE_PREFIX_PATH` needs to be an absolute path.
 
-The CMake command above prepares PrusaSlicer for building from the command line.
+The CMake command above prepares SuperSlicer for building from the command line.
 To start the build, use
 
     make -jN
@@ -55,12 +66,12 @@ Alternatively, if you would like to use XCode GUI, modify the `cmake` command to
 
     cmake .. -GXcode -DCMAKE_PREFIX_PATH="$PWD/../deps/build/destdir/usr/local"
 
-and then open the `PrusaSlicer.xcodeproj` file.
+and then open the `SuperSlicer.xcodeproj` file.
 This should open up XCode where you can perform build using the GUI or perform other tasks.
 
 ### Note on Mac OS X SDKs
 
-By default PrusaSlicer builds against whichever SDK is the default on the current system.
+By default SuperSlicer builds against whichever SDK is the default on the current system.
 
 This can be customized. The `CMAKE_OSX_SYSROOT` option sets the path to the SDK directory location
 and the `CMAKE_OSX_DEPLOYMENT_TARGET` option sets the target OS X system version (eg. `10.14` or similar).
@@ -69,9 +80,9 @@ In case you set both, the two settings need to agree with each other. (Building 
 is currently unsupported because some of the dependencies don't support this, most notably wxWidgets.)
 
 Please note that the `CMAKE_OSX_DEPLOYMENT_TARGET` and `CMAKE_OSX_SYSROOT` options need to be set the same
-on both the dependencies bundle as well as PrusaSlicer itself.
+on both the dependencies bundle as well as SuperSlicer itself.
 
-Official Mac PrusaSlicer builds are currently built against SDK 10.9 to ensure compatibility with older Macs.
+Official Mac SuperSlicer builds are currently built against SDK 10.9 to ensure compatibility with older Macs.
 
 _Warning:_ XCode may be set such that it rejects SDKs bellow some version (silently, more or less).
 This is set in the property list file

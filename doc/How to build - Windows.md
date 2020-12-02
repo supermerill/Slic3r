@@ -1,72 +1,91 @@
 
-# This how-to is out of date
+# Building SuperSlicer on Microsoft Windows
 
-We have switched to MS Visual Studio 2019.
-
-We don't use MSVS 2013 any more. At the moment we are in the process of creating new pre-built dependency bundles
-and updating this document. In the meantime, you will need to compile the dependencies yourself
-[the same way as before](#building-the-dependencies-package-yourself)
-except with CMake generators for MSVS 2019 instead of 2013.
-
-Thank you for understanding.
-
----
-
-# Building PrusaSlicer on Microsoft Windows
-
-~~The currently supported way of building PrusaSlicer on Windows is with CMake and MS Visual Studio 2013.
-You can use the free [Visual Studio 2013 Community Edition](https://www.visualstudio.com/vs/older-downloads/).
+The currently supported way of building SuperSlicer on Windows is with CMake and [MS Visual Studio 2019](https://visualstudio.microsoft.com/fr/vs).
 CMake installer can be downloaded from [the official website](https://cmake.org/download/).~~
 
-~~Building with newer versions of MSVS (2015, 2017) may work too as reported by some of our users.~~
+Building with [Visual Studio 2017 Community Edition](https://www.visualstudio.com/vs/older-downloads/). should work too.
 
-_Note:_ Thanks to [**@supermerill**](https://github.com/supermerill) for testing and inspiration for this guide.
+### How to build
 
-### Dependencies
+You have to build the dependancies (in ./deps/build)
+```
+cmake .. -G "Visual Studio 16 2019" -A x64
+msbuild /m ALL_BUILD.vcxproj
+```
 
-On Windows PrusaSlicer is built against statically built libraries.
-~~We provide a prebuilt package of all the needed dependencies. This package only works on Visual Studio 2013, so~~ if you are using a newer version of Visual Studio, you need to compile the dependencies yourself as per [below](#building-the-dependencies-package-yourself).
-The package comes in a several variants:
+and then build superslicer (in ./build):
+```
+cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_PREFIX_PATH="PATH_TO_SuperSlicer\deps\build\destdir\usr\local"
+msbuild /m /P:Configuration=Release INSTALL.vcxproj
+```
+You can also build it in visual studio, for that open the .sln.
+Note that you need to have `libgmp-10.dll` and `libmpfr-4.dll` next to your built superslicer. You can get them from any superslicer release.
 
-  - ~~64 bit, Release mode only (41 MB, 578 MB unpacked)~~
-  - ~~64 bit, Release and Debug mode (88 MB, 1.3 GB unpacked)~~
-  - ~~32 bit, Release mode only (38 MB, 520 MB unpacked)~~
-  - ~~32 bit, Release and Debug mode (74 MB, 1.1 GB unpacked)~~
+If you want to create the zipped release, you can follow this [script](https://github.com/supermerill/SuperSlicer/blob/master/.github/workflows/ccpp_win.yml).
 
-When unsure, use the _Release mode only_ variant, the _Release and Debug_ variant is only needed for debugging & development.
+# Old doc, not up-to-date:
 
-If you're unsure where to unpack the package, unpack it into `C:\local\` (but it can really be anywhere).
+### Building the dependencies package yourself
 
-Alternatively you can also compile the dependencies yourself, see below.
+The dependencies package is built using CMake scripts inside the `deps` subdirectory of SuperSlicer sources.
+(This is intentionally not interconnected with the CMake scripts in the rest of the sources.)
 
-### Building PrusaSlicer with Visual Studio
+Open the preferred Visual Studio command line (64 or 32 bit variant, or just a cmd window) and `cd` into the directory with SuperSlicer sources.
+Then `cd` into the `deps` directory and use these commands to build:
 
-First obtain the PrusaSlicer sources via either git or by extracting the source archive.
+    mkdir build
+    cd build
+    cmake .. -G "Visual Studio 15 Win64" -DDESTDIR="C:\local\destdir-custom"
+    msbuild /m ALL_BUILD.vcxproj
+	
+You can also use the Visual Studio GUI or other generators as mentioned below.
+
+Note that if you're building a 32-bit variant, you will need to change the `"Visual Studio 15 Win64"` to just `"Visual Studio 15"`.
+
+Conversely, if you're using Visual Studio version other than 2017, the version number will need to be changed accordingly (-G "Visual Studio 16 2019" -A "x64" for Visual Studio 2019 Community).
+
+The `DESTDIR` option is the location where the bundle will be installed.
+This may be customized. If you leave it empty, the `DESTDIR` will be placed inside the same `build` directory.
+
+Warning: If the `build` directory is nested too deep inside other folders, various file paths during the build become too long and the build might fail due to file writing errors (\*). For this reason, it is recommended to place the `build` directory relatively close to the drive root.
+
+Note that the build variant that you may choose using Visual Studio (i.e. _Release_ or _Debug_ etc.) when building the dependency package is **not relevant**.
+The dependency build will by default build _both_ the _Release_ and _Debug_ variants regardless of what you choose in Visual Studio.
+You can disable building of the debug variant by passing the
+
+    -DDEP_DEBUG=OFF
+
+option to CMake, this will only produce a _Release_ build.
+
+Refer to the CMake scripts inside the `deps` directory to see which dependencies are built in what versions and how this is done.
+
+* Specifically, the problem arises when building boost. Boost build tool appends all build options into paths of intermediate files, which are not handled correctly by either `b2.exe` or possibly `ninja` (?).
+
+
+### Building SuperSlicer with Visual Studio
+
+First obtain the SuperSlicer sources via either git or by extracting the source archive.
 
 Then you will need to note down the so-called 'prefix path' to the dependencies, this is the location of the dependencies packages + `\usr\local` appended.
-For example on 64 bits this would be `C:\local\destdir-64\usr\local`. The prefix path will need to be passed to CMake.
 
-When ready, open the relevant Visual Studio command line and `cd` into the directory with PrusaSlicer sources.
+When ready, open the relevant Visual Studio command line and `cd` into the directory with SuperSlicer sources.
 Use these commands to prepare Visual Studio solution file:
 
     mkdir build
     cd build
-    cmake .. -G "Visual Studio 12 Win64" -DCMAKE_PREFIX_PATH="<insert prefix path here>"
+    cmake .. -G "Visual Studio 15 Win64" -DCMAKE_PREFIX_PATH="C:\local\destdir-custom\usr\local"
 
-Note that if you're building a 32-bit variant, you will need to change the `"Visual Studio 12 Win64"` to just `"Visual Studio 12"`.
+Note that the '-G "Visual Studio 15 Win64"' have to be the same as the one you sue for building the dependencies. So replace it the same way your replace it when you built the dependencies (if you did).
 
-Conversely, if you're using Visual Studio version other than 2013, the version number will need to be changed accordingly.
-
-If `cmake` has finished without errors, go to the build directory and open the `PrusaSlicer.sln` solution file in Visual Studio.
-Before building, make sure you're building the right project (use one of those starting with `PrusaSlicer_app_...`) and that you're building
-with the right configuration, i.e. _Release_ vs. _Debug_. When unsure, choose _Release_.
+If `cmake` has finished without errors, go to the build directory and open the `SuperSlicer.sln` solution file in Visual Studio.
+Before building, make sure you're building the right project (use one of those starting with `SuperSlicer_app_...`) and that you're building with the right configuration, i.e. _Release_ vs. _Debug_. When unsure, choose _Release_.
 Note that you won't be able to build a _Debug_ variant against a _Release_-only dependencies package.
 
 #### Installing using the `INSTALL` project
 
-PrusaSlicer can be run from the Visual Studio or from Visual Studio's build directory (`src\Release` or `src\Debug`),
-but for longer-term usage you might want to install somewhere using the `INSTALL` project.
-By default, this installs into `C:\Program Files\PrusaSlicer`.
+SuperSlicer can be run from the Visual Studio or from Visual Studio's build directory (`src\Release` or `src\Debug`), but for longer-term usage you might want to install somewhere using the `INSTALL` project.
+By default, this installs into `C:\Program Files\SuperSlicer`.
 To customize the install path, use the `-DCMAKE_INSTALL_PREFIX=<path of your choice>` when invoking `cmake`.
 
 ### Building from the command line

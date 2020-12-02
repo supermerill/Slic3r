@@ -112,17 +112,21 @@ Control::Control( wxWindow *parent,
 
     // control's view variables
     SLIDER_MARGIN     = 4 + GUI::wxGetApp().em_unit();
+    
+    //DARK_ORANGE_PEN   = wxPen(wxColour(237, 107, 33));
+    //ORANGE_PEN        = wxPen(wxColour(253, 126, 66));
+    //LIGHT_ORANGE_PEN  = wxPen(wxColour(254, 177, 139));
 
-    DARK_ORANGE_PEN   = wxPen(wxColour(237, 107, 33));
-    ORANGE_PEN        = wxPen(wxColour(253, 126, 66));
-    LIGHT_ORANGE_PEN  = wxPen(wxColour(254, 177, 139));
+    DARK_BLUE_PEN     = wxPen(wxColour(32, 113, 234));
+    BLUE_PEN          = wxPen(wxColour(66, 141, 253));
+    LIGHT_BLUE_PEN    = wxPen(wxColour(139, 185, 254));
 
     DARK_GREY_PEN     = wxPen(wxColour(128, 128, 128));
     GREY_PEN          = wxPen(wxColour(164, 164, 164));
     LIGHT_GREY_PEN    = wxPen(wxColour(204, 204, 204));
 
     m_line_pens = { &DARK_GREY_PEN, &GREY_PEN, &LIGHT_GREY_PEN };
-    m_segm_pens = { &DARK_ORANGE_PEN, &ORANGE_PEN, &LIGHT_ORANGE_PEN };
+    m_segm_pens = { &DARK_BLUE_PEN, &BLUE_PEN, &LIGHT_BLUE_PEN };
 
     m_font = GetFont();
     this->SetMinSize(get_min_size());
@@ -443,26 +447,26 @@ void Control::render()
         draw_ruler(dc);
 
     if (!m_render_as_disabled) {
-        // draw line
-        draw_scroll_line(dc, lower_pos, higher_pos);
+    // draw line
+    draw_scroll_line(dc, lower_pos, higher_pos);
 
-        // draw color print ticks
-        draw_ticks(dc);
+    // draw color print ticks
+    draw_ticks(dc);
 
-        // draw both sliders
-        draw_thumbs(dc, lower_pos, higher_pos);
+    // draw both sliders
+    draw_thumbs(dc, lower_pos, higher_pos);
 
-        // draw lock/unlock
-        draw_one_layer_icon(dc);
+    // draw lock/unlock
+    draw_one_layer_icon(dc);
 
-        // draw revert bitmap (if it's shown)
-        draw_revert_icon(dc);
+    // draw revert bitmap (if it's shown)
+    draw_revert_icon(dc);
 
-        // draw cog bitmap (if it's shown)
-        draw_cog_icon(dc);
+    // draw cog bitmap (if it's shown)
+    draw_cog_icon(dc);
 
-        // draw mouse position
-        draw_tick_on_mouse_position(dc);
+    // draw mouse position
+    draw_tick_on_mouse_position(dc);
     }
 }
 
@@ -498,7 +502,7 @@ void Control::draw_info_line_with_icon(wxDC& dc, const wxPoint& pos, const Selec
 {
     if (m_selection == selection) {
         //draw info line
-        dc.SetPen(DARK_ORANGE_PEN);
+        dc.SetPen(DARK_BLUE_PEN);
         const wxPoint pt_beg = is_horizontal() ? wxPoint(pos.x, pos.y - m_thumb_size.y) : wxPoint(pos.x - m_thumb_size.x, pos.y/* - 1*/);
         const wxPoint pt_end = is_horizontal() ? wxPoint(pos.x, pos.y + m_thumb_size.y) : wxPoint(pos.x + m_thumb_size.x, pos.y/* - 1*/);
         dc.DrawLine(pt_beg, pt_end);
@@ -546,7 +550,7 @@ void Control::draw_tick_on_mouse_position(wxDC& dc)
         wxCoord new_pos = get_position_from_value(tick);
         const wxPoint pos = is_horizontal() ? wxPoint(new_pos, height * 0.5) : wxPoint(0.5 * width, new_pos);
 
-        dc.SetPen(DARK_ORANGE_PEN);
+        dc.SetPen(DARK_BLUE_PEN);
 
         draw_ticks(dc, pos, -2);
         draw_ticks(dc, pos, 2 );
@@ -910,11 +914,11 @@ void Control::Ruler::update(wxWindow* win, const std::vector<double>& values, do
                 break;
             int tick = val_it - values.begin();
 
-            // find next tick with istep
-            val *= 2;
-            val_it = std::lower_bound(values.begin(), end_it, val - epsilon());
-            // count of short ticks between ticks
-            int short_ticks_cnt = val_it == values.end() ? tick : val_it - values.begin() - tick;
+                // find next tick with istep
+                val *= 2;
+                val_it = std::lower_bound(values.begin(), end_it, val - epsilon());
+                // count of short ticks between ticks
+                int short_ticks_cnt = val_it == values.end() ? tick : val_it - values.begin() - tick;
 
             if (lround(short_ticks_cnt * scroll_step) > pixels_per_sm) {
                 step = istep;
@@ -937,7 +941,7 @@ void Control::draw_ruler(wxDC& dc)
 
     int height, width;
     get_size(&width, &height);
-    const wxCoord mid = is_horizontal() ? 0.5 * height : 0.5 * width; 
+    const wxCoord mid = is_horizontal() ? 0.5 * height : 0.5 * width;    
 
     dc.SetPen(GREY_PEN);
     wxColour old_clr = dc.GetTextForeground();
@@ -950,60 +954,60 @@ void Control::draw_ruler(wxDC& dc)
             draw_tick_text(dc, wxPoint(mid, pos), tick);
         }
     else {
-        auto draw_short_ticks = [this, mid](wxDC& dc, double& current_tick, int max_tick) {
-            while (current_tick < max_tick) {
-                wxCoord pos = get_position_from_value(lround(current_tick));
-                draw_ticks_pair(dc, pos, mid, 2);
-                current_tick += m_ruler.short_step;
-                if (current_tick > m_max_value)
-                    break;
-            }
-        };
-
-        double short_tick;
-        int tick = 0;
-        double value = 0.0;
-        int sequence = 0;
-
-        while (tick <= m_max_value) {
-            value += m_ruler.long_step;
-            if (value > m_values.back() && sequence < m_ruler.count) {
-                value = m_ruler.long_step;
-                for (tick; tick < m_values.size(); tick++)
-                    if (m_values[tick] < value)
-                        break;
-                // short ticks from the last tick to the end of current sequence
-                draw_short_ticks(dc, short_tick, tick);
-                sequence++;
-            }
-            short_tick = tick;
-
-            for (tick; tick < m_values.size(); tick++) {
-                if (m_values[tick] == value)
-                    break;
-                if (m_values[tick] > value) {
-                    if (tick > 0)
-                        tick--;
-                    break;
-                }
-            }
-            if (tick > m_max_value)
+    auto draw_short_ticks = [this, mid](wxDC& dc, double& current_tick, int max_tick) {
+        while (current_tick < max_tick) {
+            wxCoord pos = get_position_from_value(lround(current_tick));
+            draw_ticks_pair(dc, pos, mid, 2);
+            current_tick += m_ruler.short_step;
+            if (current_tick > m_max_value)
                 break;
+        }
+    };   
 
-            wxCoord pos = get_position_from_value(tick);
-            draw_ticks_pair(dc, pos, mid, 5);
-            draw_tick_text(dc, wxPoint(mid, pos), tick);
+    double short_tick;
+    int tick = 0;
+    double value = 0.0;
+    int sequence = 0;
 
+    while (tick <= m_max_value) {
+        value += m_ruler.long_step;
+        if (value > m_values.back() && sequence < m_ruler.count) {
+            value = m_ruler.long_step;
+            for (tick; tick < m_values.size(); tick++)
+                if (m_values[tick] < value)
+                    break;
+            // short ticks from the last tick to the end of current sequence
             draw_short_ticks(dc, short_tick, tick);
+            sequence++;
+        }
+        short_tick = tick;
 
-            if (value == m_values.back() && sequence < m_ruler.count) {
-                value = 0.0;
-                sequence++;
-                tick++;
+        for (tick; tick < m_values.size(); tick++) {
+            if (m_values[tick] == value)
+                break;
+            if (m_values[tick] > value) {
+                if (tick > 0)
+                    tick--;
+                break;
             }
         }
-        // short ticks from the last tick to the end 
-        draw_short_ticks(dc, short_tick, m_max_value);
+        if (tick > m_max_value)
+            break;
+
+        wxCoord pos = get_position_from_value(tick);
+        draw_ticks_pair(dc, pos, mid, 5);
+        draw_tick_text(dc, wxPoint(mid, pos), tick);
+
+        draw_short_ticks(dc, short_tick, tick);
+
+        if (value == m_values.back() && sequence < m_ruler.count) {
+            value = 0.0;
+            sequence++;
+            tick++;
+        }
+    }
+    // short ticks from the last tick to the end 
+    draw_short_ticks(dc, short_tick, m_max_value);
     }
 
     dc.SetTextForeground(old_clr);
@@ -1735,8 +1739,8 @@ std::set<int> TickCodeInfo::get_used_extruders_for_tick(int tick, int only_extru
 
         auto it_layer_tools = std::lower_bound(tool_ordering.begin(), tool_ordering.end(), LayerTools(print_z));
         for (; it_layer_tools != tool_ordering.end(); ++it_layer_tools) {
-            const std::vector<unsigned>& extruders = it_layer_tools->extruders;
-            for (const auto& extruder : extruders)
+            const std::vector<uint16_t>& extruders = it_layer_tools->extruders;
+            for (const uint16_t& extruder : extruders)
                 used_extruders.emplace(extruder+1);
         }
 
@@ -1840,7 +1844,7 @@ void Control::show_cog_icon_context_menu()
     wxMenu menu;
 
     append_menu_item(&menu, wxID_ANY, _L("Jump to height") + " (Shift+G)", "",
-                    [this](wxCommandEvent&) { jump_to_value(); }, "", & menu);
+                     [this](wxCommandEvent&) { jump_to_value(); }, "", & menu);
 
     wxMenu* ruler_mode_menu = new wxMenu();
     if (ruler_mode_menu) {
