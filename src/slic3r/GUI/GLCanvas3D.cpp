@@ -3955,7 +3955,7 @@ bool GLCanvas3D::_render_arrange_menu(float pos_x)
     } else if (ptech == ptFFF) {
         auto co_opt = m_config->option<ConfigOptionBool>("complete_objects");
         if (co_opt && co_opt->value) {
-            dist_min     = float(min_object_distance(*m_config));
+            dist_min     = float(PrintConfig::min_object_distance((const ConfigBase*)(m_config)));
             postfix      = "_fff_seq_print";
         } else {
             dist_min     = 0.f;

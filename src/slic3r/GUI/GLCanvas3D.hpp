@@ -726,7 +726,7 @@ public:
         ArrangeSettings ret = settings;
         if (&settings == &m_arrange_settings_fff_seq_print) {
             ret.distance = std::max(ret.distance,
-                                    float(min_object_distance(*m_config)));
+                                    float(PrintConfig::min_object_distance((const ConfigBase*)(m_config))));
         }
 
         return ret;

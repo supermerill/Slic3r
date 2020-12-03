@@ -3742,8 +3742,7 @@ void Plater::priv::on_process_completed(SlicingProcessCompletedEvent &evt)
             wxGetApp().removable_drive_manager()->set_exporting_finished(true);
         }else if (exporting_status == ExportingStatus::EXPORTING_TO_LOCAL && !has_error)
             notification_manager->push_exporting_finished_notification(*q->get_current_canvas3D(), last_output_path, last_output_dir_path, false);
-        }
-    }
+     }
     exporting_status = ExportingStatus::NOT_EXPORTING;
 }
 
