@@ -28,7 +28,7 @@ output = es/SuperSlicer.po
 It will tell you if you made some mistakes about the paths, the number of translations reused and the number to do.
 
 ## 3) complete the translation file
-Then, you have to open the es/toto.po file and complete all the translation. 
+Then, you have to open the es/todo.po file and complete all the translation. 
 * msgid lines are the english string
 * msgstr is the translated one, should be empty string ("").
 
