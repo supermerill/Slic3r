@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Prusa GCode viewer
-Exec=prusa-slicer --gcodeviewer %F
-Icon=PrusaSlicer-gcodeviewer
+Name=Super GCode viewer
+Exec=superslicer --gcodeviewer %F
+Icon=SuperSlicer-gcodeviewer
 Terminal=false
 Type=Application
 MimeType=text/x.gcode;
