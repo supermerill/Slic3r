@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=Super GCode viewer
+Comment=G-code viewer of SuperSlicer
 Exec=superslicer --gcodeviewer %F
 Icon=SuperSlicer-gcodeviewer
 Terminal=false
