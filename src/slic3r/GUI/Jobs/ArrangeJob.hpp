@@ -1,18 +1,14 @@
 #ifndef ARRANGEJOB_HPP
 #define ARRANGEJOB_HPP
 
-#include "Job.hpp"
+#include "PlaterJob.hpp"
 #include "libslic3r/Arrange.hpp"
 #include "libslic3r/Print.hpp"
 
 namespace Slic3r { namespace GUI {
 
-class Plater;
-
-class ArrangeJob : public Job
+class ArrangeJob : public PlaterJob
 {
-    Plater *m_plater;
-    
     using ArrangePolygon = arrangement::ArrangePolygon;
     using ArrangePolygons = arrangement::ArrangePolygons;
     
@@ -29,6 +25,8 @@ class ArrangeJob : public Job
 protected:
     
     void prepare() override;
+
+    void on_exception(const std::exception_ptr &) override;
     
 public:
     // Prepare all objects on the bed regardless of the selection
@@ -37,7 +35,7 @@ public:
 
 
     ArrangeJob(std::shared_ptr<ProgressIndicator> pri, Plater *plater)
-        : Job{std::move(pri)}, m_plater{plater}
+        : PlaterJob{std::move(pri), plater}
     {}
     
     int status_range() const override

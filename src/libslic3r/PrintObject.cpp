@@ -2610,7 +2610,7 @@ namespace Slic3r {
                     layer->make_slices();
                     //FIXME: can't make it work in multi-region object, it seems useful to avoid bridge on top of first layer compensation
                     //so it's disable, if you want an offset, use the offset field.
-                    //if (layer->regions().size() == 1 && layer_id == 0 && first_layer_compensation < 0 && m_config.raft_layers == 0) {
+                    //if (layer->regions().size() == 1 && ! m_layers.empty() && layer_id == 0 && first_layer_compensation < 0 && m_config.raft_layers == 0) {
                     //    // The Elephant foot has been compensated, therefore the 1st layer's lslices are shrank with the Elephant foot compensation value.
                     //    // Store the uncompensated value there.
                     //    assert(! m_layers.empty());

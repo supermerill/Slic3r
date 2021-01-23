@@ -160,6 +160,7 @@ Preview(wxWindow* parent, Model* model, DynamicPrintConfig* config, BackgroundSl
     void refresh_print();
 
     void msw_rescale();
+    void sys_color_changed();
     void jump_layers_slider(wxKeyEvent& evt);
     void move_layers_slider(wxKeyEvent& evt);
     void edit_layers_slider(wxKeyEvent& evt);

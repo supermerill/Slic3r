@@ -2478,6 +2478,8 @@ void GCode::process_layer(
                     instance_to_print.object_by_extruder.support->chained_path_from(m_last_pos, instance_to_print.object_by_extruder.support_extrusion_role));
                     m_layer = layers[instance_to_print.layer_id].layer();
                 }
+                //FIXME order islands?
+                // Sequential tool path ordering of multiple parts within the same object, aka. perimeter tracking (#5511)
                 for (ObjectByExtruder::Island &island : instance_to_print.object_by_extruder.islands) {
                     const std::vector<ObjectByExtruder::Island::Region>& by_region_specific =
                         is_anything_overridden ? 

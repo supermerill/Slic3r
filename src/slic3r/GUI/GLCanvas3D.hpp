@@ -565,7 +565,7 @@ public:
     void toggle_sla_auxiliaries_visibility(bool visible, const ModelObject* mo = nullptr, int instance_idx = -1);
     void toggle_model_objects_visibility(bool visible, const ModelObject* mo = nullptr, int instance_idx = -1);
     void update_instance_printable_state_for_object(size_t obj_idx);
-    void update_instance_printable_state_for_objects(std::vector<size_t>& object_idxs);
+    void update_instance_printable_state_for_objects(const std::vector<size_t>& object_idxs);
 
     void set_config(const DynamicPrintConfig* config);
     void set_process(BackgroundSlicingProcess* process);
@@ -652,7 +652,6 @@ public:
     void set_toolpath_view_type(GCodeViewer::EViewType type);
     void set_volumes_z_range(const std::array<double, 2>& range);
     void set_toolpaths_z_range(const std::array<unsigned int, 2>& range);
-    void set_toolpaths_range(double low, double high);
 
     std::vector<int> load_object(const ModelObject& model_object, int obj_idx, std::vector<int> instance_idxs);
     std::vector<int> load_object(const Model& model, int obj_idx);

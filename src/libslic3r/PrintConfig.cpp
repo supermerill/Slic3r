@@ -5332,15 +5332,20 @@ DynamicPrintConfig* DynamicPrintConfig::new_from_defaults_keys(const std::vector
 /*
 double min_object_distance(const ConfigBase &cfg)
 {   
+    const ConfigOptionEnum<PrinterTechnology> *opt_printer_technology = cfg.option<ConfigOptionEnum<PrinterTechnology>>("printer_technology");
+    PrinterTechnology printer_technology = opt_printer_technology ? opt_printer_technology->value : ptUnknown;
+
     double ret = 0.;
-    
-    if (printer_technology(cfg) == ptSLA) ret = 6.;
+
+    if (printer_technology == ptSLA)
+        ret = 6.;
     else {
         auto ecr_opt = cfg.option<ConfigOptionFloat>("extruder_clearance_radius");
         auto dd_opt  = cfg.option<ConfigOptionFloat>("duplicate_distance");
         auto co_opt  = cfg.option<ConfigOptionBool>("complete_objects");
 
-        if (!ecr_opt || !dd_opt || !co_opt) ret = 0.;
+        if (!ecr_opt || !dd_opt || !co_opt) 
+            ret = 0.;
         else {
             // min object distance is max(duplicate_distance, clearance_radius)
             ret = (co_opt->value && ecr_opt->value > dd_opt->value) ?
@@ -5359,7 +5364,9 @@ double PrintConfig::min_object_distance() const
 
 double PrintConfig::min_object_distance(const ConfigBase *config, double ref_height /* = 0*/)
 {
-    if (printer_technology(*config) == ptSLA) return 6.;
+    const ConfigOptionEnum<PrinterTechnology> *opt_printer_technology = config->option<ConfigOptionEnum<PrinterTechnology>>("printer_technology");
+    PrinterTechnology printer_technology = opt_printer_technology ? opt_printer_technology->value : ptUnknown;
+    if (printer_technology == ptSLA) return 6.;
     
     const ConfigOptionFloat* dd_opt = config->option<ConfigOptionFloat>("duplicate_distance");
     //test if called from usaslicer::l240 where it's called on an empty config...
@@ -5425,21 +5432,6 @@ double PrintConfig::min_object_distance(const ConfigBase *config, double ref_hei
         return base_dist + std::max(skirt_dist, brim_dist);
     }
     return base_dist;
-}
-
-PrinterTechnology printer_technology(const ConfigBase &cfg)
-{
-    const ConfigOptionEnum<PrinterTechnology> *opt = cfg.option<ConfigOptionEnum<PrinterTechnology>>("printer_technology");
-    
-    if (opt) return opt->value;
-    
-    const ConfigOptionBool *export_opt = cfg.option<ConfigOptionBool>("export_sla");
-    if (export_opt && export_opt->getBool()) return ptSLA;
-    
-    export_opt = cfg.option<ConfigOptionBool>("export_gcode");
-    if (export_opt && export_opt->getBool()) return ptFFF;    
-    
-    return ptUnknown;
 }
 
 void DynamicPrintConfig::normalize_fdm()

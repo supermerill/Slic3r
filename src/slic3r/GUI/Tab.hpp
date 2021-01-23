@@ -247,7 +247,7 @@ public:
 
 	// map of option name -> wxColour (color of the colored label, associated with option) 
     // Used for options which don't have corresponded field
-	std::map<std::string, wxColour*>	m_colored_Label_colors;
+	std::map<std::string, wxColour>	m_colored_Label_colors;
 
     // Counter for the updating (because of an update() function can have a recursive behavior):
     // 1. increase value from the very beginning of an update() function
@@ -296,7 +296,7 @@ public:
 	void		toggle_show_hide_incompatible();
 	void		update_show_hide_incompatible_button();
 	void		update_ui_from_settings();
-	void		update_labels_colour();
+	void		update_label_colours();
 	void		decorate();
 	void		update_changed_ui();
 	void		get_sys_and_mod_flags(const std::string& opt_key, bool& sys_page, bool& modified_page);

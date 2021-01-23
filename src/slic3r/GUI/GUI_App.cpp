@@ -139,7 +139,7 @@ public:
 
             memDC.SetFont(m_action_font);
             memDC.SetTextForeground(wxColour(0, 102, 255));
-            memDC.DrawText(text, int(m_scale * 60), int(m_scale * 275));
+            memDC.DrawText(text, int(m_scale * 60), m_action_line_y_position);
 
             memDC.SelectObject(wxNullBitmap);
             set_bitmap(bitmap);
@@ -214,14 +214,22 @@ public:
 
         memDc.SetFont(m_constant_text.version_font);
         memDc.DrawLabel(m_constant_text.version, banner_rect, wxALIGN_TOP | wxALIGN_LEFT);
+        int version_height = memDc.GetTextExtent(m_constant_text.version).GetY();
 
         memDc.SetFont(m_constant_text.credits_font);
         memDc.DrawLabel(m_constant_text.credits, banner_rect, wxALIGN_BOTTOM | wxALIGN_LEFT);
+        int credits_height = memDc.GetMultiLineTextExtent(m_constant_text.credits).GetY();
+        int text_height    = memDc.GetTextExtent("text").GetY();
+
+        // calculate position for the dynamic text
+        int logo_and_header_height = margin + logo_size + title_height + version_height;
+        m_action_line_y_position = logo_and_header_height + 0.5 * (bmp.GetHeight() - margin - credits_height - logo_and_header_height - text_height);
     }
 
 private:
     wxBitmap    m_main_bitmap;
     wxFont      m_action_font;
+    int         m_action_line_y_position;
     float       m_scale {1.0};
 
     struct ConstantText
@@ -265,7 +273,8 @@ private:
         float title_font_scale = (float)text_banner_width / GetTextExtent(m_constant_text.title).GetX();
         scale_font(m_constant_text.title_font, title_font_scale > 3.5f ? 3.5f : title_font_scale);
 
-        scale_font(m_constant_text.version_font, 2.f);
+        float version_font_scale = (float)text_banner_width / GetTextExtent(m_constant_text.version).GetX();
+        scale_font(m_constant_text.version_font, version_font_scale > 2.f ? 2.f : version_font_scale);
 
         // The width of the credits information string doesn't respect to the banner width some times.
         // So, scale credits_font in the respect to the longest string width
@@ -1032,6 +1041,12 @@ void GUI_App::update_label_colours_from_appconfig()
     }
 }
 
+void GUI_App::update_label_colours()
+{
+    for (Tab* tab : tabs_list)
+        tab->update_label_colours();
+}
+
 void GUI_App::init_fonts()
 {
     m_small_font = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
@@ -1065,7 +1080,10 @@ void GUI_App::update_fonts(const MainFrame *main_frame)
     m_code_font.SetPointSize(m_normal_font.GetPointSize());
 }
 
-void GUI_App::set_label_clr_modified(const wxColour& clr) {
+void GUI_App::set_label_clr_modified(const wxColour& clr) 
+{
+    if (m_color_label_modified == clr)
+        return;
     m_color_label_modified = clr;
     auto clr_str = wxString::Format(wxT("#%02X%02X%02X"), clr.Red(), clr.Green(), clr.Blue());
     std::string str = clr_str.ToStdString();
@@ -1073,7 +1091,10 @@ void GUI_App::set_label_clr_modified(const wxColour& clr) {
     app_config->save();
 }
 
-void GUI_App::set_label_clr_sys(const wxColour& clr) {
+void GUI_App::set_label_clr_sys(const wxColour& clr)
+{
+    if (m_color_label_sys == clr)
+        return;
     m_color_label_sys = clr;
     auto clr_str = wxString::Format(wxT("#%02X%02X%02X"), clr.Red(), clr.Green(), clr.Blue());
     std::string str = clr_str.ToStdString();
@@ -1299,6 +1320,7 @@ void fatal_error(wxWindow* parent)
 // Update the UI based on the current preferences.
 void GUI_App::update_ui_from_settings(bool apply_free_camera_correction)
 {
+    update_label_colours();
     mainframe->update_ui_from_settings(apply_free_camera_correction);
 }
 
@@ -1945,11 +1967,9 @@ bool GUI_App::OnExceptionInMainLoop()
 void GUI_App::OSXStoreOpenFiles(const wxArrayString &fileNames)
 {
     size_t num_gcodes = 0;
-    for (const wxString &filename : fileNames) {
-        wxString fn = filename.Upper();
-        if (fn.EndsWith(".G") || fn.EndsWith(".GCODE"))
+    for (const wxString &filename : fileNames)
+        if (is_gcode_file(into_u8(filename)))
             ++ num_gcodes;
-    }
     if (fileNames.size() == num_gcodes) {
         // Opening PrusaSlicer by drag & dropping a G-Code onto PrusaSlicer icon in Finder,
         // just G-codes were passed. Switch to G-code viewer mode.
@@ -1969,8 +1989,7 @@ void GUI_App::MacOpenFiles(const wxArrayString &fileNames)
     std::vector<wxString>    gcode_files;
     std::vector<wxString>    non_gcode_files;
     for (const auto& filename : fileNames) {
-        wxString fn = filename.Upper();
-        if (fn.EndsWith(".G") || fn.EndsWith(".GCODE"))
+        if (is_gcode_file(into_u8(filename)))
             gcode_files.emplace_back(filename);
         else {
             files.emplace_back(into_u8(filename));

@@ -242,18 +242,11 @@ void Tab::create_preset_tab()
 
     m_undo_btn->Bind(wxEVT_BUTTON, ([this](wxCommandEvent) { on_roll_back_value(); }));
     m_undo_to_sys_btn->Bind(wxEVT_BUTTON, ([this](wxCommandEvent) { on_roll_back_value(true); }));
-    m_question_btn->Bind(wxEVT_BUTTON, ([this](wxCommandEvent)
-    {
+    m_question_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent) {
         ButtonsDescription dlg(this, m_icon_descriptions);
-        if (dlg.ShowModal() == wxID_OK) {
-            // Colors for ui "decoration"
-            for (Tab *tab : wxGetApp().tabs_list) {
-                tab->m_sys_label_clr = wxGetApp().get_label_clr_sys();
-                tab->m_modified_label_clr = wxGetApp().get_label_clr_modified();
-                tab->update_labels_colour();
-            }
-        }
-    }));
+        if (dlg.ShowModal() == wxID_OK)
+            wxGetApp().update_label_colours();
+    });
     m_search_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent) { wxGetApp().plater()->search(false); });
 
     // Colors for ui "decoration"
@@ -316,6 +309,13 @@ void Tab::create_preset_tab()
     // This helps to process all the cursor key events on Windows in the tree control,
     // so that the cursor jumps to the last item.
     m_treectrl->Bind(wxEVT_TREE_SEL_CHANGED, [this](wxTreeEvent&) {
+#ifdef __linux__
+        // Events queue is opposite On Linux. wxEVT_SET_FOCUS invokes after wxEVT_TREE_SEL_CHANGED,
+        // and a result wxEVT_KILL_FOCUS doesn't invoke for the TextCtrls.
+        // see https://github.com/prusa3d/PrusaSlicer/issues/5720
+        // So, call SetFocus explicitly for this control before changing of the selection
+        m_treectrl->SetFocus();
+#endif
             if (!m_disable_tree_sel_changed_event && !m_pages.empty()) {
                 if (m_page_switch_running)
                     m_page_switch_planned = true;
@@ -489,8 +489,13 @@ void Tab::OnActivate()
     Refresh();
 }
 
-void Tab::update_labels_colour()
+void Tab::update_label_colours()
 {
+    if (m_sys_label_clr == wxGetApp().get_label_clr_sys() && m_modified_label_clr == wxGetApp().get_label_clr_modified())
+        return;
+    m_sys_label_clr = wxGetApp().get_label_clr_sys();
+    m_modified_label_clr = wxGetApp().get_label_clr_modified();
+
     //update options "decoration"
     for (const std::pair<std::string, int> &opt : m_options_list)
     {
@@ -508,7 +513,7 @@ void Tab::update_labels_colour()
         if (opt.first == "bed_shape"            || opt.first == "filament_ramming_parameters" || 
             opt.first == "compatible_prints"    || opt.first == "compatible_printers"           ) {
             if (m_colored_Label_colors.find(opt.first) != m_colored_Label_colors.end())
-                *m_colored_Label_colors.at(opt.first) = *color;
+                m_colored_Label_colors.at(opt.first) = *color;
             continue;
         }
 
@@ -536,6 +541,8 @@ void Tab::update_labels_colour()
         }
         cur_item = m_treectrl->GetNextVisible(cur_item);
     }
+
+    decorate();
 }
 
 void Tab::decorate()
@@ -547,7 +554,7 @@ void Tab::decorate()
 
         if (opt.first == "bed_shape" || opt.first == "filament_ramming_parameters" ||
             opt.first == "compatible_prints" || opt.first == "compatible_printers")
-            colored_label_clr = (m_colored_Label_colors.find(opt.first) == m_colored_Label_colors.end()) ? nullptr : m_colored_Label_colors.at(opt.first);
+            colored_label_clr = (m_colored_Label_colors.find(opt.first) == m_colored_Label_colors.end()) ? nullptr : &m_colored_Label_colors.at(opt.first);
 
         if (!colored_label_clr) {
             field = get_field(opt.first);
@@ -1003,9 +1010,7 @@ void Tab::sys_color_changed()
     m_treectrl->AssignImageList(m_icons);
 
     // Colors for ui "decoration"
-    m_sys_label_clr = wxGetApp().get_label_clr_sys();
-    m_modified_label_clr = wxGetApp().get_label_clr_modified();
-    update_labels_colour();
+    update_label_colours();
 
     // update options_groups
     if (m_active_page)
@@ -1770,9 +1775,9 @@ bool Tab::create_pages(std::string setting_type_name, int idx_page)
 
             if (!in_line) {
                 if (colored) {
-                    m_colored_Label_colors[setting_id] = &m_default_text_clr;
+                    m_colored_Label_colors[setting_id] = m_default_text_clr;
                     Line l = current_group->create_single_option_line(option, label_path.empty() ? wxString(wxEmptyString) : wxString(label_path));
-                    l.full_Label_color = m_colored_Label_colors[setting_id];
+                    l.full_Label_color = &m_colored_Label_colors[setting_id];
                     current_group->append_line(l);
                 } else {
                     current_group->append_line(current_group->create_single_option_line(option, label_path.empty() ? wxString(wxEmptyString) : wxString(label_path)));
@@ -3622,8 +3627,8 @@ void Tab::create_line_with_widget(ConfigOptionsGroup* optgroup, const std::strin
     line.widget = widget;
     line.label_path = path;
 
-    m_colored_Label_colors[opt_key] = &m_default_text_clr;
-    line.full_Label_color = m_colored_Label_colors[opt_key];
+    m_colored_Label_colors[opt_key] = m_default_text_clr;
+    line.full_Label_color = &m_colored_Label_colors[opt_key];
 
     optgroup->append_line(line);
 }

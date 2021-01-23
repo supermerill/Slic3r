@@ -668,7 +668,7 @@ DynamicPrintConfig PresetBundle::full_sla_config() const
 // If the file is loaded successfully, its print / filament / printer profiles will be activated.
 void PresetBundle::load_config_file(const std::string &path)
 {
-	if (boost::iends_with(path, ".gcode") || boost::iends_with(path, ".g")) {
+	if (is_gcode_file(path)) {
 		DynamicPrintConfig config;
 		config.apply(FullPrintConfig::defaults());
         config.load_from_gcode_file(path);
@@ -929,7 +929,11 @@ void PresetBundle::load_config_file_config_bundle(const std::string &path, const
             if (opt_compatible->type() == coStrings)
                 static_cast<ConfigOptionStrings*>(opt_compatible)->values.clear();
         }
-        collection_dst.load_preset(path, preset_name_dst, std::move(preset_src->config), activate).is_external = true;
+        (collection_dst.type() == Preset::TYPE_FILAMENT ? 
+            collection_dst.load_preset(path, preset_name_dst, preset_src->config, activate) :
+            // Only move the source config for non filament profiles, as single filament profile may be referenced multiple times.
+            collection_dst.load_preset(path, preset_name_dst, std::move(preset_src->config), activate))
+            .is_external = true;
         return preset_name_dst;
     };
     load_one(this->prints,        tmp_bundle.prints,        tmp_bundle.prints       .get_selected_preset_name(), true);

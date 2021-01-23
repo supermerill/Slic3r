@@ -1339,7 +1339,7 @@ void GLCanvas3D::toggle_model_objects_visibility(bool visible, const ModelObject
 {
     for (GLVolume* vol : m_volumes.volumes) {
         if (vol->composite_id.object_id == 1000) { // wipe tower
-                vol->is_active = (visible && mo == nullptr);
+            vol->is_active = (visible && mo == nullptr);
         }
         else {
         if ((mo == nullptr || m_model->objects[vol->composite_id.object_id] == mo)
@@ -1385,7 +1385,7 @@ void GLCanvas3D::update_instance_printable_state_for_object(const size_t obj_idx
     }
 }
 
-void GLCanvas3D::update_instance_printable_state_for_objects(std::vector<size_t>& object_idxs)
+void GLCanvas3D::update_instance_printable_state_for_objects(const std::vector<size_t>& object_idxs)
 {
     for (size_t obj_idx : object_idxs)
         update_instance_printable_state_for_object(obj_idx);
@@ -3004,6 +3004,7 @@ void GLCanvas3D::on_render_timer(wxTimerEvent& evt)
     }
     //render();
     m_dirty = true;
+    wxWakeUpIdle();
 }
 
 void GLCanvas3D::request_extra_frame_delayed(int miliseconds)
@@ -4175,7 +4176,7 @@ void GLCanvas3D::_render_thumbnail_internal(ThumbnailData& thumbnail_data, bool 
                             custom_color[1] = clr.Green() / 255.f;
                             custom_color[2] = clr.Blue() / 255.f;
                         }
-    for (const GLVolume* vol : visible_volumes)
+    for (GLVolume* vol : visible_volumes)
     {
         if (vol->printable && !vol->is_outside) {
             if (custom_color[0] < 0) {
@@ -4187,7 +4188,11 @@ void GLCanvas3D::_render_thumbnail_internal(ThumbnailData& thumbnail_data, bool 
         } else {
             shader->set_uniform("uniform_color", gray);
         }
+        // the volume may have been deactivated by an active gizmo
+        bool is_active = vol->is_active;
+        vol->is_active = true;
         vol->render();
+        vol->is_active = is_active;
     }
 
     shader->stop_using();
