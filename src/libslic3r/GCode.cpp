@@ -1343,9 +1343,6 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     }
 */
 
-    //write temps after custom gcodes to ensure the temperature are good.
-    this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
-    this->_print_first_layer_bed_temperature(file, print, start_gcode, initial_extruder_id, true);
     // Disable fan.
     if (print.config().disable_fan_first_layers.get_at(initial_extruder_id))
         _write(file, m_writer.set_fan(0, true, initial_extruder_id));
@@ -1405,6 +1402,10 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
         // if we are running a single-extruder setup, just set the extruder and "return nothing"
         _write(file, this->set_extruder(initial_extruder_id, 0.));
     }
+
+    //write temps after custom gcodes to ensure the temperature are good. (after tool selection)
+    this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
+    this->_print_first_layer_bed_temperature(file, print, start_gcode, initial_extruder_id, true);
 
     // Do all objects for each layer.
     if (print.config().complete_objects.value) {
