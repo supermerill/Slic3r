@@ -68,7 +68,6 @@ void CalibrationAbstractDialog::create(std::string html_path, wxSize dialog_size
     main_sizer->Add(buttons, 0, wxEXPAND | wxALL, 5);
 
     SetSizer(main_sizer);
-    main_sizer->SetSizeHints(this);
     this->SetSize(dialog_size.x, dialog_size.y);
 }
 
