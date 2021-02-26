@@ -1072,6 +1072,12 @@ public:
     ConfigOptionStrings             start_filament_gcode;
     ConfigOptionString              start_gcode;
     ConfigOptionBool                single_extruder_multi_material;
+    ConfigOptionBools               single_extruder_mixer;
+    ConfigOptionBools               manage_tool_lifecycle;
+    ConfigOptionStrings             tool_create_gcode;
+    ConfigOptionStrings             tool_release_gcode;
+    ConfigOptionInts                mix_filaments_count;
+    ConfigOptionStrings             extruder_mix_ratio;
     ConfigOptionBool                single_extruder_multi_material_priming;
     ConfigOptionBool                wipe_tower_no_sparse_layers;
     ConfigOptionStrings             tool_name;
@@ -1180,6 +1186,12 @@ protected:
         OPT_PTR(retract_restart_extra_toolchange);
         OPT_PTR(retract_speed);
         OPT_PTR(single_extruder_multi_material);
+        OPT_PTR(single_extruder_mixer);
+        OPT_PTR(manage_tool_lifecycle);
+        OPT_PTR(tool_create_gcode);
+        OPT_PTR(tool_release_gcode);
+        OPT_PTR(mix_filaments_count);
+        OPT_PTR(extruder_mix_ratio);
         OPT_PTR(single_extruder_multi_material_priming);
         OPT_PTR(wipe_tower_no_sparse_layers);
         OPT_PTR(start_gcode);
@@ -1240,6 +1252,7 @@ public:
     ConfigOptionFloat               extruder_clearance_height;
     ConfigOptionFloat               extruder_clearance_radius;
     ConfigOptionStrings             extruder_colour;
+//    ConfigOptionStrings             extruder_mix_ratio;
     ConfigOptionPoints              extruder_offset;
     ConfigOptionBools               fan_always_on;
     ConfigOptionInts                fan_below_layer_time;
@@ -1335,6 +1348,7 @@ protected:
         OPT_PTR(extruder_clearance_height);
         OPT_PTR(extruder_clearance_radius);
         OPT_PTR(extruder_colour);
+//        OPT_PTR(extruder_mix_ratio);
         OPT_PTR(extruder_offset);
         OPT_PTR(fan_always_on);
         OPT_PTR(fan_below_layer_time);

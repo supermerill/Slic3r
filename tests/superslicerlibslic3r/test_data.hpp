@@ -58,7 +58,7 @@ TriangleMesh mesh(TestMesh m, Vec3f translate, double scale = 1.0);
 
 /// Templated function to see if two values are equivalent (+/- epsilon)
 template <typename T>
-bool _equiv(const T& a, const T& b) { return abs(a - b) < Slic3r::Geometry::epsilon; }
+bool _equiv(const T& a, const T& b) { return abs(a - b) < boost::math::tools::detail::epsilon; }
 
 template <typename T>
 bool _equiv(const T& a, const T& b, double epsilon) { return abs(a - b) < epsilon; }
