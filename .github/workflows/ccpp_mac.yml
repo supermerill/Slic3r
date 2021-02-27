@@ -39,6 +39,7 @@ jobs:
       working-directory: ./deps/build
       run: rm -rf dep_*
     - name: mkdir build
+      working-directory: ./
       run: mkdir build
     - name: cmake
       working-directory: ./build
