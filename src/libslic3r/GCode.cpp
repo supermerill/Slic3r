@@ -1015,17 +1015,42 @@ std::vector<const PrintInstance*> sort_object_instances_by_model_order(const Pri
 
 // set standby temp for extruders
 // Parse the custom G-code, try to find T, and add it if not present
+// **mtr** add support for mixing extruders
 void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,  ToolOrdering &tool_ordering, const std::string &custom_gcode )
 {
 
-    //set standby temp for reprap
+    //set tools and  temp for reprap
     if (std::set<uint8_t>{gcfRepRap}.count(print.config().gcode_flavor.value) > 0) {
         for (uint16_t tool_id : tool_ordering.all_extruders()) {
+            // If we're managing tool creation, we need to create them first
+            if (bool(print.config().manage_tool_lifecycle.get_at(tool_id))) {
+                std::string gen_tool_code = std::string(print.config().tool_create_gcode.get_at(tool_id));
+                std::string tool_name = std::string(print.config().tool_name.get_at(tool_id));
+                _write_format(file, "M563 P%d %s S\"%s\"; Create the virtual tool\n",
+                    tool_id, gen_tool_code.c_str(), tool_name.c_str());
+                // if firmware extraction is set, we need to set that up..
+                if (bool(print.config().use_firmware_retraction)) {
+                    double length = print.config().retract_length.get_at(tool_id);
+                    double num_mix_filaments = print.config().mix_filaments_count.get_at(tool_id);
+                    double lift = print.config().retract_lift.get_at(tool_id);
+                    double speed = print.config().retract_speed.get_at(tool_id)*60; //mm/minute
+                    length /= num_mix_filaments;
+                    _write_format(file, "M207 P%d S%f F%f Z%f  ; Set firmware retraction\n",
+                        tool_id, length, speed, lift);
+
+                }
+            }
+            // and if it's a mixing extruder, we need to set the mix ratio.
+            if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
+                std::string mix_ratio = std::string(print.config().extruder_mix_ratio.get_at(tool_id));
+                _write_format(file, "M567 P%d E%s  ; Set the initial mix ratio\n",
+                    tool_id, mix_ratio.c_str());
+            }
             int standby_temp = int(print.config().temperature.get_at(tool_id));
             if (standby_temp > 0) {
                 if (print.config().ooze_prevention.value)
                     standby_temp += print.config().standby_temperature_delta.value;
-                _write_format(file, "G10 P%d R%d ; sets the standby temperature\n",
+                _write_format(file, "G10 P%d R%d ; sets the standby temperature\n\n",
                     tool_id,
                     standby_temp);
             }
@@ -1325,7 +1350,7 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
 
     // Set extruder(s) temperature before and after start G-code.
     if ((this->config().gcode_flavor != gcfKlipper || print.config().start_gcode.value.empty()) && print.config().first_layer_temperature.get_at(initial_extruder_id) != 0)
-        this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, false);
+        this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
 
     // adds tag for processor
     _write_format(file, ";%s%s\n", GCodeProcessor::Extrusion_Role_Tag.c_str(), ExtrusionEntity::role_to_string(erCustom).c_str());
@@ -1566,6 +1591,17 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
                     config.set_key_value("previous_extruder", new ConfigOptionInt(extruder_id));
                     config.set_key_value("next_extruder", new ConfigOptionInt(0));
                     _writeln(file, this->placeholder_parser_process("end_filament_gcode", end_gcode, extruder_id, &config));
+                }
+            }
+        }
+        // **mtr** add code to release tools for reprap.
+        if (std::set<uint8_t>{gcfRepRap}.count(print.config().gcode_flavor.value) > 0) {
+            for (uint16_t tool_id : tool_ordering.all_extruders()) {
+                if (bool(print.config().manage_tool_lifecycle.get_at(tool_id))) {
+                    std::string rel_tool_code = std::string(print.config().tool_release_gcode.get_at(tool_id));
+                    std::string tool_name = std::string(print.config().tool_name.get_at(tool_id));
+                    _write_format(file, "M563 P%d %s ; release the virtual tool\n",
+                        tool_id, rel_tool_code.c_str() );
                 }
             }
         }
@@ -1970,7 +2006,7 @@ std::string GCode::emit_custom_gcode_per_print_z(
             } else {
                 // add tag for processor
                     gcode += ";" + GCodeProcessor::Custom_Code_Tag + "\n";
-                if (gcode_type == CustomGCode::Template)    // Template Cistom Gcode
+                if (gcode_type == CustomGCode::Template)    // Template Custom Gcode
                     gcode += print.config().template_custom_gcode;
                 else                                        // custom Gcode
                     gcode += custom_gcode->extra;
@@ -2163,7 +2199,7 @@ void GCode::process_layer(
                 continue;
             int temperature = print.config().temperature.get_at(extruder.id());
             if(temperature > 0) // don't set it if disabled
-                gcode += m_writer.set_temperature(temperature, false, extruder.id());
+                gcode += m_writer.set_temperature(temperature, true, extruder.id());
         }
         if(print.config().bed_temperature.get_at(first_extruder_id) > 0)  // don't set it if disabled
             gcode += m_writer.set_bed_temperature(print.config().bed_temperature.get_at(first_extruder_id));
