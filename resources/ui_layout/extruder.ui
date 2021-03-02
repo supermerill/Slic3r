@@ -14,7 +14,7 @@ group:Offsets (for multi-extruder printers)
 group:Mixing (for mixing extruder printers)
 	setting:idx:single_extruder_mixer
 	setting:idx:mix_filaments_count
-	setting:full_width:idx:extruder_mix_ratio
+	setting:idx:extruder_mix_ratio
 	setting:idx:manage_tool_lifecycle
 	setting:idx:tool_create_gcode
 	setting:idx:tool_release_gcode

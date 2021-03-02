@@ -1073,7 +1073,8 @@ void PrintConfigDef::init_fff_params()
     def = this->add("extruder_mix_ratio", coStrings);
     def->label = L("Extruder Mix Ratio");
     def->gui_type = "one_string";
-    def->full_width = true;
+    //def->full_width = true;
+    def->width = 40;
     def->tooltip = L("This is used to send the command to setup a mix ratio for mixing extruders. "
                      "It consists of a colon delimited list of fractions that MUST total 1.0"
                      " If your extruder doesn't support mixing this is ignored");
@@ -2444,7 +2445,8 @@ void PrintConfigDef::init_fff_params()
     def = this->add("tool_create_gcode", coStrings);
     def->label = L("Tool Creation gcode");
     def->gui_type = "one_string";
-    def->full_width = true;
+    //def->full_width = true;
+    def->width = 20;
     def->tooltip = L("If Manage_Tool_lifecycle is set, gcode is included at the beginning of the gcode to dynamically create the associated tool for this virtual extruder using the M563 command.  This should be set to the drive, heater and fan components of that command");
     // Empty string means no mix ratio defined.
     def->set_default_value(new ConfigOptionStrings {"D0:1:2:3 H1 F1 "});
@@ -2452,10 +2454,11 @@ void PrintConfigDef::init_fff_params()
     def = this->add("tool_release_gcode", coStrings);
     def->label = L("Tool Release gcode");
     def->gui_type = "one_string";
-    def->full_width = true;
-    def->tooltip = L("If Manage_Tool_lifecycle is set, this gcode is included at the end of the gcode to dynamically release the associated tool for this virtual extruder. Replace the 'x' with the associated tool number");
+    //def->full_width = true;
+    def->width = 20;
+    def->tooltip = L("If Manage_Tool_lifecycle is set, this gcode is included at the end of the gcode using the M563 command to release the associated tool for this virtual extruder. This should be set to dissasociate Drive and Heater ");
     // Empty string means no mix ratio defined.
-    def->set_default_value(new ConfigOptionStrings {"M563 Px D-1 H-1"});
+    def->set_default_value(new ConfigOptionStrings {"D-1 H-1"});
 
     def = this->add("max_fan_speed", coInts);
     def->label = L("Max");

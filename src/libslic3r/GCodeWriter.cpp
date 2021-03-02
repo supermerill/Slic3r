@@ -172,7 +172,7 @@ std::string GCodeWriter::set_temperature(const unsigned int temperature, bool wa
     gcode << " ; " << comment << "\n";
     
     if ((FLAVOR_IS(gcfTeacup) || FLAVOR_IS(gcfRepRap)) && wait)
-        gcode << "M116 ; wait for temperature to be reached\n";
+        gcode << "M116 ; wait for temperature to be reached\n\n";
     
     m_last_temperature = temperature;
     m_last_temperature_with_offset = temp_w_offset;

@@ -1035,7 +1035,7 @@ void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,
                     double lift = print.config().retract_lift.get_at(tool_id);
                     double speed = print.config().retract_speed.get_at(tool_id)*60; //mm/minute
                     length /= num_mix_filaments;
-                    _write_format(file, "M207 P%d S%f F%f Z%f  ; Set firmware retraction\n",
+                    _write_format(file, "M207 P%d S%.2f F%.0f Z%.2f  ; Set firmware retraction\n",
                         tool_id, length, speed, lift);
 
                 }

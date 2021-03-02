@@ -2765,12 +2765,13 @@ void TabPrinter::toggle_options()
     {
         size_t i = size_t(val) - 1;
         bool have_retract_length = m_config->opt_float("retract_length", i) > 0;
-
-        // when using firmware retraction, firmware decides retraction length
+        bool manage_lifecycle = m_config->opt_bool("manage_tool_lifecycle", i);
+        
+        // when using firmware retraction, firmware decides retraction length... except if we're managine the lifecycle.
         bool use_firmware_retraction = m_config->opt_bool("use_firmware_retraction");
         field = get_field("retract_length", i);
         if (field)
-            field->toggle(!use_firmware_retraction);
+            field->toggle(!use_firmware_retraction || manage_lifecycle);
 
         // user can customize travel length if we have retraction length or we"re using
         // firmware retraction
