@@ -1092,16 +1092,34 @@ void PrintConfigDef::init_fff_params()
 
     
     def = this->add("extruder_mix_change_points", coStrings);
-    def->label = L("transition point as a % of overall height");
+    def->label = L("transition points");
     def->category = OptionCategory::extruders;
     def->mode = comAdvanced;
     def->width = 4;
     def->height = 4;
     def->multiline = true;
-    def->sidetext = "% of part(s) height";
-    def->tooltip = L("Used to define where (proportional) the mix ratio changes..");
+    def->sidetext = "height above platter";
+    def->tooltip = L("Used to define where the mix ratio changes as a height(mm) above the platter "
+                     "or as a layer number depending on the 'as layer' checkbox");
     // Empty string means evenly distribute.
     def->set_default_value(new ConfigOptionStrings {""});
+    
+    // **mtr** add mix level type
+//    def = this->add("extruder_mix_level_type",coEnums);
+//    def->label = L("Mix Level Type");
+//    def->category = OptionCategory::extruders;
+//    def->mode = comAdvanced;
+//    def->width = 6;
+//    def->tooltip = L("This specifies what the change/trasition points represent"
+//                     " relative to the objects using this extruder");
+//    def->enum_keys_map = &ConfigOptionEnum<MixLevelType>::get_enum_values();
+//    def->enum_values.push_back("percent");
+//    def->enum_values.push_back("heightmm");
+//    def->enum_values.push_back("layer");
+//    def->enum_labels.push_back(L("Percent"));
+//    def->enum_labels.push_back(L("Height in mm"));
+//    def->enum_labels.push_back(L("Layer"));
+//    def->set_default_value(new ConfigOptionEnum<MixLevelType> {mltPct});
 
 
     def = this->add("extruder_offset", coPoints);
@@ -4300,6 +4318,7 @@ void PrintConfigDef::init_extruder_option_keys()
         "extruder_mix_ratios",
         "extruder_gradient",
         "extruder_mix_change_points",
+//        "extruder_mix_level_type",
         "default_filament_profile"
     };
 
@@ -5600,7 +5619,7 @@ void DynamicPrintConfig::set_num_extruders(unsigned int num_extruders)
             continue;
         auto* opt = this->option(key, false);
         assert(opt != nullptr);
-        assert(opt->is_vector());
+    //    assert(opt->is_vector());
         if (opt != nullptr && opt->is_vector())
             static_cast<ConfigOptionVectorBase*>(opt)->resize(num_extruders, defaults.option(key));
     }

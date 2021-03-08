@@ -148,6 +148,8 @@ enum ConfigOptionType {
     coBools         = coBool + coVectorType,
     // a generic enum
     coEnum          = 9,
+    // vector of enum
+    coEnums         = coEnum + coVectorType
 };
 
 enum ConfigOptionMode {
