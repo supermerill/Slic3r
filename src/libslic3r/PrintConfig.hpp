@@ -1077,7 +1077,9 @@ public:
     ConfigOptionStrings             tool_create_gcode;
     ConfigOptionStrings             tool_release_gcode;
     ConfigOptionInts                mix_filaments_count;
-    ConfigOptionStrings             extruder_mix_ratio;
+    ConfigOptionStrings             extruder_mix_ratios;
+    ConfigOptionStrings             extruder_mix_change_points;
+    ConfigOptionBools               extruder_gradient;
     ConfigOptionBool                single_extruder_multi_material_priming;
     ConfigOptionBool                wipe_tower_no_sparse_layers;
     ConfigOptionStrings             tool_name;
@@ -1191,7 +1193,9 @@ protected:
         OPT_PTR(tool_create_gcode);
         OPT_PTR(tool_release_gcode);
         OPT_PTR(mix_filaments_count);
-        OPT_PTR(extruder_mix_ratio);
+        OPT_PTR(extruder_mix_ratios);
+        OPT_PTR(extruder_gradient);
+        OPT_PTR(extruder_mix_change_points);
         OPT_PTR(single_extruder_multi_material_priming);
         OPT_PTR(wipe_tower_no_sparse_layers);
         OPT_PTR(start_gcode);

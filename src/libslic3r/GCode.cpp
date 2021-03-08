@@ -1013,13 +1013,10 @@ std::vector<const PrintInstance*> sort_object_instances_by_model_order(const Pri
     return instances;
 }
 
-// set standby temp for extruders
-// Parse the custom G-code, try to find T, and add it if not present
-// **mtr** add support for mixing extruders
-void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,  ToolOrdering &tool_ordering, const std::string &custom_gcode )
+// initialize and create virtual mixing extruders.  this needs to be done at the beginning before any tools are used
+// even before any custom G-Code is run.  note, currently only works for reprap GCode flavor
+void GCode::_init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer, ToolOrdering& tool_ordering, const std::string& custom_gcode)
 {
-
-    //set tools and  temp for reprap
     if (std::set<uint8_t>{gcfRepRap}.count(print.config().gcode_flavor.value) > 0) {
         for (uint16_t tool_id : tool_ordering.all_extruders()) {
             // If we're managing tool creation, we need to create them first
@@ -1039,13 +1036,33 @@ void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,
                         tool_id, length, speed, lift);
 
                 }
+                // and if it's a mixing extruder, we need to set the mix ratio.
+                if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
+                    std::string mix_ratios = std::string(print.config().extruder_mix_ratios.get_at(tool_id));
+                    // If it's not a gradient, get the ratio
+                    if (!bool(print.config().extruder_gradient.get_at(tool_id))) {
+                        std::stringstream mix_stream(mix_ratios);
+                        std::string parsed;
+                        if (getline(mix_stream, parsed)) {
+                            _write_format(file, "M567 P%d E%s  ; Set the initial mix ratio\n\n",
+                                          tool_id, parsed.c_str());
+                        }
+                    }
+                }
             }
-            // and if it's a mixing extruder, we need to set the mix ratio.
-            if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
-                std::string mix_ratio = std::string(print.config().extruder_mix_ratio.get_at(tool_id));
-                _write_format(file, "M567 P%d E%s  ; Set the initial mix ratio\n",
-                    tool_id, mix_ratio.c_str());
-            }
+        }
+    }
+}
+
+// set standby temp for extruders
+// Parse the custom G-code, try to find T, and add it if not present
+// **mtr** add support for mixing extruders
+void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,  ToolOrdering &tool_ordering, const std::string &custom_gcode )
+{
+
+    //set tools and  temp for reprap
+    if (std::set<uint8_t>{gcfRepRap}.count(print.config().gcode_flavor.value) > 0) {
+        for (uint16_t tool_id : tool_ordering.all_extruders()) {
             int standby_temp = int(print.config().temperature.get_at(tool_id));
             if (standby_temp > 0) {
                 if (print.config().ooze_prevention.value)
@@ -1344,6 +1361,9 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     // Set bed temperature if the start G-code does not contain any bed temp control G-codes.
     if(this->config().gcode_flavor != gcfKlipper && print.config().first_layer_bed_temperature.get_at(initial_extruder_id) != 0)
         this->_print_first_layer_bed_temperature(file, print, start_gcode, initial_extruder_id, false);
+
+    // init (virtual) mixing extruders.  Also sets initial mix rations for all mixing extruders.
+    this->_init_mixing_extruders(file, print, m_writer, tool_ordering, start_gcode);
 
     //init extruders
     this->_init_multiextruders(file, print, m_writer, tool_ordering, start_gcode);
@@ -1828,7 +1848,8 @@ void GCode::_print_first_layer_extruder_temperatures(FILE *file, Print &print, c
     // Is the bed temperature set by the provided custom G-code?
     int  temp_by_gcode     = -1;
     bool include_g10   = print.config().gcode_flavor == gcfRepRap;
-    if (custom_gcode_sets_temperature(gcode, 104, 109, include_g10, temp_by_gcode)) {
+    bool managed = print.config().manage_tool_lifecycle.get_at(first_printing_extruder_id);
+    if (custom_gcode_sets_temperature(gcode, 104, 109, include_g10, temp_by_gcode) && !managed) {
         // Set the extruder temperature at m_writer, but throw away the generated G-code as it will be written with the custom G-code.
         int temp = print.config().first_layer_temperature.get_at(first_printing_extruder_id);
         if (temp == 0)
@@ -1847,7 +1868,7 @@ void GCode::_print_first_layer_extruder_temperatures(FILE *file, Print &print, c
                 if (print.config().ooze_prevention.value)
                     temp += print.config().standby_temperature_delta.value;
                 if (temp > 0)
-                    _write(file, m_writer.set_temperature(temp, false, tool_id));
+                    _write(file, m_writer.set_temperature(temp, wait, tool_id));
             }
         }
         if (wait || print.config().single_extruder_multi_material.value) {
@@ -2193,8 +2214,10 @@ void GCode::process_layer(
     if (! first_layer && ! m_second_layer_things_done) {
         // Transition from 1st to 2nd layer. Adjust nozzle temperatures as prescribed by the nozzle dependent
         // first_layer_temperature vs. temperature settings.
+        // **mtr** added support for managed extruders..
         for (const Extruder &extruder : m_writer.extruders()) {
-            if (print.config().single_extruder_multi_material.value && extruder.id() != m_writer.tool()->id())
+            if (print.config().single_extruder_multi_material.value &&
+                extruder.id() != m_writer.tool()->id())
                 // In single extruder multi material mode, set the temperature for the current extruder only.
                 continue;
             int temperature = print.config().temperature.get_at(extruder.id());
@@ -2386,7 +2409,6 @@ void GCode::process_layer(
         gcode += (layer_tools.has_wipe_tower && m_wipe_tower) ?
             m_wipe_tower->tool_change(*this, extruder_id, extruder_id == layer_tools.extruders.back()) :
             this->set_extruder(extruder_id, print_z);
-
         // let analyzer tag generator aware of a role type change
         if (layer_tools.has_wipe_tower && m_wipe_tower)
             m_last_processor_extrusion_role = erWipeTower;
@@ -4029,7 +4051,7 @@ std::string GCode::set_extruder(unsigned int extruder_id, double print_z, bool n
         return "";
 
     // if we are running a single-extruder setup, just set the extruder and return nothing
-    if (!m_writer.multiple_extruders) {
+    if (!m_writer.multiple_extruders ) {
         m_placeholder_parser.set("current_extruder", extruder_id);
 
         std::string gcode;
@@ -4108,6 +4130,7 @@ std::string GCode::set_extruder(unsigned int extruder_id, double print_z, bool n
                                          m_config.temperature.get_at(extruder_id));
         if (temp > 0)
             gcode += m_writer.set_temperature(temp, false);
+        
     }
 
     m_placeholder_parser.set("current_extruder", extruder_id);

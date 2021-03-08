@@ -2763,9 +2763,28 @@ void TabPrinter::toggle_options()
     if (m_active_page->title().StartsWith("Extruder ", &extruder_number) && extruder_number.ToLong(&val) &&
         val > 0 && (size_t)val <= m_extruders_count)
     {
+        
         size_t i = size_t(val) - 1;
+        
+        bool single_extruder_mix = m_config->opt_bool("single_extruder_mixer", i);
+        std::vector<std::string> vec_se = { "extruder_mix_ratios", "mix_filaments_count",
+            "extruder_gradient"};
+        for (auto el : vec_se) {
+            field = get_field(el, i);
+            if (field)
+                field->toggle(single_extruder_mix);
+        }
+
         bool have_retract_length = m_config->opt_float("retract_length", i) > 0;
         bool manage_lifecycle = m_config->opt_bool("manage_tool_lifecycle", i);
+        
+        std::vector<std::string> vec_ml = { "tool_create_gcode", "tool_release_gcode" };
+        for (auto el : vec_ml) {
+            field = get_field(el, i);
+            if (field)
+                field->toggle(manage_lifecycle);
+        }
+
         
         // when using firmware retraction, firmware decides retraction length... except if we're managine the lifecycle.
         bool use_firmware_retraction = m_config->opt_bool("use_firmware_retraction");

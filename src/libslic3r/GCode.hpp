@@ -201,6 +201,9 @@ private:
     void            _do_export(Print &print, FILE *file, ThumbnailsGeneratorCallback thumbnail_cb);
 
     void            _init_multiextruders(FILE* file, Print& print, GCodeWriter& writer, ToolOrdering& tool_ordering, const std::string& custom_gcode);
+    
+    void            _init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer, ToolOrdering& tool_ordering, const std::string& custom_gcode);
+
 
     static std::vector<LayerToPrint>        		                   collect_layers_to_print(const PrintObject &object);
     static std::vector<std::pair<coordf_t, std::vector<LayerToPrint>>> collect_layers_to_print(const Print &print);

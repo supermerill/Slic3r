@@ -1070,16 +1070,38 @@ void PrintConfigDef::init_fff_params()
 
     // **mtr** add mix ratio
                    
-    def = this->add("extruder_mix_ratio", coStrings);
-    def->label = L("Extruder Mix Ratio");
+    def = this->add("extruder_mix_ratios", coStrings);
+    def->label = L("Extruder Mix Ratios");
     def->gui_type = "one_string";
-    //def->full_width = true;
-    def->width = 40;
+    def->category = OptionCategory::extruders;
+    def->mode = comAdvanced;
+    def->width = 20;
+    def->multiline=true;
+    def->height = 4;
     def->tooltip = L("This is used to send the command to setup a mix ratio for mixing extruders. "
                      "It consists of a colon delimited list of fractions that MUST total 1.0"
                      " If your extruder doesn't support mixing this is ignored");
     // Empty string means no mix ratio defined.
     def->set_default_value(new ConfigOptionStrings {"0.25:0.25:0.25:0.25"});
+    
+    def = this->add("extruder_gradient", coBools);
+    def->label = L("Extruder Is Gradient");
+    def->mode = comAdvanced;
+    def->tooltip = L("Check this to interpret the mix ratios as gradient and transition points as size of the gradient");
+    def->set_default_value(new ConfigOptionBools {false});
+
+    
+    def = this->add("extruder_mix_change_points", coStrings);
+    def->label = L("transition point as a % of overall height");
+    def->category = OptionCategory::extruders;
+    def->mode = comAdvanced;
+    def->width = 4;
+    def->height = 4;
+    def->multiline = true;
+    def->sidetext = "% of part(s) height";
+    def->tooltip = L("Used to define where (proportional) the mix ratio changes..");
+    // Empty string means evenly distribute.
+    def->set_default_value(new ConfigOptionStrings {""});
 
 
     def = this->add("extruder_offset", coPoints);
@@ -4275,7 +4297,9 @@ void PrintConfigDef::init_extruder_option_keys()
         "tool_create_gcode",
         "tool_release_gcode",
         "mix_filaments_count",
-        "extruder_mix_ratio",
+        "extruder_mix_ratios",
+        "extruder_gradient",
+        "extruder_mix_change_points",
         "default_filament_profile"
     };
 

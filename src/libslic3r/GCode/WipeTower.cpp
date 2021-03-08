@@ -410,7 +410,7 @@ public:
                 gcode << " T" << tool;
             }
         }
-    
+
         if(!comment.empty())
             gcode << " ; " << comment << "\n";
 
@@ -547,6 +547,7 @@ private:
     float         m_used_filament_length = 0.f;
     GCodeFlavor   m_gcode_flavor;
     const std::vector<WipeTower::FilamentParameters>& m_filpar;
+    std::string   m_tool_mix_ratio;
 
 	std::string   set_format_X(float x)
 	{
