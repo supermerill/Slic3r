@@ -15,9 +15,9 @@ group:Mixing (for mixing extruder printers)
 	setting:idx:single_extruder_mixer
 	setting:idx:mix_filaments_count
 	line: Mix Ratios
-        setting:idx:extruder_gradient
 		setting:idx:extruder_mix_ratios
 		setting:label_width$1:label$_:idx:extruder_mix_change_points
+    	setting:idx:extruder_gradient
 	end_line
 	setting:idx:manage_tool_lifecycle
 	setting:idx:tool_create_gcode

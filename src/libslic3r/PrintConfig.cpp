@@ -1077,7 +1077,7 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->width = 20;
     def->multiline=true;
-    def->height = 4;
+    def->height = 6;
     def->tooltip = L("This is used to send the command to setup a mix ratio for mixing extruders. "
                      "It consists of a colon delimited list of fractions that MUST total 1.0"
                      " If your extruder doesn't support mixing this is ignored");
@@ -1085,7 +1085,7 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionStrings {"0.25:0.25:0.25:0.25"});
     
     def = this->add("extruder_gradient", coBools);
-    def->label = L("Extruder Is Gradient");
+    def->label = L("Gradient");
     def->mode = comAdvanced;
     def->tooltip = L("Check this to interpret the mix ratios as gradient and transition points as size of the gradient");
     def->set_default_value(new ConfigOptionBools {false});
@@ -1098,7 +1098,8 @@ void PrintConfigDef::init_fff_params()
     def->width = 4;
     def->height = 4;
     def->multiline = true;
-    def->sidetext = "height above platter";
+    def->sidetext = "height";
+    def->sidetext_width = 6;
     def->tooltip = L("Used to define where the mix ratio changes as a height(mm) above the platter "
                      "or as a layer number depending on the 'as layer' checkbox");
     // Empty string means evenly distribute.
@@ -5619,7 +5620,7 @@ void DynamicPrintConfig::set_num_extruders(unsigned int num_extruders)
             continue;
         auto* opt = this->option(key, false);
         assert(opt != nullptr);
-    //    assert(opt->is_vector());
+        assert(opt->is_vector());
         if (opt != nullptr && opt->is_vector())
             static_cast<ConfigOptionVectorBase*>(opt)->resize(num_extruders, defaults.option(key));
     }

@@ -264,7 +264,7 @@ AboutDialog::AboutDialog()
         // TRN "Slic3r _is licensed under the_ License"
         const std::string is_lecensed_str = _utf8(L("is licensed under the"));
         const std::string license_str = _utf8(L("GNU Affero General Public License, version 3"));
-        const std::string based_on_str = _utf8(L("SuperSlicer is based on PrusaSlicer which is based on Slic3r by Alessandro Ranellucci and the RepRap community."));
+        const std::string based_on_str = _utf8(L("SuperSlicerMx is based on SuperSlicer which is is based on PrusaSlicer which is based on Slic3r by Alessandro Ranellucci and the RepRap community."));
         const std::string contributors_str = _utf8(L("Contributions by Henrik Brix Andersen, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Joseph Lenox, Y. Sapir, Mike Sheldrake, Vojtech Bubnik, Durand Rémi and numerous others."));
         const auto text = from_u8(
             (boost::format(
