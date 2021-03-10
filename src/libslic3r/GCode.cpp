@@ -1036,19 +1036,19 @@ void GCode::_init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer
                         tool_id, length, speed, lift);
 
                 }
-                // and if it's a mixing extruder, we need to set the mix ratio.
-                if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
-                    std::string mix_ratios = std::string(print.config().extruder_mix_ratios.get_at(tool_id));
-                    // If it's not a gradient, get the ratio
-                    if (!bool(print.config().extruder_gradient.get_at(tool_id))) {
-                        std::stringstream mix_stream(mix_ratios);
-                        std::string parsed;
-                        if (getline(mix_stream, parsed)) {
-                            _write_format(file, "M567 P%d E%s  ; Set the initial mix ratio\n\n",
-                                          tool_id, parsed.c_str());
-                        }
-                    }
+            }
+            // and if it's a mixing extruder, we need to set the mix ratio.
+            if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
+                std::string mix_ratios = std::string(print.config().extruder_mix_ratios.get_at(tool_id));
+                // get the last ratio in the list
+                std::stringstream mix_stream(mix_ratios);
+                std::string this_ratio;
+                std::string last_ratio;
+                while (getline(mix_stream, this_ratio)) {
+                    last_ratio = this_ratio;
                 }
+                _write_format(file, "M567 P%d E%s  ; Set the initial mix ratio\n\n",
+                              tool_id, last_ratio.c_str());
             }
         }
     }

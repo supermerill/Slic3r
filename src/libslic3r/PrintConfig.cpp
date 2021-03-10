@@ -1078,9 +1078,9 @@ void PrintConfigDef::init_fff_params()
     def->width = 20;
     def->multiline=true;
     def->height = 6;
-    def->tooltip = L("This is used to send the command to setup a mix ratio for mixing extruders. "
-                     "It consists of a colon delimited list of fractions that MUST total 1.0"
-                     " If your extruder doesn't support mixing this is ignored");
+    def->tooltip = L("This is used to send the command to setup a mix ratios for mixing extruders. "
+                     "Each line consists of a colon delimited list of fractions that MUST total 1.0"
+                     " If your hot end doesn't support mixing this is ignored");
     // Empty string means no mix ratio defined.
     def->set_default_value(new ConfigOptionStrings {"0.25:0.25:0.25:0.25"});
     
@@ -1090,38 +1090,26 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("Check this to interpret the mix ratios as gradient and transition points as size of the gradient");
     def->set_default_value(new ConfigOptionBools {false});
 
-    
+    def = this->add("extruder_mix_layers", coBools);
+    def->label = L("Height as Layers");
+    def->mode = comAdvanced;
+    def->tooltip = L("Check this to interpret the height as layers rather than mm");
+    def->set_default_value(new ConfigOptionBools {false});
+
+
     def = this->add("extruder_mix_change_points", coStrings);
     def->label = L("transition points");
     def->category = OptionCategory::extruders;
     def->mode = comAdvanced;
     def->width = 4;
-    def->height = 4;
+    def->height = 6;
     def->multiline = true;
     def->sidetext = "height";
-    def->sidetext_width = 6;
     def->tooltip = L("Used to define where the mix ratio changes as a height(mm) above the platter "
                      "or as a layer number depending on the 'as layer' checkbox");
     // Empty string means evenly distribute.
     def->set_default_value(new ConfigOptionStrings {""});
     
-    // **mtr** add mix level type
-//    def = this->add("extruder_mix_level_type",coEnums);
-//    def->label = L("Mix Level Type");
-//    def->category = OptionCategory::extruders;
-//    def->mode = comAdvanced;
-//    def->width = 6;
-//    def->tooltip = L("This specifies what the change/trasition points represent"
-//                     " relative to the objects using this extruder");
-//    def->enum_keys_map = &ConfigOptionEnum<MixLevelType>::get_enum_values();
-//    def->enum_values.push_back("percent");
-//    def->enum_values.push_back("heightmm");
-//    def->enum_values.push_back("layer");
-//    def->enum_labels.push_back(L("Percent"));
-//    def->enum_labels.push_back(L("Height in mm"));
-//    def->enum_labels.push_back(L("Layer"));
-//    def->set_default_value(new ConfigOptionEnum<MixLevelType> {mltPct});
-
 
     def = this->add("extruder_offset", coPoints);
     def->label = L("Extruder offset");
@@ -4318,6 +4306,7 @@ void PrintConfigDef::init_extruder_option_keys()
         "mix_filaments_count",
         "extruder_mix_ratios",
         "extruder_gradient",
+        "extruder_mix_layers",
         "extruder_mix_change_points",
 //        "extruder_mix_level_type",
         "default_filament_profile"
