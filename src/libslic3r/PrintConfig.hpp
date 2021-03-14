@@ -1095,7 +1095,7 @@ public:
     ConfigOptionStrings             extruder_mix_ratios;
     ConfigOptionStrings             extruder_mix_change_points;
     ConfigOptionBools               extruder_gradient;
-    ConfigOptionBools               extruder_mix_layers;
+    ConfigOptionBools               extruder_mix_absolute;
     ConfigOptionBool                single_extruder_multi_material_priming;
     ConfigOptionBool                wipe_tower_no_sparse_layers;
     ConfigOptionStrings             tool_name;
@@ -1212,7 +1212,7 @@ protected:
         OPT_PTR(extruder_mix_ratios);
         OPT_PTR(extruder_gradient);
         OPT_PTR(extruder_mix_change_points);
-        OPT_PTR(extruder_mix_layers);
+        OPT_PTR(extruder_mix_absolute);
         OPT_PTR(single_extruder_multi_material_priming);
         OPT_PTR(wipe_tower_no_sparse_layers);
         OPT_PTR(start_gcode);

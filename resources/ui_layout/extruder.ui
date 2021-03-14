@@ -16,7 +16,7 @@ group:Mixing (for mixing extruder printers)
 	line: Filaments in Mix
 		setting:label$:idx:mix_filaments_count
 		setting:label_width$1:idx:extruder_gradient
-		setting:idx:extruder_mix_layers
+		setting:idx:extruder_mix_absolute
 	end_line
 	line: Mix Ratios
 		setting:label$:sidetext_width$1:idx:extruder_mix_ratios

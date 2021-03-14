@@ -1090,10 +1090,10 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("Check this to interpret the mix ratios as gradient and transition points as size of the gradient");
     def->set_default_value(new ConfigOptionBools {false});
 
-    def = this->add("extruder_mix_layers", coBools);
-    def->label = L("Height as Layers");
+    def = this->add("extruder_mix_absolute", coBools);
+    def->label = L("Height as Absolute");
     def->mode = comAdvanced;
-    def->tooltip = L("Check this to interpret the height as layers rather than mm");
+    def->tooltip = L("Check this to interpret the height as absolut location rather than layer relative");
     def->set_default_value(new ConfigOptionBools {false});
 
 
@@ -1101,7 +1101,7 @@ void PrintConfigDef::init_fff_params()
     def->label = L("transition points");
     def->category = OptionCategory::extruders;
     def->mode = comAdvanced;
-    def->width = 4;
+    def->width = 6;
     def->height = 6;
     def->multiline = true;
     def->sidetext = "height";
@@ -4306,9 +4306,8 @@ void PrintConfigDef::init_extruder_option_keys()
         "mix_filaments_count",
         "extruder_mix_ratios",
         "extruder_gradient",
-        "extruder_mix_layers",
+        "extruder_mix_absolute",
         "extruder_mix_change_points",
-//        "extruder_mix_level_type",
         "default_filament_profile"
     };
 

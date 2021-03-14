@@ -359,6 +359,7 @@ static inline void set_extra_lift(const Layer& layer, const Print& print, GCodeW
     std::string tcr_gcode, tcr_escaped_gcode = gcodegen.placeholder_parser_process("tcr_rotated_gcode", tcr_rotated_gcode, new_extruder_id, &config);
     unescape_string_cstyle(tcr_escaped_gcode, tcr_gcode);
     gcode += tcr_gcode;
+        //**mtr** try this to
     check_add_eol(toolchange_gcode_str);
 
     if (gcodegen.writer().tool() && gcodegen.m_config.filament_enable_toolchange_part_fan.values[gcodegen.writer().tool()->id()]) {
@@ -1013,6 +1014,24 @@ std::vector<const PrintInstance*> sort_object_instances_by_model_order(const Pri
     return instances;
 }
 
+ExtruderMixAndChangePts::ExtruderMixAndChangePts(ConfigOptionString ratio, ConfigOptionString change_point, bool gradient, float min_height, float max_height)
+{
+    
+}
+
+//std::vector<float> get_layer_mix_ratio(float height)
+//{
+//    for (std::pair<int, std::vector<ExtruderMixandChangePts>> mix, m_mix_ratios) {
+//        
+//    }
+//}
+
+// forward declaration so I don't move code too much **mtr**
+static bool custom_gcode_sets_temperature(const std::string &gcode, const int mcode_set_temp_dont_wait, const int mcode_set_temp_and_wait, const bool include_g10, int &temp_out, int tool_id);
+
+// forward declaration so I don't move code too much **mtr**
+static bool custom_gcode_sets_bed_temperature(const std::string &gcode, const int mcode_set_temp_dont_wait, const int mcode_set_temp_and_wait, int &temp_out);
+
 // initialize and create virtual mixing extruders.  this needs to be done at the beginning before any tools are used
 // even before any custom G-Code is run.  note, currently only works for reprap GCode flavor
 void GCode::_init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer, ToolOrdering& tool_ordering, const std::string& custom_gcode)
@@ -1040,7 +1059,7 @@ void GCode::_init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer
             // and if it's a mixing extruder, we need to set the mix ratio.
             if (bool(print.config().single_extruder_mixer.get_at(tool_id))) {
                 std::string mix_ratios = std::string(print.config().extruder_mix_ratios.get_at(tool_id));
-                // get the last ratio in the list
+                // get the last ratio in the list since it will be the bottom ratio
                 std::stringstream mix_stream(mix_ratios);
                 std::string this_ratio;
                 std::string last_ratio;
@@ -1067,11 +1086,12 @@ void GCode::_init_multiextruders(FILE *file, Print &print, GCodeWriter & writer,
             if (standby_temp > 0) {
                 if (print.config().ooze_prevention.value)
                     standby_temp += print.config().standby_temperature_delta.value;
-                _write_format(file, "G10 P%d R%d ; sets the standby temperature\n\n",
+                _write_format(file, "G10 P%d R%d ; sets the standby temperature\n",
                     tool_id,
                     standby_temp);
             }
         }
+        _write_format(file, "\n"); // just to be clean
     }
 }
 
@@ -1362,15 +1382,22 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     if(this->config().gcode_flavor != gcfKlipper && print.config().first_layer_bed_temperature.get_at(initial_extruder_id) != 0)
         this->_print_first_layer_bed_temperature(file, print, start_gcode, initial_extruder_id, false);
 
-    // init (virtual) mixing extruders.  Also sets initial mix rations for all mixing extruders.
+    // init (virtual) mixing extruders.  Also sets initial mix rations for all mixing extruders. need to do this before setting temps or extruding.
     this->_init_mixing_extruders(file, print, m_writer, tool_ordering, start_gcode);
 
     //init extruders
     this->_init_multiextruders(file, print, m_writer, tool_ordering, start_gcode);
 
-    // Set extruder(s) temperature before and after start G-code.
-    if ((this->config().gcode_flavor != gcfKlipper || print.config().start_gcode.value.empty()) && print.config().first_layer_temperature.get_at(initial_extruder_id) != 0)
-        this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
+    // Set extruder(s) temperature before and after start G-code. but only if the custom gcode doesn't
+    if ((this->config().gcode_flavor != gcfKlipper || print.config().start_gcode.value.empty()) && print.config().first_layer_temperature.get_at(initial_extruder_id) != 0) {
+        int temp_by_gcode = -1;
+        bool include_g10 = print.config().gcode_flavor == gcfRepRap;
+        if (! custom_gcode_sets_temperature(start_gcode, 104, 109, include_g10, temp_by_gcode, initial_extruder_id)) {
+            // change the tool to the first extruder
+            _write(file, m_writer.toolchange(initial_extruder_id));
+            this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
+        }
+    }
 
     // adds tag for processor
     _write_format(file, ";%s%s\n", GCodeProcessor::Extrusion_Role_Tag.c_str(), ExtrusionEntity::role_to_string(erCustom).c_str());
@@ -1405,19 +1432,22 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
     // Collect custom seam data from all objects.
     m_seam_placer.init(print);
 
-    //activate first extruder is multi-extruder and not in start-gcode
+    //activate first extruder if multi-extruder and not in start-gcode
+    // need to change this to see if the initial tool is the last one set in the gCode.
     if (m_writer.multiple_extruders) {
         //if not in gcode
         bool find = false;
         if (!start_gcode.empty()) {
             const char *ptr = start_gcode.data();
+            long last_tool = -1;
             while (*ptr != 0) {
                 // Skip whitespaces.
                 for (; *ptr == ' ' || *ptr == '\t'; ++ptr);
                 if (*ptr == 'T') {
                     // TX for most of the firmwares
-                    find = true;
-                    break;
+                    char *endptr = nullptr;
+                    // get the tool so we can compare with initial tool
+                    last_tool = strtol(++ptr, &endptr, 10);
                 } else if (*ptr == 'A' && print.config().gcode_flavor.value == gcfKlipper) {
                     // ACTIVATE_EXTRUDER for klipper (if used)
                     if (std::string::npos != start_gcode.find("ACTIVATE_EXTRUDER", size_t(ptr - start_gcode.data()))) {
@@ -1430,6 +1460,8 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
                 // Skip the end of line indicators.
                 for (; *ptr == '\r' || *ptr == '\n'; ++ptr);
             }
+            if (last_tool == initial_extruder_id)
+                find = true;
         }
         if (!find) {
             // Set initial extruder only after custom start G-code.
@@ -1448,11 +1480,11 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
         _write(file, this->set_extruder(initial_extruder_id, 0.));
     }
 
-    //write temps after custom gcodes to ensure the temperature are good. (after tool selection)
-    if(print.config().first_layer_temperature.get_at(initial_extruder_id) != 0)
-        this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
+    //write temps after custom gcodes to ensure the temperature are good. (after tool selection).. bed temp first
     if (print.config().first_layer_bed_temperature.get_at(initial_extruder_id) != 0)
         this->_print_first_layer_bed_temperature(file, print, start_gcode, initial_extruder_id, true);
+    if(print.config().first_layer_temperature.get_at(initial_extruder_id) != 0)
+        this->_print_first_layer_extruder_temperatures(file, print, start_gcode, initial_extruder_id, true);
 
     // Do all objects for each layer.
     if (print.config().complete_objects.value) {
@@ -1687,66 +1719,161 @@ std::string GCode::placeholder_parser_process(const std::string &name, const std
 }
 
 // Parse the custom G-code, try to find mcode_set_temp_dont_wait and mcode_set_temp_and_wait or optionally G10 with temperature inside the custom G-code.
-// Returns true if one of the temp commands are found, and try to parse the target temperature value into temp_out.
-static bool custom_gcode_sets_temperature(const std::string &gcode, const int mcode_set_temp_dont_wait, const int mcode_set_temp_and_wait, const bool include_g10, int &temp_out)
+// Returns true if one of the temp commands are found, and associated with the tool_id. and try to parse the target temperature value into temp_out.
+// mtr modified to add tool_id check.
+static bool custom_gcode_sets_temperature(const std::string &gcode, const int mcode_set_temp_dont_wait, const int mcode_set_temp_and_wait, const bool include_g10, int &temp_out, int tool_id)
 {
     temp_out = -1;
     if (gcode.empty())
         return false;
+    
+    const char *ptr = gcode.data();
+    bool temp_set_by_gcode = false;
+    bool found_tool = false;
+    bool found_temp_and_tool = false;
+    int  last_tool = -1;
+    while (*ptr != 0) {
+        // Skip whitespaces.
+        for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
+        if (*ptr == 'T') {
+            //check for the tool
+            char *endptr = nullptr;
+            int toolnum = int(strtol(++ptr, &endptr, 10));
+            if (toolnum == tool_id && temp_set_by_gcode) {
+                found_tool = true;
+            }
+            last_tool = toolnum;
+            ptr = endptr;
+        } else if (*ptr == 'M' || // Line starts with 'M'. It is a machine command.
+                   (*ptr == 'G' && include_g10)) { // Only check for G10 if requested
+            bool is_gcode = *ptr == 'G';
+            char *endptr = nullptr;
+            int mgcode = int(strtol(++ptr, &endptr, 10));
+            is_gcode = is_gcode && mgcode == 10;
+            ptr = endptr;
+            if (is_gcode) {
+                // see if there's a tool defined here and if it matches.
+                // skip the white space
+                for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
+                if (*ptr == 'P') {
+                    // found a tool associated with it.
+                    char *endptr = nullptr;
+                    int mg10tool = int(strtol(++ptr, &endptr, 10));
+                    ptr = endptr;
+                    if (mg10tool == tool_id) {
+                        found_tool = true;
+                    }
+                    // skip whitespace
+                    for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
+                }
+                if (*ptr == 'S') {
+                    // found a G10 temp
+                    // skip the white sapce baby
+                    // Parse an int.
+                    endptr = nullptr;
+                    long temp_parsed = strtol(++ptr, &endptr, 10);
+                    ptr = endptr;
+                    if (endptr > ptr) {
+                        temp_out = temp_parsed;
+                        found_temp_and_tool = true;
+                    }
+                }
+            } else {
+                // must be an M command
+                // M104/M109 or M140/M190 found.
+                bool is_mcode = mgcode == mcode_set_temp_dont_wait || mgcode == mcode_set_temp_and_wait;
+                if (is_mcode) {
+                    // so, it's a valid M code. look for tool and temp settings.
+                    
+                    // Now try to parse the temperature value.
+                    // While not at the end of the line:
+                    // skip the white stuff
+                    for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
+                    if (*ptr == 'S') {
+                        // found a temperature setting
+                        // more of that white stuff
+                        // Parse an int.
+                        endptr = nullptr;
+                        long temp_parsed = strtol(++ptr, &endptr, 10);
+                        if (endptr > ptr) {
+                            ptr = endptr;
+                            temp_out = temp_parsed;
+                            temp_set_by_gcode = true;
+                        }
+                    } else {
+                        if (*ptr == 'T') {
+                            // found a tool.. see if it matches.
+                            // and yet more white stuff
+                            endptr = nullptr;
+                            int mtool =strtol(++ptr, &endptr, 10);
+                            if (endptr > ptr) {
+                                ptr = endptr;
+                                if (mtool = tool_id) {
+                                    found_tool = true;
+                                    found_temp_and_tool = true;
+                                }
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }else {
+            // Skip this word.
+            for (; strchr(" \t;\r\n\0", *ptr) == nullptr; ++ ptr);
+        }
+        // Skip the rest of the line.
+        for (; *ptr != 0 && *ptr != '\r' && *ptr != '\n'; ++ ptr);
+        // Skip the end of line indicators.
+        for (; *ptr == '\r' || *ptr == '\n'; ++ ptr);
+    }
+    return found_temp_and_tool && (last_tool == tool_id);
+}
 
+// simpler version for checking if the code sets the bed temperature
+static bool custom_gcode_sets_bed_temperature(const std::string &gcode, const int mcode_set_temp_dont_wait, const int mcode_set_temp_and_wait, int &temp_out)
+{
+    temp_out = -1;
+    if (gcode.empty())
+        return false;
+    
     const char *ptr = gcode.data();
     bool temp_set_by_gcode = false;
     while (*ptr != 0) {
         // Skip whitespaces.
         for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
-        if (*ptr == 'M' || // Line starts with 'M'. It is a machine command.
-            (*ptr == 'G' && include_g10)) { // Only check for G10 if requested
-            bool is_gcode = *ptr == 'G';
-            ++ ptr;
-            // Parse the M or G code value.
+        if (*ptr == 'M') {
             char *endptr = nullptr;
-            int mgcode = int(strtol(ptr, &endptr, 10));
-            if (endptr != nullptr && endptr != ptr && 
-                is_gcode ?
-                    // G10 found
-                    mgcode == 10 :
-                // M104/M109 or M140/M190 found.
-                    (mgcode == mcode_set_temp_dont_wait || mgcode == mcode_set_temp_and_wait)) {
-				ptr = endptr;
-                if (! is_gcode)
-                    // Let the caller know that the custom M-code sets the temperature.
-                temp_set_by_gcode = true;
+            int mgcode = int(strtol(++ptr, &endptr, 10));
+            ptr = endptr;
+            // M104/M109 or M140/M190 found.
+            bool is_mcode = mgcode == mcode_set_temp_dont_wait || mgcode == mcode_set_temp_and_wait;
+            if (is_mcode) {
+                // so, it's a valid M code. look for tool and temp settings.
+                
                 // Now try to parse the temperature value.
-				// While not at the end of the line:
-				while (strchr(";\r\n\0", *ptr) == nullptr) {
-                    // Skip whitespaces.
-                    for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
-                    if (*ptr == 'S') {
-                        // Skip whitespaces.
-                        for (++ ptr; *ptr == ' ' || *ptr == '\t'; ++ ptr);
-                        // Parse an int.
-                        endptr = nullptr;
-                        long temp_parsed = strtol(ptr, &endptr, 10);
-						if (endptr > ptr) {
-							ptr = endptr;
-							temp_out = temp_parsed;
-                            // Let the caller know that the custom G-code sets the temperature
-                            // Only do this after successfully parsing temperature since G10
-                            // can be used for other reasons
-                            temp_set_by_gcode = true;
-						}
-                    } else {
-                        // Skip this word.
-						for (; strchr(" \t;\r\n\0", *ptr) == nullptr; ++ ptr);
+                // While not at the end of the line:
+                // skip the white stuff
+                for (; *ptr == ' ' || *ptr == '\t'; ++ ptr);
+                if (*ptr == 'S') {
+                    // found a temperature setting
+                    // more of that white stuff
+                    // Parse an int.
+                    endptr = nullptr;
+                    long temp_parsed = strtol(++ptr, &endptr, 10);
+                    if (endptr > ptr) {
+                        ptr = endptr;
+                        temp_out = temp_parsed;
+                        temp_set_by_gcode = true;
                     }
                 }
             }
         }
         // Skip the rest of the line.
         for (; *ptr != 0 && *ptr != '\r' && *ptr != '\n'; ++ ptr);
-		// Skip the end of line indicators.
+        // Skip the end of line indicators.
         for (; *ptr == '\r' || *ptr == '\n'; ++ ptr);
-	}
+    }
     return temp_set_by_gcode;
 }
 
@@ -1828,7 +1955,7 @@ void GCode::_print_first_layer_bed_temperature(FILE *file, Print &print, const s
     if (temp == 0) return;
     // Is the bed temperature set by the provided custom G-code?
     int  temp_by_gcode     = -1;
-    bool temp_set_by_gcode = custom_gcode_sets_temperature(gcode, 140, 190, false, temp_by_gcode);
+    bool temp_set_by_gcode = custom_gcode_sets_bed_temperature(gcode, 140, 190, temp_by_gcode);
     if (temp_set_by_gcode && temp_by_gcode >= 0 && temp_by_gcode < 1000)
         temp = temp_by_gcode;
     // Always call m_writer.set_bed_temperature() so it will set the internal "current" state of the bed temp as if
@@ -1845,11 +1972,13 @@ void GCode::_print_first_layer_bed_temperature(FILE *file, Print &print, const s
 // RepRapFirmware: G10 Sxx
 void GCode::_print_first_layer_extruder_temperatures(FILE *file, Print &print, const std::string &gcode, unsigned int first_printing_extruder_id, bool wait)
 {
-    // Is the bed temperature set by the provided custom G-code?
     int  temp_by_gcode     = -1;
     bool include_g10   = print.config().gcode_flavor == gcfRepRap;
     bool managed = print.config().manage_tool_lifecycle.get_at(first_printing_extruder_id);
-    if (custom_gcode_sets_temperature(gcode, 104, 109, include_g10, temp_by_gcode) && !managed) {
+    
+    // Is the extruder temperature set by the provided custom G-code?
+
+    if (custom_gcode_sets_temperature(gcode, 104, 109, include_g10, temp_by_gcode, first_printing_extruder_id)) {
         // Set the extruder temperature at m_writer, but throw away the generated G-code as it will be written with the custom G-code.
         int temp = print.config().first_layer_temperature.get_at(first_printing_extruder_id);
         if (temp == 0)
@@ -2212,20 +2341,23 @@ void GCode::process_layer(
     }
 
     if (! first_layer && ! m_second_layer_things_done) {
-        // Transition from 1st to 2nd layer. Adjust nozzle temperatures as prescribed by the nozzle dependent
-        // first_layer_temperature vs. temperature settings.
-        // **mtr** added support for managed extruders..
-        for (const Extruder &extruder : m_writer.extruders()) {
-            if (print.config().single_extruder_multi_material.value &&
-                extruder.id() != m_writer.tool()->id())
-                // In single extruder multi material mode, set the temperature for the current extruder only.
-                continue;
-            int temperature = print.config().temperature.get_at(extruder.id());
-            if(temperature > 0) // don't set it if disabled
-                gcode += m_writer.set_temperature(temperature, true, extruder.id());
-        }
+        // Transition from 1st to 2nd layer. Adjust bed and nozzle temperatures as prescribed by the nozzle dependent
         if(print.config().bed_temperature.get_at(first_extruder_id) > 0)  // don't set it if disabled
             gcode += m_writer.set_bed_temperature(print.config().bed_temperature.get_at(first_extruder_id));
+        
+        // first_layer_temperature vs. temperature settings.
+        for (const Extruder &extruder : m_writer.extruders()) {
+            if (print.config().single_extruder_multi_material.value) {
+                if (extruder.id() == m_writer.tool()->id() || print.config().single_extruder_mixer.get_at(extruder.id())) {
+                    // In single extruder multi material mode, set the temperature for the current extruder only.. unless we have mixer...
+                    // also, need to force a wait if the extruder id is the same as the writer id.
+                    int temperature = print.config().temperature.get_at(extruder.id());
+                    bool do_wait = extruder.id() == m_writer.tool()->id();
+                    if(temperature > 0) // don't set it if disabled
+                        gcode += m_writer.set_temperature(temperature, do_wait, extruder.id());
+                }
+            }
+        }
         // Mark the temperature transition from 1st to 2nd layer to be finished.
         m_second_layer_things_done = true;
     }

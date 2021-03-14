@@ -119,6 +119,34 @@ public:
     static const std::vector<std::string>& get() { return Colors; }
 };
 
+//initialized with the option string for a specific change point
+// converts it to specific floating point mix ratios and a specific heights, starting at the bottom.
+class ExtruderMixAndChangePts
+{
+    // min and max height are the first layer height and the top layer height of the objects being printed.
+    ExtruderMixAndChangePts(ConfigOptionString ratio, ConfigOptionString change_point,
+                            bool gradient, bool absolute, float min_height, float max_height);
+    std::vector<float> get_layer_mix_ratio(float height);
+private:
+    
+    // vector of height to mix ratio values
+    std::vector<std::pair<std::vector<float>, float>>  m_mix_ratios;
+};
+
+// tracks and supports adjusting the mix ratios for all active extruders.
+class ExtruderMixer
+{
+    void init_mixing_extruders(FILE* file, Print& print, GCodeWriter& writer, ToolOrdering& tool_ordering, const std::string& custom_gcode);
+    std::string layer_mix_change(GCode gcodegen);
+private:
+    struct ExtChangePts {
+        int m_extruder_id;
+        std::vector<ExtruderMixAndChangePts> m_mix_change_pts;
+    };
+    
+    std::vector<ExtChangePts> m_mix_refs;
+};
+
 class GCode : ExtrusionVisitorConst  {
 public:        
     GCode() : 
