@@ -289,8 +289,8 @@ void GLIndexedVertexArray::render(
 const float GLVolume::SELECTED_COLOR[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
 const float GLVolume::HOVER_SELECT_COLOR[4] = { 0.4f, 0.9f, 0.1f, 1.0f };
 const float GLVolume::HOVER_DESELECT_COLOR[4] = { 1.0f, 0.75f, 0.75f, 1.0f };
-const float GLVolume::OUTSIDE_COLOR[4] = { 0.0f, 0.38f, 0.8f, 1.0f };
-const float GLVolume::SELECTED_OUTSIDE_COLOR[4] = { 0.19f, 0.58f, 1.0f, 1.0f };
+const float GLVolume::OUTSIDE_COLOR[4] = { 0.867f, 0.173f, 0.0f, 1.0f }; //dark red	
+const float GLVolume::SELECTED_OUTSIDE_COLOR[4] = { 1.0f, 0.239f, 0.0f, 1.0f }; //red
 const float GLVolume::DISABLED_COLOR[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
 const float GLVolume::MODEL_COLOR[4][4] = {
     { 1.0f, 1.0f, 0.0f, 1.f },
