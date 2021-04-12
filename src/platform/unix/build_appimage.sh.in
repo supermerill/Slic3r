@@ -2,7 +2,7 @@
 APPIMAGETOOLURL="https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage"
 
 
-APP_IMAGE=$1
+APP_IMAGE="@SLIC3R_APP_KEY@_@SLIC3R_VERSION_FULL@_ubu64.AppImage"
 
 wget ${APPIMAGETOOLURL} -O ../appimagetool.AppImage
 chmod +x ../appimagetool.AppImage
@@ -24,5 +24,5 @@ EOF
 
 
 ../appimagetool.AppImage .
-mv Slic3r-x86_64.AppImage ${APP_IMAGE}
+mv @SLIC3R_APP_KEY@-x86_64.AppImage ${APP_IMAGE}
 chmod +x ${APP_IMAGE}

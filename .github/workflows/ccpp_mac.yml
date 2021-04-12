@@ -48,7 +48,12 @@ jobs:
       run: cmake .. -DCMAKE_PREFIX_PATH="$PWD/../deps/build/destdir/usr/local" -DCMAKE_OSX_DEPLOYMENT_TARGET="10.13" -DSLIC3R_STATIC=1
     - name: make SuperSlicer
       working-directory: ./build
-      run: make SuperSlicer
+      run: make Slic3r
+    - name: ls build
+      working-directory: ./build
+      run: |
+        ls -al src
+        ls -al .
     - name: update Info.plist
       working-directory: ./build/src
       run: sed "s/+UNKNOWN/_$(date '+%F')/" Info.plist >Info.date.plist
@@ -66,7 +71,7 @@ jobs:
       working-directory: ./build
       run: |
         cp -Rf ../resources pack/SuperSlicer/SuperSlicer.app/Contents/Resources
-        cp pack/SuperSlicer/SuperSlicer.app/Contents/Resources/icons/slic3r.icns pack/SuperSlicer/SuperSlicer.app/Contents/resources/Slic3r.icns
+        cp pack/SuperSlicer/SuperSlicer.app/Contents/Resources/icons/SuperSlicer.icns pack/SuperSlicer/SuperSlicer.app/Contents/resources/SuperSlicer.icns
         cp src/Info.date.plist pack/SuperSlicer/SuperSlicer.app/Contents/Info.plist
         echo -n -e 'APPL????\x0a' > PkgInfo
         cp PkgInfo pack/SuperSlicer/SuperSlicer.app/Contents/PkgInfo
@@ -74,7 +79,7 @@ jobs:
     - name: copy bin and do not let it lower case
       working-directory: ./build
       run: |
-        cp -f src/SuperSlicer pack/SuperSlicer/SuperSlicer.app/Contents/MacOS/SuperSlicer
+        cp -f src/superslicer pack/SuperSlicer/SuperSlicer.app/Contents/MacOS/SuperSlicer
         chmod u+x pack/SuperSlicer/SuperSlicer.app/Contents/MacOS/SuperSlicer
         tar -cvf SuperSlicer.tar pack/SuperSlicer
     - name: create dmg

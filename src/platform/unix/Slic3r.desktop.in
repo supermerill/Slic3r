@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=@SLIC3R_APP_KEY@
+Name=@SLIC3R_APP_NAME@
 GenericName=3D Printing Software
 Comment=G-code generator for 3D printers
 Icon=@SLIC3R_APP_KEY@
