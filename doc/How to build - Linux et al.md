@@ -1,11 +1,12 @@
 
 # Building SuperSlicer on UNIX/Linux
 
+
 SuperSlicer uses the CMake build system and requires several dependencies.
 The dependencies can be listed in `deps/deps-linux.cmake` and `deps/deps-unix-common.cmake`, although they don't necessarily need to be as recent
 as the versions listed - generally versions available on conservative Linux distros such as Debian stable or CentOS should suffice.
 
-Perl is not required any more.
+Perl is not required anymore.
 
 In a typical situation, one would open a command line, go to the SuperSlicer sources, create a directory called `build` or similar,
 `cd` into it and call:
@@ -16,6 +17,20 @@ In a typical situation, one would open a command line, go to the SuperSlicer sou
 where `N` is the number of CPU cores available.
 
 Additional CMake flags may be applicable as explained below.
+
+### How to get the source code
+
+You have to gitclone  the repository
+```
+git clone https://github.com/supermerill/SuperSlicer.git
+```
+
+and then you have to clone the profiles submodules
+
+```
+cd resources/profiles
+git submodule update
+```
 
 ## How to build, the easy way
 

@@ -11,6 +11,19 @@ To build SuperSlicer on Mac OS, you will need the following software:
 XCode is available through Apple's App Store, the other three tools are available on
 [brew](https://brew.sh/) (use `brew install cmake git gettext` to install them).
 
+### How to get the source code
+
+You have to gitclone  the repository
+```
+git clone https://github.com/supermerill/SuperSlicer.git
+```
+
+and then you have to clone the profiles submodules
+
+```
+cd resources/profiles
+git submodule update
+```
 ### How to build
 
 You can follow the [script](https://github.com/supermerill/SuperSlicer/blob/master/.github/workflows/ccpp_mac.yml) the build server use to create the ubuntu release.

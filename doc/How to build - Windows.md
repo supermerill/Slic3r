@@ -6,6 +6,20 @@ CMake installer can be downloaded from [the official website](https://cmake.org/
 
 Building with [Visual Studio 2017 Community Edition](https://www.visualstudio.com/vs/older-downloads/). should work too.
 
+### How to get the source code
+
+You have to gitclone  the repository
+```
+git clone https://github.com/supermerill/SuperSlicer.git
+```
+
+and then you have to clone the profiles submodules
+
+```
+cd resources/profiles
+git submodule update
+```
+
 ### How to build
 
 You have to build the dependancies (in ./deps/build)

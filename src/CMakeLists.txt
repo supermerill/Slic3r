@@ -107,9 +107,9 @@ if (MINGW)
     set_target_properties(Slic3r PROPERTIES PREFIX "")
 endif (MINGW)
 
-if (NOT WIN32 AND NOT APPLE)
+if (NOT WIN32)
     # Binary name on unix like systems (Linux, Unix)
-    set_target_properties(Slic3r PROPERTIES OUTPUT_NAME "Slic3r")
+    set_target_properties(Slic3r PROPERTIES OUTPUT_NAME "${SLIC3R_APP_CMD}")
 endif ()
 
 target_link_libraries(Slic3r libslic3r cereal)
@@ -160,7 +160,7 @@ if (WIN32)
     endif()
     target_compile_definitions(Slic3r_app_gui PRIVATE -DSLIC3R_WRAPPER_NOCONSOLE)
     add_dependencies(Slic3r_app_gui Slic3r)
-    set_target_properties(Slic3r_app_gui PROPERTIES OUTPUT_NAME "slic3r")
+    set_target_properties(Slic3r_app_gui PROPERTIES OUTPUT_NAME ${SLIC3R_APP_CMD})
     target_link_libraries(Slic3r_app_gui PRIVATE boost_headeronly)
 
     add_executable(Slic3r_app_console PrusaSlicer_app_msvc.cpp ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}.rc)
@@ -224,7 +224,7 @@ else ()
             COMMAND ln -sf Slic3r prusa-gcodeviewer
             COMMAND ln -sf Slic3r PrusaGCodeViewer
             WORKING_DIRECTORY "$<TARGET_FILE_DIR:Slic3r>"
-            COMMENT "Symlinking the G-code viewer to Slic3r, symlinking to slic3r and prusa-gcodeviewer"
+            COMMENT "Symlinking the G-code viewer to Slic3r, symlinking to slic3r and gcodeviewer"
             VERBATIM)
     else ()
         add_custom_command(TARGET Slic3r POST_BUILD
