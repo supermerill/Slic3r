@@ -83,9 +83,7 @@ jobs:
         chmod +x ../build_appimage.sh
         ../build_appimage.sh
     - name: Upload appimage
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@master
       with:
         name: SuperSlicer-AppImage.tar
-        path: build/package/SuperSlicer_ubu64.AppImage
-        
-        
+        path: build/package/SuperSlicer*.AppImage
