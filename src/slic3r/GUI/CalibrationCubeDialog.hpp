@@ -16,7 +16,7 @@ public:
 protected:
     void create_buttons(wxStdDialogButtonSizer* sizer) override;
     void create_geometry(std::string cube_path);
-    void create_geometry_voron(wxCommandEvent& event_args) { create_geometry("voron_design_cube_v6.amf"); }
+    void create_geometry_voron(wxCommandEvent& event_args) { create_geometry("voron_design_cube_v7.amf"); }
     void create_geometry_standard(wxCommandEvent& event_args) { create_geometry("xyzCalibration_cube.amf"); }
 
     wxComboBox* scale;
