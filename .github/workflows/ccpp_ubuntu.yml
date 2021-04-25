@@ -58,11 +58,6 @@ jobs:
     - name: copy resources
       working-directory: ./build
       run: cp -Rf ../resources package/resources
-    - name: ls build
-      working-directory: ./build
-      run: |
-        ls -al src
-        ls -al .
     - name: copy bin
       working-directory: ./build
       run: cp -f src/superslicer package/bin/superslicer
