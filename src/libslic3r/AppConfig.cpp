@@ -57,6 +57,7 @@ void AppConfig::set_defaults()
 
         if (get("show_drop_project_dialog").empty())
             set("show_drop_project_dialog", "1");
+		
         if (get("drop_project_action").empty())
             set("drop_project_action", "1");
 
@@ -151,11 +152,20 @@ void AppConfig::set_defaults()
         if (get("use_custom_toolbar_size").empty())
             set("use_custom_toolbar_size", "0");
 
+        if (get("show_collapse_button").empty())
+            set("show_collapse_button", "1");
+
+        if (get("suppress_hyperlinks").empty())
+            set("suppress_hyperlinks", "1");
+
         if (get("custom_toolbar_size").empty())
             set("custom_toolbar_size", "100");
 
         if (get("auto_toolbar_size").empty())
             set("auto_toolbar_size", "100");
+
+        if (get("auto_switch_preview").empty())
+            set("auto_switch_preview", "1");
 
 #if ENABLE_ENVIRONMENT_MAP
         if (get("use_environment_map").empty())

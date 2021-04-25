@@ -49,11 +49,6 @@ jobs:
     - name: make SuperSlicer
       working-directory: ./build
       run: make Slic3r
-    - name: ls build
-      working-directory: ./build
-      run: |
-        ls -al src
-        ls -al .
     - name: update Info.plist
       working-directory: ./build/src
       run: sed "s/+UNKNOWN/_$(date '+%F')/" Info.plist >Info.date.plist

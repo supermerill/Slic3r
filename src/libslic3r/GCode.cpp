@@ -3289,10 +3289,11 @@ void GCode::use(const ExtrusionEntityCollection &collection) {
 std::string GCode::extrude_path(const ExtrusionPath &path, const std::string &description, double speed) {
 
     ExtrusionPath simplifed_path = path;
-    if (this->config().min_length.value != 0 && !m_last_too_small.empty()) {
+    const double scaled_min_length = scale_(this->config().min_length.value);
+    if (scaled_min_length > 0 && !m_last_too_small.empty()) {
         //descr += " trys fusion " + std::to_string(unscaled(m_last_too_small.last_point().x())) + " , " + std::to_string(unscaled(path.first_point().x()));
         //ensure that it's a continous thing
-        if (m_last_too_small.first_point().distance_to_square(path.first_point()) < scale_(this->config().min_length) /*&& m_last_too_small.first_point().distance_to_square(path.first_point()) > EPSILON*/) {
+        if (m_last_too_small.last_point().distance_to_square(path.first_point()) < scaled_min_length*scaled_min_length /*&& m_last_too_small.first_point().distance_to_square(path.first_point()) > EPSILON*/) {
             //descr += " ! fusion " + std::to_string(simplifed_path.polyline.points.size());
             simplifed_path.height = (m_last_too_small.height * m_last_too_small.length() + simplifed_path.height * simplifed_path.length()) / (m_last_too_small.length() + simplifed_path.length());
             simplifed_path.mm3_per_mm = (m_last_too_small.mm3_per_mm * m_last_too_small.length() + simplifed_path.mm3_per_mm * simplifed_path.length()) / (m_last_too_small.length() + simplifed_path.length());
@@ -3302,23 +3303,19 @@ std::string GCode::extrude_path(const ExtrusionPath &path, const std::string &de
         }
         m_last_too_small.polyline.points.clear();
     }
-    if (this->config().min_length.value > 0) {
-        simplifed_path.simplify(scale_(this->config().min_length));
+    if (scaled_min_length > 0) {
+        // it's an alternative to simplifed_path.simplify(scale_(this->config().min_length)); with more enphasis ont he segment length that on the feature detail.
+        // because tolerance = min_length /10, douglas_peucker will erase more points if angles are shallower than 6° and then the '_plus' will kick in to keep a bit more.
+        // if angles are all bigger than 6°, then the douglas_peucker will do all the work.
+        simplifed_path.polyline.points = MultiPoint::_douglas_peucker_plus(simplifed_path.polyline.points, scaled_min_length / 10, scaled_min_length);
     }
     //else simplifed_path.simplify(SCALED_RESOLUTION);  //should already be simplified
-    if (this->config().min_length.value != 0 && simplifed_path.length() < scale_(this->config().min_length)) {
+    if (scaled_min_length > 0 && simplifed_path.length() < scaled_min_length) {
         m_last_too_small = simplifed_path;
         return "";
-            //"; "+ descr+" .... too small for extrude: "+std::to_string(simplifed_path.length())+" < "+ std::to_string(scale_(this->config().min_length))
-            //+ " ; " + std::to_string(unscaled(path.first_point().x())) + " : " + std::to_string(unscaled(path.last_point().x()))
-            //+" =;=> " + std::to_string(unscaled(simplifed_path.first_point().x())) + " : " + std::to_string(unscaled(simplifed_path.last_point().x()))
-            //+ "\n";
     }
 
     std::string gcode = this->_extrude(simplifed_path, description, speed);
-
-    //gcode += " ; " + std::to_string(unscaled(path.first_point().x())) + " : " + std::to_string(unscaled(path.last_point().x()));
-    //gcode += " =;=> " + std::to_string(unscaled(simplifed_path.first_point().x())) + " : " + std::to_string(unscaled(simplifed_path.last_point().x()));
 
     if (m_wipe.enable) {
         m_wipe.path = std::move(simplifed_path.polyline);

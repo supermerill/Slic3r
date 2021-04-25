@@ -2909,14 +2909,14 @@ void PrintConfigDef::init_fff_params()
     def->category = OptionCategory::slicing;
     def->tooltip = L("Minimum detail resolution, used to simplify the input file for speeding up "
         "the slicing job and reducing memory usage. High-resolution models often carry "
-        "more detail than printers can render. Set to zero to disable any simplification "
+        "more details than printers can render. Set to zero to disable any simplification "
         "and use full resolution from input. "
-        "\nNote: " SLIC3R_APP_NAME " has an internal resolution of 0.000001mm."
+        "\nNote: " SLIC3R_APP_NAME " has an internal working resolution of 0.0001mm."
         "\nInfill & Thin areas are simplified up to 0.0125mm.");
     def->sidetext = L("mm");
     def->min = 0;
     def->mode = comExpert;
-    def->set_default_value(new ConfigOptionFloat(0.0125));
+    def->set_default_value(new ConfigOptionFloat(0.002));
 
     def = this->add("retract_before_travel", coFloats);
     def->label = L("Minimum travel after retraction");

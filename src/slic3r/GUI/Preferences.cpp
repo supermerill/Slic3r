@@ -419,6 +419,15 @@ void PreferencesDialog::build()
 	option.opt.width = 6;
 	m_optgroup_gui->append_single_option_line(option);
 
+	if (is_editor) {
+		def.label = L("Switch from 3D view to Preview when sliced");
+		def.type = coBool;
+		def.tooltip = std::string(L("When an object is sliced, it will switch your view from the 3D view to the previewx (and then gcode-preview) automatically."));
+		def.set_default_value(new ConfigOptionBool{ app_config->get("auto_switch_preview") == "1" });
+		option = Option(def, "auto_switch_preview");
+		m_optgroup_gui->append_single_option_line(option);
+	}
+
 	activate_options_tab(m_optgroup_gui);
 
 	if (is_editor) {

@@ -3095,7 +3095,7 @@ unsigned int Plater::priv::update_background_process(bool force_validation, bool
     }
 
     //update tab if needed
-    if (invalidated != Print::ApplyStatus::APPLY_STATUS_UNCHANGED)
+    if (invalidated != Print::ApplyStatus::APPLY_STATUS_UNCHANGED && wxGetApp().app_config->get("auto_switch_preview") == "1")
     {
         if (this->preview->can_display_gcode())
             main_frame->select_tab(MainFrame::ETabType::PlaterGcode, true);
@@ -3708,7 +3708,8 @@ void Plater::priv::on_slicing_update(SlicingStatusEvent &evt)
 void Plater::priv::on_slicing_completed(wxCommandEvent & evt)
 {
     notification_manager->push_slicing_complete_notification(evt.GetInt(), is_sidebar_collapsed());
-    main_frame->select_tab(MainFrame::ETabType::PlaterPreview);
+    if(wxGetApp().app_config->get("auto_switch_preview") == "1")
+        main_frame->select_tab(MainFrame::ETabType::PlaterPreview);
     switch (this->printer_technology) {
     case ptFFF:
         this->update_fff_scene();
@@ -3788,7 +3789,8 @@ void Plater::priv::on_process_completed(SlicingProcessCompletedEvent &evt)
     this->background_process.stop();
     this->statusbar()->reset_cancel_callback();
     this->statusbar()->stop_busy();
-    main_frame->select_tab(MainFrame::ETabType::PlaterGcode);
+    if (wxGetApp().app_config->get("auto_switch_preview") == "1")
+        main_frame->select_tab(MainFrame::ETabType::PlaterGcode);
 
     // Reset the "export G-code path" name, so that the automatic background processing will be enabled again.
     this->background_process.reset_export();
