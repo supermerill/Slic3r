@@ -741,7 +741,7 @@ void Preview::update_layers_slider(const std::vector<double>& layers_z, bool kee
 
     Plater* plater = wxGetApp().plater();
     CustomGCode::Info ticks_info_from_model = plater->model().custom_gcode_per_print_z;
-    if ( plater->printer_technology() != ptSLA )
+    if ( wxGetApp().preset_bundle->printers.get_edited_preset().config.option("z_offset") != nullptr )
     {
         //add z-shift from gcode output
         const float z_shift = wxGetApp().preset_bundle->printers.get_edited_preset().config.opt_float("z_offset");
