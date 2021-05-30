@@ -496,10 +496,15 @@ void PhysicalPrinterDialog::update()
         m_optgroup->hide_field("printhost_authorization_type");
         m_optgroup->show_field("printhost_apikey", true);
         for (const std::string& opt_key : std::vector<std::string>{ "printhost_user", "printhost_password" })
-            m_optgroup->hide_field(opt_key);
+            m_optgroup->hide_field(opt_key);        
         const auto opt = m_config->option<ConfigOptionEnum<PrintHostType>>("host_type");
         supports_multiple_printers = opt && opt->value == htRepetier;
-    }
+
+        // hide api key for klipper
+        if (opt && opt->value == htKlipper) {
+            m_optgroup->hide_field("printhost_apikey");
+        }
+   }
     else {
         m_optgroup->set_value("host_type", int(PrintHostType::htOctoPrint), false);
         m_optgroup->hide_field("host_type");

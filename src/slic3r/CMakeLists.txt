@@ -215,6 +215,8 @@ set(SLIC3R_GUI_SOURCES
     Utils/FixModelByWin10.hpp
     Utils/OctoPrint.cpp
     Utils/OctoPrint.hpp
+    Utils/Klipper.cpp
+    Utils/Klipper.hpp
     Utils/Duet.cpp
     Utils/Duet.hpp
     Utils/FlashAir.cpp

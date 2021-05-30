@@ -80,7 +80,7 @@ bool OctoPrint::test(wxString &msg) const
 
 wxString OctoPrint::get_test_ok_msg () const
 {
-    return _(L("Connection to OctoPrint works correctly."));
+    return wxString::Format(_(L("Connection to %s works correctly.")), get_name());
 }
 
 wxString OctoPrint::get_test_failed_msg (wxString &msg) const
@@ -133,7 +133,7 @@ bool OctoPrint::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, Erro
             prorgess_fn(std::move(progress), cancel);
             if (cancel) {
                 // Upload was canceled
-                BOOST_LOG_TRIVIAL(info) << "Octoprint: Upload canceled";
+                BOOST_LOG_TRIVIAL(info) << get_name() << ": Upload canceled";
                 res = false;
             }
         })
