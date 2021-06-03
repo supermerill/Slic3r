@@ -838,25 +838,20 @@ bool UnsavedChangesDialog::save(PresetCollection* dependent_presets)
 }
 
 template<class T>
-wxString get_string_from_enum(const std::string& opt_key, const DynamicPrintConfig& config, bool is_infill = false)
+wxString get_string_from_enum(const std::string& opt_key, const DynamicPrintConfig& config)
 {
     const ConfigOptionDef& def = config.def()->options.at(opt_key);
     const std::vector<std::string>& names = def.enum_labels;//ConfigOptionEnum<T>::get_enum_names();
     T val = config.option<ConfigOptionEnum<T>>(opt_key)->value;
 
-    // Each infill doesn't use all list of infill declared in PrintConfig.hpp.
-    // So we should "convert" val to the correct one
-    if (is_infill) {
-        for (auto key_val : *def.enum_keys_map)
-            if ((int)key_val.second == (int)val) {
-                auto it = std::find(def.enum_values.begin(), def.enum_values.end(), key_val.first);
-                if (it == def.enum_values.end())
-                    return "";
-                return from_u8(_utf8(names[it - def.enum_values.begin()]));
-            }
-        return _L("Undef");
-    }
-    return from_u8(_utf8(names[static_cast<int>(val)]));
+    for (auto key_val : *def.enum_keys_map)
+        if ((int)key_val.second == (int)val) {
+            auto it = std::find(def.enum_values.begin(), def.enum_values.end(), key_val.first);
+            if (it == def.enum_values.end())
+                return "";
+            return from_u8(_utf8(names[it - def.enum_values.begin()]));
+        }
+    return _L("Undef");
 }
 
 static int get_id_from_opt_key(std::string opt_key)
@@ -954,7 +949,7 @@ static wxString get_string_value(std::string opt_key, const DynamicPrintConfig& 
             opt_key == "solid_fill_pattern" ||
             opt_key == "brim_ears_pattern" ||
             opt_key == "support_material_interface_pattern")
-            return get_string_from_enum<InfillPattern>(opt_key, config, true);
+            return get_string_from_enum<InfillPattern>(opt_key, config);
         if (opt_key == "complete_objects_sort")
             return get_string_from_enum<CompleteObjectSort>(opt_key, config);
         if (opt_key == "display_orientation")
@@ -977,7 +972,7 @@ static wxString get_string_value(std::string opt_key, const DynamicPrintConfig& 
         if (opt_key == "no_perimeter_unsupported_algo")
             return get_string_from_enum<NoPerimeterUnsupportedAlgo>(opt_key, config);
         if (opt_key == "perimeter_loop_seam")
-            return get_string_from_enum<SeamPosition>(opt_key, config, true);
+            return get_string_from_enum<SeamPosition>(opt_key, config);
         if (opt_key == "printhost_authorization_type")
             return get_string_from_enum<AuthorizationType>(opt_key, config);
         if (opt_key == "seam_position")
