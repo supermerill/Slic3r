@@ -5483,7 +5483,7 @@ void PrintConfigDef::to_prusa(t_config_option_key& opt_key, std::string& value, 
 "top_infill_extrusion_spacing",
 "start_gcode_manual",
 "perimeter_round_corners",
-
+"travel_speed_z",
     };
     //looks if it's to be removed, or have to be transformed
     if (to_remove_keys.find(opt_key) != to_remove_keys.end()) {
