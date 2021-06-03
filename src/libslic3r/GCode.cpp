@@ -3741,8 +3741,6 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
             speed = m_config.get_abs_value("ironing_speed");
         } else if (path.role() == erNone) {
             speed = m_config.get_abs_value("travel_speed");
-        } else if (path.role() == erNone) {
-            speed = m_config.get_abs_value("travel_speed_z");
         } else if (path.role() == erMilling) {
             speed = m_config.get_abs_value("milling_speed");
         } else {
