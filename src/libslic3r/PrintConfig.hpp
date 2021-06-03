@@ -1104,6 +1104,7 @@ public:
     ConfigOptionStrings             tool_name;
     ConfigOptionString              toolchange_gcode;
     ConfigOptionFloat               travel_speed;
+    ConfigOptionFloat               travel_speed_z;
     ConfigOptionBool                use_firmware_retraction;
     ConfigOptionBool                use_relative_e_distances;
     ConfigOptionBool                use_volumetric_e;
