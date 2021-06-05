@@ -45,7 +45,7 @@ echo -n "[9/9] Generating MacOS app..."
     # copy bin and do not let it lower case
     cp -f src/@SLIC3R_APP_CMD@ pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/MacOS/@SLIC3R_APP_KEY@
     chmod u+x pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/MacOS/@SLIC3R_APP_KEY@
-} &> $ROOT/build/MacOS_Build.log # Capture all command output
+} &> $ROOT/Build.log # Capture all command output
 echo "done"
 
 if [[ -n "$BUILD_IMAGE" ]]
@@ -58,6 +58,6 @@ echo -n "Creating DMG Image for distribution..."
     hdiutil create -ov -fs HFS+ -volname "@SLIC3R_APP_KEY@" -srcfolder "pack/@SLIC3R_APP_KEY@" temp.dmg
     hdiutil convert temp.dmg -format UDZO -o @SLIC3R_APP_KEY@.dmg
     popd
-} &> $ROOT/build/MacOS_Build.log # Capture all command output
+} &> $ROOT/Build.log # Capture all command output
 echo "done"
 fi

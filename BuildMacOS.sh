@@ -94,9 +94,12 @@ echo -n "[8/9] Building Slic3r..."
 } &> $ROOT/build/Build.log # Capture all command output
 echo "done"
 
+# Give proper permissions to script
+chmod 755 $ROOT/build/src/BuildMacOSImage.sh
+
 if [[ -n "$BUILD_IMAGE" ]]
 then
-	$ROOT/build/BuildMacOSImage.sh -i
+	$ROOT/build/src/BuildMacOSImage.sh -i
 else
-	$ROOT/build/BuildMacOSImage.sh
+	$ROOT/build/src/BuildMacOSImage.sh
 fi
