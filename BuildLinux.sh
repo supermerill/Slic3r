@@ -120,3 +120,4 @@ echo -n "[9/9] Generating Linux app..."
         $ROOT/build/src/BuildLinuxImage.sh
     fi
 } &> $ROOT/build/Build.log # Capture all command output
+echo "done"
