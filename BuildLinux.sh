@@ -8,8 +8,9 @@ while getopts ":ih" opt; do
     i )
         export BUILD_IMAGE="1"
         ;;
-    h ) echo "Usage: ./BuildMacOS.sh [-i]"
-        echo "   -i: Generate DMG image (optional)"
+    h ) echo "Usage: ./BuildLinux.sh [-i][-u]"
+        echo "   -i: Generate appimage (optional)"
+        echo "   -u: only update clock & dependency packets (optional and need sudo)"
         exit 0
         ;;
   esac
@@ -21,6 +22,19 @@ then
     mkdir build
 fi
 
+
+if [[ -n "$BUILD_IMAGE" ]]
+then
+    echo -n "Updating linux ..."
+    {
+        hwclock -s
+        apt update
+        apt install libgtk2.0-dev libglew-dev libudev-dev libdbus-1-dev
+    } > $ROOT/build/Build.log # Capture all command output
+    echo "done"
+    exit 0
+fi
+
 echo -n "[1/9] Updating submodules..."
 {
     # update submodule profiles
@@ -28,7 +42,7 @@ echo -n "[1/9] Updating submodules..."
     git submodule update --init
     popd
 } > $ROOT/build/Build.log # Capture all command output
-echo "done"
+
 
 echo -n "[2/9] Changing date in version..."
 {
@@ -63,7 +77,7 @@ echo -n "[5/9] Renaming wxscintilla library..."
 {
     # rename wxscintilla
     pushd destdir/usr/local/lib
-    cp libwxscintilla-3.1.a libwx_osx_cocoau_scintilla-3.1.a
+    cp libwxscintilla-3.1.a libwx_gtk2u_scintilla-3.1.a
     popd
 } &> $ROOT/build/Build.log # Capture all command output
 echo "done"
@@ -94,9 +108,12 @@ echo -n "[8/9] Building Slic3r..."
 } &> $ROOT/build/Build.log # Capture all command output
 echo "done"
 
-if [[ -n "$BUILD_IMAGE" ]]
-then
-	$ROOT/build/BuildMacOSImage.sh -i
-else
-	$ROOT/build/BuildMacOSImage.sh
-fi
+echo -n "[9/9] Generating Linux app..."
+{
+    if [[ -n "$BUILD_IMAGE" ]]
+    then
+        $ROOT/build/BuildLinuxImage.sh -i
+    else
+        $ROOT/build/BuildLinuxImage.sh
+    fi
+} &> $ROOT/build/Build.log # Capture all command output

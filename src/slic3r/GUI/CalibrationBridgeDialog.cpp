@@ -62,10 +62,14 @@ void CalibrationBridgeDialog::create_geometry(std::string setting_to_test, bool 
         gui_app->app_config->set("autocenter", "0");
     }
 
-    int idx_steps = steps->GetSelection();
-    int idx_nb = nb_tests->GetSelection();
-    size_t step = 5 + (idx_steps == wxNOT_FOUND ? 0 : idx_steps * 5);
-    size_t nb_items = 1 + (idx_nb == wxNOT_FOUND ? 0 : idx_nb);
+    long step = 10;
+    if (!steps->GetValue().ToLong(&step)) {
+        step = 10;
+    }
+    long nb_items = 10;
+    if (!nb_tests->GetValue().ToLong(&nb_items)) {
+        nb_items = 10;
+    }
 
     std::vector<std::string> items;
     for (size_t i = 0; i < nb_items; i++)

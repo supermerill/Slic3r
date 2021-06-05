@@ -63,17 +63,12 @@ bool FlashAir::test(wxString &msg) const
 	return res;
 }
 
-wxString FlashAir::get_test_ok_msg () const
-{
-	return _(L("Connection to FlashAir works correctly and upload is enabled."));
-}
-
 wxString FlashAir::get_test_failed_msg (wxString &msg) const
 {
     return GUI::from_u8((boost::format("%s: %s\n%s")
-                    % _utf8(L("Could not connect to FlashAir"))
+                    % (boost::format(_u8L("Could not connect to %s")) % get_name())
                     % std::string(msg.ToUTF8())
-                    % _utf8(L("Note: FlashAir with firmware 2.00.02 or newer and activated upload function is required."))).str());
+                    % _u8L("Note: FlashAir with firmware 2.00.02 or newer and activated upload function is required.")).str());
 }
 
 bool FlashAir::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, ErrorFn error_fn) const

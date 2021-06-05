@@ -842,6 +842,15 @@ void GCodeProcessor::reset()
     m_width_compare.reset();
 #endif // ENABLE_GCODE_VIEWER_DATA_CHECKING
 }
+void GCodeProcessor::process_string(const std::string& gcode, std::function<void()> cancel_callback)
+{
+    std::stringstream ss(gcode);
+    std::string strline;
+    while ( std::getline(ss, strline))
+        m_parser.parse_line(strline, [this](GCodeReader& reader, const GCodeReader::GCodeLine& line) {
+            process_gcode_line(line); 
+        });
+}
 
 void GCodeProcessor::process_file(const std::string& filename, bool apply_postprocess, std::function<void()> cancel_callback)
 {
@@ -1903,21 +1912,27 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
 #if ENABLE_TOOLPATHS_WIDTH_HEIGHT_FROM_GCODE
         if (m_forced_width > 0.0f)
             m_width = m_forced_width;
-        else if (m_extrusion_role == erExternalPerimeter)
+        else {
+            if (m_extrusion_role == erExternalPerimeter)
 #else
-        if (m_extrusion_role == erExternalPerimeter)
+        {
+            if (m_extrusion_role == erExternalPerimeter)
 #endif // ENABLE_TOOLPATHS_WIDTH_HEIGHT_FROM_GCODE
-            // cross section: rectangle
-            m_width = delta_pos[E] * static_cast<float>(M_PI * sqr(1.05f * filament_radius)) / (delta_xyz * m_height);
-        else if (is_bridge(m_extrusion_role) || m_extrusion_role == erNone)
-            // cross section: circle
-            m_width = static_cast<float>(m_filament_diameters[m_extruder_id]) * std::sqrt(delta_pos[E] / delta_xyz);
-        else
-            // cross section: rectangle + 2 semicircles
-            m_width = delta_pos[E] * static_cast<float>(M_PI * sqr(filament_radius)) / (delta_xyz * m_height) + static_cast<float>(1.0 - 0.25 * M_PI) * m_height;
+                // cross section: rectangle
+                m_width = delta_pos[E] * static_cast<float>(M_PI * sqr(1.05f * filament_radius)) / (delta_xyz * m_height);
+            else if (is_bridge(m_extrusion_role) || m_extrusion_role == erNone)
+                // cross section: circle
+                m_width = static_cast<float>(m_filament_diameters[m_extruder_id]) * std::sqrt(delta_pos[E] / delta_xyz);
+            else
+                // cross section: rectangle + 2 semicircles
+                m_width = delta_pos[E] * static_cast<float>(M_PI * sqr(filament_radius)) / (delta_xyz * m_height) + static_cast<float>(1.0 - 0.25 * M_PI) * m_height;
 
-        // clamp width to avoid artifacts which may arise from wrong values of m_height
-        m_width = std::min(m_width, std::max(1.0f, 4.0f * m_height));
+            // if teh value seems wrong, fall back to circular extrusion from flow
+            if (m_width > m_height * 10 || m_width < m_height) {
+                m_width = 2 * std::sqrt(m_mm3_per_mm / float(PI));
+                m_height = m_width;
+            }
+        }
 
 #if ENABLE_GCODE_VIEWER_DATA_CHECKING
         m_width_compare.update(m_width, m_extrusion_role);

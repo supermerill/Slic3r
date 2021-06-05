@@ -68,6 +68,7 @@ struct OptionViewParameters
 {
     bool category   {false};
     bool english    {false};
+    bool exact      {false};
 
     int  hovered_id {0};
 };
@@ -154,6 +155,7 @@ class SearchDialog : public GUI::DPIDialog
     SearchListModel*    search_list_model   { nullptr };
     wxCheckBox*         check_category      { nullptr };
     wxCheckBox*         check_english       { nullptr };
+    wxCheckBox*         check_exact         { nullptr };
 
     OptionsSearcher*    searcher            { nullptr };
 

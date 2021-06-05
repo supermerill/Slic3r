@@ -746,7 +746,6 @@ namespace Slic3r {
                 || opt_key == "support_material_threshold"
                 || opt_key == "support_material_with_sheath"
                 || opt_key == "dont_support_bridges"
-                || opt_key == "first_layer_extrusion_width"
                 || opt_key == "support_material_solid_first_layer") {
                 steps.emplace_back(posSupportMaterial);
             } else if (opt_key == "bottom_solid_layers") {
@@ -788,7 +787,6 @@ namespace Slic3r {
                 || opt_key == "fill_top_flow_ratio"
                 || opt_key == "fill_smooth_width"
                 || opt_key == "fill_smooth_distribution"
-                || opt_key == "first_layer_extrusion_width"
                 || opt_key == "infill_anchor"
                 || opt_key == "infill_anchor_max"
                 || opt_key == "infill_connection"
@@ -802,7 +800,6 @@ namespace Slic3r {
                 || opt_key == "extra_perimeters_odd_layers"
                 || opt_key == "external_infill_margin"
                 || opt_key == "external_perimeter_overlap"
-                || opt_key == "first_layer_extrusion_width"
                 || opt_key == "gap_fill_overlap"
                 || opt_key == "no_perimeter_unsupported_algo"
                 || opt_key == "perimeters"
@@ -815,7 +812,8 @@ namespace Slic3r {
                 || opt_key == "perimeter_extruder") {
                 steps.emplace_back(posPerimeters);
                 steps.emplace_back(posSupportMaterial);
-            } else if (opt_key == "bridge_flow_ratio") {
+            } else if (opt_key == "bridge_flow_ratio"
+                || opt_key == "first_layer_extrusion_width") {
                 //if (m_config.support_material_contact_distance > 0.) {
                     // Only invalidate due to bridging if bridging is enabled.
                     // If later "support_material_contact_distance" is modified, the complete PrintObject is invalidated anyway.

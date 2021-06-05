@@ -786,6 +786,11 @@ void ObjectList::copy_settings_to_clipboard()
 void ObjectList::paste_settings_into_list()
 {
     wxDataViewItem item = GetSelection();
+    if (!item.IsOk()) {
+        BOOST_LOG_TRIVIAL(error) << "Warning: can't paste settings on empty selection\n";
+        return;
+    }
+
     assert(item.IsOk());
     if (m_objects_model->GetItemType(item) & itSettings)
         item = m_objects_model->GetParent(item);

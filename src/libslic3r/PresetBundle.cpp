@@ -1481,7 +1481,10 @@ void PresetBundle::update_compatible(PresetSelectCompatibleType select_other_pri
     {
     public:
         PreferedPrintProfileMatch(const Preset &preset, const std::string &prefered_name) :
-            PreferedProfileMatch(preset.alias, prefered_name), m_prefered_layer_height(preset.config.opt_float("layer_height")) {}
+            PreferedProfileMatch(preset.alias, prefered_name), m_alias_preset(preset), m_prefered_layer_height(0){
+            if(!preset.alias.empty())
+                m_prefered_layer_height = preset.config.opt_float("layer_height");
+        }
 
         int operator()(const Preset &preset) const
         {
@@ -1495,7 +1498,8 @@ void PresetBundle::update_compatible(PresetSelectCompatibleType select_other_pri
         }
 
     private:
-        const double m_prefered_layer_height;
+        double m_prefered_layer_height;
+        const Preset& m_alias_preset;
     };
 
     // Matching by the layer height in addition.

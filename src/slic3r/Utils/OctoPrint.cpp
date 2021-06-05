@@ -78,14 +78,13 @@ bool OctoPrint::test(wxString &msg) const
     return res;
 }
 
-wxString OctoPrint::get_test_ok_msg () const
-{
-    return wxString::Format(_(L("Connection to %s works correctly.")), get_name());
-}
-
 wxString OctoPrint::get_test_failed_msg (wxString &msg) const
 {
-    return wxString::Format("%s: %s\n\n%s", wxString::Format(_(L("Could not connect to %s")), get_name()), msg, _(L("Note: OctoPrint version at least 1.1.0 is required.")));
+    return GUI::from_u8((boost::format("%s: %s\n\n%s")
+        % (boost::format(_u8L("Could not connect to %s")) % get_name())
+        % std::string(msg.ToUTF8())
+        % _u8L("Note: OctoPrint version at least 1.1.0 is required.")
+        ).str());
 }
 
 bool OctoPrint::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, ErrorFn error_fn) const

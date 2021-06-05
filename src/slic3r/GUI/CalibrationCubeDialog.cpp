@@ -24,17 +24,19 @@ namespace Slic3r {
 namespace GUI {
 
 void CalibrationCubeDialog::create_buttons(wxStdDialogButtonSizer* buttons){
-    wxString choices_scale[] = { "10mm", "20mm", "30mm", "40mm" };
-    scale = new wxComboBox(this, wxID_ANY, wxString{ "20mm" }, wxDefaultPosition, wxDefaultSize, 4, choices_scale);
+    wxString choices_scale[] = { "10", "20", "30", "40" };
+    scale = new wxComboBox(this, wxID_ANY, wxString{ "20" }, wxDefaultPosition, wxDefaultSize, 4, choices_scale);
     scale->SetToolTip(_(L("You can choose the dimension of the cube. It's a simple scale, you can modify it in the right panel yourself if you prefer. It's just quicker to select it here.")));
     scale->SetSelection(1);
     wxString choices_goal[] = { "Dimensional accuracy (default)" , "infill/perimeter overlap"/*, "external perimeter overlap"*/};
     calibrate = new wxComboBox(this, wxID_ANY, wxString{ "Dimensional accuracy (default)" }, wxDefaultPosition, wxDefaultSize, 2, choices_goal);
     calibrate->SetToolTip(_(L("Select a goal, this will change settings to increase the effects to search.")));
     calibrate->SetSelection(0);
+    calibrate->SetEditable(false);
 
     buttons->Add(new wxStaticText(this, wxID_ANY, wxString{ "dimension:" }));
     buttons->Add(scale);
+    buttons->Add(new wxStaticText(this, wxID_ANY, wxString{ "mm" }));
     buttons->AddSpacer(40);
     buttons->Add(new wxStaticText(this, wxID_ANY, wxString{ "goal:" }));
     buttons->Add(calibrate);
@@ -74,7 +76,11 @@ void CalibrationCubeDialog::create_geometry(std::string calibration_path) {
     if (calibration_path == "xyzCalibration_cube.amf")
         cube_size = 20;
     int idx_scale = scale->GetSelection();
-    float xyzScale = (10/cube_size) * (idx_scale+1);
+    double xyzScale = 20;
+    if (!scale->GetValue().ToDouble(&xyzScale)) {
+        xyzScale = 20;
+    }
+    xyzScale = xyzScale / cube_size;
     //do scaling
     model.objects[objs_idx[0]]->scale(xyzScale, xyzScale, xyzScale);
 

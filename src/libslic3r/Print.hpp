@@ -429,7 +429,7 @@ public:
     // Returns an empty string if valid, otherwise returns an error message.
     std::pair<PrintValidationError, std::string> validate() const override;
     double              skirt_first_layer_height() const;
-    Flow                brim_flow(size_t extruder_id) const;
+    Flow                brim_flow(size_t extruder_id, const PrintObjectConfig &brim_config) const;
     Flow                skirt_flow(size_t extruder_id) const;
     
     std::vector<uint16_t> object_extruders(const PrintObjectPtrs &objects) const;

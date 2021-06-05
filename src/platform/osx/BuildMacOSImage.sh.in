@@ -1,0 +1,63 @@
+#!/bin/bash
+
+export ROOT=`pwd`
+export NCORES=`sysctl -n hw.ncpu`
+
+while getopts ":ih" opt; do
+  case ${opt} in
+    i )
+        export BUILD_IMAGE="1"
+        ;;
+    h ) echo "Usage: ./BuildMacOSImage.sh [-i]"
+        echo "   -i: Generate DMG image (optional)"
+        exit 0
+        ;;
+  esac
+done
+
+echo -n "[9/9] Generating MacOS app..."
+{
+    # update Info.plist
+    pushd src
+    sed "s/+UNKNOWN/_$(date '+%F')/" Info.plist >Info.date.plist
+    popd
+
+    # create directory and copy into it
+    if [ -d "pack" ]
+    then
+        rm -rf pack/*
+    fi
+    mkdir pack
+    mkdir pack/@SLIC3R_APP_KEY@
+    mkdir pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app
+    mkdir pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents
+    mkdir pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/_CodeSignature
+    mkdir pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/Frameworks
+    mkdir pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/MacOS
+
+    # copy Resources
+    cp -Rf ../resources pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/Resources
+    cp pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/Resources/icons/@SLIC3R_APP_KEY@.icns pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/resources/@SLIC3R_APP_KEY@.icns
+    cp src/Info.date.plist pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/Info.plist
+    echo -n -e 'APPL????\x0a' > PkgInfo
+    cp PkgInfo pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/PkgInfo
+
+    # copy bin and do not let it lower case
+    cp -f src/@SLIC3R_APP_CMD@ pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/MacOS/@SLIC3R_APP_KEY@
+    chmod u+x pack/@SLIC3R_APP_KEY@/@SLIC3R_APP_KEY@.app/Contents/MacOS/@SLIC3R_APP_KEY@
+} &> $ROOT/build/MacOS_Build.log # Capture all command output
+echo "done"
+
+if [[ -n "$BUILD_IMAGE" ]]
+then
+echo -n "Creating DMG Image for distribution..."
+{
+    tar -cvf @SLIC3R_APP_KEY@.tar pack/@SLIC3R_APP_KEY@
+
+    # create dmg
+    hdiutil create -ov -fs HFS+ -volname "@SLIC3R_APP_KEY@" -srcfolder "pack/@SLIC3R_APP_KEY@" temp.dmg
+    hdiutil convert temp.dmg -format UDZO -o @SLIC3R_APP_KEY@.dmg
+    popd
+} &> $ROOT/build/MacOS_Build.log # Capture all command output
+echo "done"
+fi

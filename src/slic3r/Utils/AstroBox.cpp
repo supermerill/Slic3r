@@ -79,17 +79,13 @@ bool AstroBox::test(wxString &msg) const
     return res;
 }
 
-wxString AstroBox::get_test_ok_msg () const
-{
-    return _(L("Connection to AstroBox works correctly."));
-}
-
 wxString AstroBox::get_test_failed_msg (wxString &msg) const
 {
     return GUI::from_u8((boost::format("%s: %s\n\n%s")
-        % _utf8(L("Could not connect to AstroBox"))
+        % (boost::format(_u8L("Could not connect to %s")) % get_name())
         % std::string(msg.ToUTF8())
-        % _utf8(L("Note: AstroBox version at least 1.1.0 is required."))).str());
+        % _u8L("Note: AstroBox version at least 1.1.0 is required.")
+        ).str());
 }
 
 bool AstroBox::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, ErrorFn error_fn) const

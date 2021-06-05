@@ -39,8 +39,8 @@ public:
     virtual const char* get_name() const = 0;
 
     virtual bool test(wxString &curl_msg) const = 0;
-    virtual wxString get_test_ok_msg () const = 0;
-    virtual wxString get_test_failed_msg (wxString &msg) const = 0;
+    virtual wxString get_test_ok_msg () const;
+    virtual wxString get_test_failed_msg (wxString &msg) const;
     virtual bool upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, ErrorFn error_fn) const = 0;
     virtual bool has_auto_discovery() const = 0;
     virtual bool can_test() const = 0;

@@ -86,7 +86,7 @@ public:
     void    export_region_fill_surfaces_to_svg_debug(const char *name) const;
 
     // Is there any valid extrusion assigned to this LayerRegion?
-    bool    has_extrusions() const { return !this->perimeters.entities.empty() || !this->fills.entities.empty() || !this->ironings.entities.empty(); }
+    bool    has_extrusions() const { return !this->perimeters.entities.empty() || !this->fills.entities.empty() || !this->ironings.entities.empty() || !this->thin_fills.entities.empty(); }
 
 protected:
     friend class Layer;

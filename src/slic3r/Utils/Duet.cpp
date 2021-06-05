@@ -42,18 +42,6 @@ bool Duet::test(wxString &msg) const
 	return connectionType != ConnectionType::error;
 }
 
-wxString Duet::get_test_ok_msg () const
-{
-	return _(L("Connection to Duet works correctly."));
-}
-
-wxString Duet::get_test_failed_msg (wxString &msg) const
-{
-    return GUI::from_u8((boost::format("%s: %s")
-                    % _utf8(L("Could not connect to Duet"))
-                    % std::string(msg.ToUTF8())).str());
-}
-
 bool Duet::upload(PrintHostUpload upload_data, ProgressFn prorgess_fn, ErrorFn error_fn) const
 {
 	wxString connect_msg;

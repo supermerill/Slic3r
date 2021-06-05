@@ -634,7 +634,7 @@ void PreferencesDialog::create_settings_mode_widget()
                     app_config->get("old_settings_layout_mode") == "1" ? 1 :
                     app_config->get("new_settings_layout_mode") == "1" ? 2 :
                     app_config->get("dlg_settings_layout_mode") == "1" ? 3 :
-#ifdef __APPLE__
+#ifndef WIN32
         1;
 #else
         0;
@@ -654,6 +654,16 @@ void PreferencesDialog::create_settings_mode_widget()
 		m_values["new_settings_layout_mode"] = boost::any_cast<bool>(selection == 2) ? "1" : "0";
 		m_values["dlg_settings_layout_mode"] = boost::any_cast<bool>(selection == 3) ? "1" : "0";
 	});
+	std::wstring unstable_warning = _L("!! Can be unstable in some os distribution !!");
+	m_layout_mode_box->SetToolTip(_L("Choose how the windows are selectable and displayed:")
+		+ "\n* " + _L(" Tab layout: all windows are in the application, all are selectable via a tab.")
+#ifndef WIN32
+		+ " " + unstable_warning
+#endif
+		+ "\n* " + _L("Old layout: all windows are in the application, settings are on the top tab bar and the plater choice in on the bottom of the plater view.")
+		+ "\n* " + _L("Settings button: all windows are in the application, no tabs: you have to clic on settings gears to switch to settings tabs.")
+		+ "\n* " + _L("Settings window: settings are displayed in their own window. You have to clic on settings gears to show the settings window.")
+	);
 
 	auto sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(m_layout_mode_box, 1, wxALIGN_CENTER_VERTICAL);

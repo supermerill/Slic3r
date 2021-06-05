@@ -230,10 +230,10 @@ public:
     virtual ConfigOption*       clone() const = 0;
     // Set a value from a ConfigOption. The two options should be compatible.
     virtual void                set(const ConfigOption *option) = 0;
-    virtual int                 getInt()        const { throw BadOptionTypeException("Calling ConfigOption::getInt on a non-int ConfigOption"); }
+    virtual int32_t              getInt()        const { throw BadOptionTypeException("Calling ConfigOption::getInt on a non-int ConfigOption"); }
     virtual double              getFloat()      const { throw BadOptionTypeException("Calling ConfigOption::getFloat on a non-float ConfigOption"); }
     virtual bool                getBool()       const { throw BadOptionTypeException("Calling ConfigOption::getBool on a non-boolean ConfigOption");  }
-    virtual void                setInt(int /* val */) { throw BadOptionTypeException("Calling ConfigOption::setInt on a non-int ConfigOption"); }
+    virtual void                setInt(int32_t /* val */) { throw BadOptionTypeException("Calling ConfigOption::setInt on a non-int ConfigOption"); }
     virtual bool                operator==(const ConfigOption &rhs) const = 0;
     bool                        operator!=(const ConfigOption &rhs) const { return ! (*this == rhs); }
     bool                        is_scalar()     const { return (int(this->type()) & int(coVectorType)) == 0; }
@@ -257,6 +257,9 @@ public:
     	*this = *rhs; 
     	return true;
     }
+private:
+    friend class cereal::access;
+    template<class Archive> void serialize(Archive& ar) { ar(this->phony); }
 };
 
 typedef ConfigOption*       ConfigOptionPtr;
@@ -293,7 +296,7 @@ public:
 
 private:
 	friend class cereal::access;
-	template<class Archive> void serialize(Archive & ar) { ar(this->value); }
+	template<class Archive> void serialize(Archive & ar) { ar(this->phony); ar(this->value); }
 };
 
 // Value of a vector valued option (bools, ints, floats, strings, points)
@@ -509,7 +512,7 @@ public:
 
 private:
 	friend class cereal::access;
-	template<class Archive> void serialize(Archive & ar) { ar(this->values); }
+	template<class Archive> void serialize(Archive & ar) { ar(this->phony); ar(this->values); }
 };
 
 class ConfigOptionFloat : public ConfigOptionSingle<double>
@@ -665,17 +668,17 @@ private:
 using ConfigOptionFloats 		 = ConfigOptionFloatsTempl<false>;
 using ConfigOptionFloatsNullable = ConfigOptionFloatsTempl<true>;
 
-class ConfigOptionInt : public ConfigOptionSingle<int>
+class ConfigOptionInt : public ConfigOptionSingle<int32_t>
 {
 public:
-    ConfigOptionInt() : ConfigOptionSingle<int>(0) {}
-    explicit ConfigOptionInt(int value) : ConfigOptionSingle<int>(value) {}
-    explicit ConfigOptionInt(double _value) : ConfigOptionSingle<int>(int(floor(_value + 0.5))) {}
+    ConfigOptionInt() : ConfigOptionSingle<int32_t>(0) {}
+    explicit ConfigOptionInt(int32_t value) : ConfigOptionSingle<int32_t>(value) {}
+    explicit ConfigOptionInt(double _value) : ConfigOptionSingle<int32_t>(int32_t(floor(_value + 0.5))) {}
     
     static ConfigOptionType static_type() { return coInt; }
     ConfigOptionType        type()   const override { return static_type(); }
-    int                     getInt() const override { return this->value; }
-    void                    setInt(int val) override { this->value = val; }
+    int32_t                  getInt() const override { return this->value; }
+    void                    setInt(int32_t val) override { this->value = val; }
     ConfigOption*           clone()  const override { return new ConfigOptionInt(*this); }
     bool                    operator==(const ConfigOptionInt &rhs) const { return this->value == rhs.value; }
     
@@ -702,16 +705,16 @@ public:
 
 private:
 	friend class cereal::access;
-	template<class Archive> void serialize(Archive &ar) { ar(cereal::base_class<ConfigOptionSingle<int>>(this)); }
+	template<class Archive> void serialize(Archive &ar) { ar(cereal::base_class<ConfigOptionSingle<int32_t>>(this)); }
 };
 
 template<bool NULLABLE>
-class ConfigOptionIntsTempl : public ConfigOptionVector<int>
+class ConfigOptionIntsTempl : public ConfigOptionVector<int32_t>
 {
 public:
-    ConfigOptionIntsTempl() : ConfigOptionVector<int>() {}
-    explicit ConfigOptionIntsTempl(size_t n, int value) : ConfigOptionVector<int>(n, value) {}
-    explicit ConfigOptionIntsTempl(std::initializer_list<int> il) : ConfigOptionVector<int>(std::move(il)) {}
+    ConfigOptionIntsTempl() : ConfigOptionVector<int32_t>() {}
+    explicit ConfigOptionIntsTempl(size_t n, int32_t value) : ConfigOptionVector<int32_t>(n, value) {}
+    explicit ConfigOptionIntsTempl(std::initializer_list<int32_t> il) : ConfigOptionVector<int32_t>(std::move(il)) {}
 
     static ConfigOptionType static_type() { return coInts; }
     ConfigOptionType        type()  const override { return static_type(); }
@@ -721,7 +724,7 @@ public:
     // Could a special "nil" value be stored inside the vector, indicating undefined value?
     bool 					nullable() const override { return NULLABLE; }
     // Special "nil" value to be stored into the vector if this->supports_nil().
-    static int	 			nil_value() { return std::numeric_limits<int>::max(); }
+    static int32_t			nil_value() { return std::numeric_limits<int32_t>::max(); }
     // A scalar is nil, or all values of a vector are nil.
     bool 					is_nil() const override { for (auto v : this->values) if (v != nil_value()) return false; return true; }
     bool 					is_nil(size_t idx) const override { return this->values[idx] == nil_value(); }
@@ -729,7 +732,7 @@ public:
     std::string serialize() const override
     {
         std::ostringstream ss;
-        for (const int &v : this->values) {
+        for (const int32_t &v : this->values) {
             if (&v != &this->values.front())
             	ss << ",";
             serialize_single_value(ss, v);
@@ -741,7 +744,7 @@ public:
     {
         std::vector<std::string> vv;
         vv.reserve(this->values.size());
-        for (const int v : this->values) {
+        for (const int32_t v : this->values) {
             std::ostringstream ss;
         	serialize_single_value(ss, v);
             vv.push_back(ss.str());
@@ -764,7 +767,7 @@ public:
                     throw Slic3r::RuntimeError("Deserializing nil into a non-nullable object");
         	} else {
 	            std::istringstream iss(item_str);
-	            int value;
+	            int32_t value;
 	            iss >> value;
 	            this->values.push_back(value);
 	        }
@@ -773,7 +776,7 @@ public:
     }
 
 private:
-	void serialize_single_value(std::ostringstream &ss, const int v) const {
+	void serialize_single_value(std::ostringstream &ss, const int32_t v) const {
 			if (v == nil_value()) {
         		if (NULLABLE)
         			ss << "nil";
@@ -784,7 +787,7 @@ private:
 	}
 
 	friend class cereal::access;
-	template<class Archive> void serialize(Archive &ar) { ar(cereal::base_class<ConfigOptionVector<int>>(this)); }
+	template<class Archive> void serialize(Archive &ar) { ar(cereal::base_class<ConfigOptionVector<int32_t>>(this)); }
 };
 
 using ConfigOptionInts   	   = ConfigOptionIntsTempl<false>;
@@ -1413,7 +1416,7 @@ using ConfigOptionBoolsNullable = ConfigOptionBoolsTempl<true>;
 // Map from an enum integer value to an enum name.
 typedef std::vector<std::string>  t_config_enum_names;
 // Map from an enum name to an enum integer value.
-typedef std::map<std::string,int> t_config_enum_values;
+typedef std::map<std::string,int32_t> t_config_enum_values;
 
 template <class T>
 class ConfigOptionEnum : public ConfigOptionSingle<T>
@@ -1428,7 +1431,7 @@ public:
     ConfigOption*           clone() const override { return new ConfigOptionEnum<T>(*this); }
     ConfigOptionEnum<T>&    operator=(const ConfigOption *opt) { this->set(opt); return *this; }
     bool                    operator==(const ConfigOptionEnum<T> &rhs) const { return this->value == rhs.value; }
-    int                     getInt() const override { return (int)this->value; }
+    int32_t                  getInt() const override { return (int32_t)this->value; }
 
     bool operator==(const ConfigOption &rhs) const override
     {
@@ -1450,8 +1453,8 @@ public:
     {
         // as names are static-initialized, it's thread safe
         static t_config_enum_names names = ConfigOptionEnum<T>::create_enum_names();
-        assert(static_cast<int>(this->value) < int(names.size()));
-        return names[static_cast<int>(this->value)];
+        assert(static_cast<int32_t>(this->value) < int32_t(names.size()));
+        return names[static_cast<int32_t>(this->value)];
     }
 
     bool deserialize(const std::string &str, bool append = false) override
@@ -1462,7 +1465,7 @@ public:
 
     static bool has(T value) 
     {
-        for (const std::pair<std::string, int> &kvp : ConfigOptionEnum<T>::get_enum_values())
+        for (const std::pair<std::string, int32_t> &kvp : ConfigOptionEnum<T>::get_enum_values())
             if (kvp.second == value)
                 return true;
         return false;
@@ -1475,12 +1478,12 @@ public:
         if (names.empty()) {
             // Initialize the map.
             const t_config_enum_values &enum_keys_map = ConfigOptionEnum<T>::get_enum_values();
-            int cnt = 0;
-            for (const std::pair<std::string, int> &kvp : enum_keys_map)
+            int32_t cnt = 0;
+            for (const std::pair<std::string, int32_t> &kvp : enum_keys_map)
                 cnt = std::max(cnt, kvp.second);
             cnt += 1;
             names.assign(cnt, "");
-            for (const std::pair<std::string, int> &kvp : enum_keys_map)
+            for (const std::pair<std::string, int32_t> &kvp : enum_keys_map)
                 names[kvp.second] = kvp.first;
         }
         return names;
@@ -1506,7 +1509,7 @@ class ConfigOptionEnumGeneric : public ConfigOptionInt
 {
 public:
     ConfigOptionEnumGeneric(const t_config_enum_values* keys_map = nullptr) : keys_map(keys_map) {}
-    explicit ConfigOptionEnumGeneric(const t_config_enum_values* keys_map, int value) : ConfigOptionInt(value), keys_map(keys_map) {}
+    explicit ConfigOptionEnumGeneric(const t_config_enum_values* keys_map, int32_t value) : ConfigOptionInt(value), keys_map(keys_map) {}
 
     const t_config_enum_values* keys_map;
     
@@ -1891,7 +1894,7 @@ public:
     // Conversion to string is always possible.
     void set(const std::string &opt_key, bool  				value, bool create = false)
     	{ this->option_throw<ConfigOptionBool>(opt_key, create)->value = value; }
-    void set(const std::string &opt_key, int   				value, bool create = false);
+    void set(const std::string &opt_key, int32_t				value, bool create = false);
     void set(const std::string &opt_key, double				value, bool create = false);
     void set(const std::string &opt_key, const char		   *value, bool create = false)
     	{ this->option_throw<ConfigOptionString>(opt_key, create)->value = value; }
@@ -1908,8 +1911,8 @@ public:
     	SetDeserializeItem(const std::string &opt_key, const std::string &opt_value, bool append = false) : opt_key(opt_key), opt_value(opt_value), append(append) {}
     	SetDeserializeItem(const char *opt_key, const bool value, bool append = false) : opt_key(opt_key), opt_value(value ? "1" : "0"), append(append) {}
     	SetDeserializeItem(const std::string &opt_key, const bool value, bool append = false) : opt_key(opt_key), opt_value(value ? "1" : "0"), append(append) {}
-    	SetDeserializeItem(const char *opt_key, const int value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
-    	SetDeserializeItem(const std::string &opt_key, const int value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
+    	SetDeserializeItem(const char *opt_key, const int32_t value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
+    	SetDeserializeItem(const std::string &opt_key, const int32_t value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
     	SetDeserializeItem(const char *opt_key, const float value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
     	SetDeserializeItem(const std::string &opt_key, const float value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
     	SetDeserializeItem(const char *opt_key, const double value, bool append = false) : opt_key(opt_key), opt_value(std::to_string(value)), append(append) {}
@@ -2075,10 +2078,10 @@ public:
     double&             opt_float(const t_config_option_key &opt_key, unsigned int idx)         { return this->option<ConfigOptionFloats>(opt_key)->get_at(idx); }
     const double&       opt_float(const t_config_option_key &opt_key, unsigned int idx) const   { return dynamic_cast<const ConfigOptionFloats*>(this->option(opt_key))->get_at(idx); }
 
-    int&                opt_int(const t_config_option_key &opt_key)                             { return this->option<ConfigOptionInt>(opt_key)->value; }
-    int                 opt_int(const t_config_option_key &opt_key) const                       { return dynamic_cast<const ConfigOptionInt*>(this->option(opt_key))->value; }
-    int&                opt_int(const t_config_option_key &opt_key, unsigned int idx)           { return this->option<ConfigOptionInts>(opt_key)->get_at(idx); }
-    int                 opt_int(const t_config_option_key &opt_key, unsigned int idx) const     { return dynamic_cast<const ConfigOptionInts*>(this->option(opt_key))->get_at(idx); }
+    int32_t&             opt_int(const t_config_option_key &opt_key)                             { return this->option<ConfigOptionInt>(opt_key)->value; }
+    int32_t              opt_int(const t_config_option_key &opt_key) const                       { return dynamic_cast<const ConfigOptionInt*>(this->option(opt_key))->value; }
+    int32_t&             opt_int(const t_config_option_key &opt_key, unsigned int idx)           { return this->option<ConfigOptionInts>(opt_key)->get_at(idx); }
+    int32_t              opt_int(const t_config_option_key &opt_key, unsigned int idx) const     { return dynamic_cast<const ConfigOptionInts*>(this->option(opt_key))->get_at(idx); }
 
     template<typename ENUM>
 	ENUM                opt_enum(const t_config_option_key &opt_key) const                      {

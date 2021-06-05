@@ -20,6 +20,7 @@
 #include "Repetier.hpp"
 #include "Klipper.hpp"
 #include "../GUI/PrintHostDialogs.hpp"
+#include "slic3r/GUI/I18N.hpp"
 
 namespace fs = boost::filesystem;
 using boost::optional;
@@ -29,6 +30,19 @@ namespace Slic3r {
 
 
 PrintHost::~PrintHost() {}
+
+
+wxString PrintHost::get_test_ok_msg() const
+{
+    return wxString::Format(_L("Connection to %s works correctly."), get_name());
+}
+
+wxString PrintHost::get_test_failed_msg(wxString& msg) const
+{
+    return GUI::from_u8((boost::format("%s: %s")
+        % (boost::format(_u8L("Could not connect to %s")) % get_name())
+        % std::string(msg.ToUTF8())).str());
+}
 
 PrintHost* PrintHost::get_print_host(DynamicPrintConfig *config)
 {

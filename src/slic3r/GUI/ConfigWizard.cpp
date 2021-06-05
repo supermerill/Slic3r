@@ -1402,21 +1402,38 @@ PageDiameters::PageDiameters(ConfigWizard *parent)
 
 void PageDiameters::apply_custom_config(DynamicPrintConfig &config)
 {
+
     auto *opt_nozzle = new ConfigOptionFloats(1, spin_nozzle->GetValue());
     config.set_key_value("nozzle_diameter", opt_nozzle);
     auto *opt_filam = new ConfigOptionFloats(1, spin_filam->GetValue());
     config.set_key_value("filament_diameter", opt_filam);
 
-    config.set_key_value("support_material_extrusion_width", new ConfigOptionFloatOrPercent(95, false));
-    config.set_key_value("top_infill_extrusion_width", new ConfigOptionFloatOrPercent(100, false));
-    config.set_key_value("first_layer_extrusion_width", new ConfigOptionFloatOrPercent(140, false));
-    config.set_key_value("extrusion_width", new ConfigOptionFloatOrPercent(110, false));
-    config.set_key_value("perimeter_extrusion_width", new ConfigOptionFloatOrPercent(110, false));
-    config.set_key_value("external_perimeter_extrusion_width", new ConfigOptionFloatOrPercent(105, false));
-    config.set_key_value("infill_extrusion_width", new ConfigOptionFloatOrPercent(110, false));
-    config.set_key_value("solid_infill_extrusion_width", new ConfigOptionFloatOrPercent(110, false));
-    config.set_key_value("solid_infill_extrusion_width", new ConfigOptionFloatOrPercent(110, false));
+    config.set_key_value("extrusion_width", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("first_layer_extrusion_width", new ConfigOptionFloatOrPercent(140, true));
+    config.set_key_value("perimeter_extrusion_width", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("external_perimeter_extrusion_width", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("infill_extrusion_width", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("solid_infill_extrusion_width", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("top_infill_extrusion_width", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("support_material_extrusion_width", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("skirt_extrusion_width", new ConfigOptionFloatOrPercent(110, true));
 
+    //configure spacing where needed
+    config.set_key_value("extrusion_spacing", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("first_layer_extrusion_spacing", new ConfigOptionFloatOrPercent(140, true));
+    config.set_key_value("perimeter_extrusion_spacing", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("external_perimeter_extrusion_spacing", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("infill_extrusion_spacing", new ConfigOptionFloatOrPercent(100, true));
+    config.set_key_value("solid_infill_extrusion_spacing", new ConfigOptionFloatOrPercent(105, true));
+    config.set_key_value("top_infill_extrusion_spacing", new ConfigOptionFloatOrPercent(100, true));
+    config.option("extrusion_width")->set_phony(true);
+    config.option("first_layer_extrusion_width")->set_phony(true);
+    config.option("perimeter_extrusion_width")->set_phony(true);
+    config.option("external_perimeter_extrusion_width")->set_phony(true);
+    config.option("infill_extrusion_width")->set_phony(true);
+    config.option("solid_infill_extrusion_width")->set_phony(true);
+    config.option("top_infill_extrusion_width")->set_phony(true);
+    config.update_phony({});
 }
 
 PageTemperatures::PageTemperatures(ConfigWizard *parent)

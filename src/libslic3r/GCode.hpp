@@ -170,7 +170,7 @@ public:
     const PlaceholderParser& placeholder_parser() const { return m_placeholder_parser; }
     // Process a template through the placeholder parser, collect error messages to be reported
     // inside the generated string and after the G-code export finishes.
-    std::string     placeholder_parser_process(const std::string &name, const std::string &templ, unsigned int current_extruder_id, DynamicConfig *config_override = nullptr);
+    std::string     placeholder_parser_process(const std::string &name, const std::string &templ, uint16_t current_extruder_id, DynamicConfig *config_override = nullptr);
     bool            enable_cooling_markers() const { return m_enable_cooling_markers; }
     std::string     extrusion_role_to_string_for_parser(const ExtrusionRole &);
 
@@ -183,7 +183,7 @@ public:
     static void append_full_config(const Print& print, std::string& str);
 
     // called by porcess_layer, do the color change / custom gcode
-    std::string emit_custom_gcode_per_print_z(const CustomGCode::Item* custom_gcode, unsigned int first_extruder_id, const Print& print, PrintStatistics& stats);
+    std::string emit_custom_gcode_per_print_z(const CustomGCode::Item* custom_gcode, uint16_t first_extruder_id, const Print& print, PrintStatistics& stats);
 
     // Object and support extrusions of the same PrintObject at the same print_z.
     // public, so that it could be accessed by free helper functions from GCode.cpp
@@ -282,7 +282,7 @@ private:
             std::vector<Region> by_region;                                    // all extrusions for this island, grouped by regions
 
             // Fills in by_region_per_copy_cache and returns its reference.
-            const std::vector<Region>& by_region_per_copy(std::vector<Region> &by_region_per_copy_cache, unsigned int copy, unsigned int extruder, bool wiping_entities = false) const;
+            const std::vector<Region>& by_region_per_copy(std::vector<Region> &by_region_per_copy_cache, unsigned int copy, uint16_t extruder, bool wiping_entities = false) const;
         };
         std::vector<Island>         islands;
     };
@@ -319,7 +319,7 @@ private:
     bool            needs_retraction(const Polyline &travel, ExtrusionRole role = erNone);
     std::string     retract(bool toolchange = false);
     std::string     unretract() { return m_writer.unlift() + m_writer.unretract(); }
-    std::string     set_extruder(unsigned int extruder_id, double print_z, bool no_toolchange = false);
+    std::string     set_extruder(uint16_t extruder_id, double print_z, bool no_toolchange = false);
 
     // Cache for custom seam enforcers/blockers for each layer.
     SeamPlacer                          m_seam_placer;
@@ -350,7 +350,7 @@ private:
     ExtrusionRole                       m_last_processor_extrusion_role;
     // How many times will change_layer() be called?
     // change_layer() will update the progress bar.
-    unsigned int                        m_layer_count;
+    uint32_t                            m_layer_count;
     // Progress bar indicator. Increments from -1 up to layer_count.
     int                                 m_layer_index;
     // Current layer processed. Insequential printing mode, only a single copy will be printed.
@@ -428,19 +428,19 @@ private:
     std::string _before_extrude(const ExtrusionPath &path, const std::string &description, double speed = -1);
     std::string _after_extrude(const ExtrusionPath &path);
     void print_machine_envelope(FILE *file, Print &print);
-    void _print_first_layer_bed_temperature(FILE *file, Print &print, const std::string &gcode, unsigned int first_printing_extruder_id, bool wait);
-    void _print_first_layer_extruder_temperatures(FILE *file, Print &print, const std::string &gcode, unsigned int first_printing_extruder_id, bool wait);
+    void _print_first_layer_bed_temperature(FILE *file, Print &print, const std::string &gcode, uint16_t first_printing_extruder_id, bool wait);
+    void _print_first_layer_extruder_temperatures(FILE *file, Print &print, const std::string &gcode, uint16_t first_printing_extruder_id, bool wait);
     // this flag triggers first layer speeds
     bool                                on_first_layer() const { return m_layer != nullptr && m_layer->id() == 0; }
 
     friend ObjectByExtruder& object_by_extruder(
-        std::map<unsigned int, std::vector<ObjectByExtruder>> &by_extruder, 
-        unsigned int                                           extruder_id, 
-        size_t                                                 object_idx, 
-        size_t                                                 num_objects);
+        std::map<uint16_t, std::vector<ObjectByExtruder>>      &by_extruder, 
+        uint16_t                                                extruder_id, 
+        size_t                                                  object_idx, 
+        size_t                                                  num_objects);
     friend std::vector<ObjectByExtruder::Island>& object_islands_by_extruder(
-        std::map<unsigned int, std::vector<ObjectByExtruder>>  &by_extruder, 
-        unsigned int                                            extruder_id, 
+        std::map<uint16_t, std::vector<ObjectByExtruder>>      &by_extruder, 
+        uint16_t                                                extruder_id, 
         size_t                                                  object_idx, 
         size_t                                                  num_objects,
         size_t                                                  num_islands);

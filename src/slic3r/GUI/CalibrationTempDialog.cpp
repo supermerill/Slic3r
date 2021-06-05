@@ -70,15 +70,22 @@ void CalibrationTempDialog::create_geometry(wxCommandEvent& event_args) {
     // -- get temps
     const ConfigOptionInts* temperature_config = filament_config->option<ConfigOptionInts>("temperature");
     assert(temperature_config->values.size() >= 1);
-    int idx_steps = steps->GetSelection();
-    int idx_up = nb_up->GetSelection();
-    int idx_down = nb_down->GetSelection();
+    long nb_items_up = 1;
+    if (!nb_up->GetValue().ToLong(&nb_items_up)) {
+        nb_items_up = 2;
+    }
+    long nb_items_down = 1;
+    if (!nb_down->GetValue().ToLong(&nb_items_down)) {
+        nb_items_down = 2;
+    }
     int16_t temperature = 5 * (temperature_config->values[0] / 5);
-    size_t step_temp = 5 + (idx_steps == wxNOT_FOUND ? 0 : (idx_steps * 5));
-    size_t nb_items = 1 + (idx_down == wxNOT_FOUND ? 0 : idx_down)
-        + (idx_up == wxNOT_FOUND ? 0 : idx_up);
+    long step_temp = 1;
+    if (!steps->GetValue().ToLong(&step_temp)) {
+        step_temp = 10;
+    }
+    size_t nb_items = 1 + nb_items_up + nb_items_down;
     //start at the highest temp
-    temperature = temperature + step_temp * (idx_up == wxNOT_FOUND ? 0 : idx_up);
+    temperature = temperature + step_temp * nb_items_up;
     
     /// --- scale ---
     //model is created for a 0.4 nozzle, scale xy with nozzle size.

@@ -502,7 +502,7 @@ std::string ConfigBase::opt_serialize(const t_config_option_key &opt_key) const
     return opt->serialize();
 }
 
-void ConfigBase::set(const std::string &opt_key, int value, bool create)
+void ConfigBase::set(const std::string &opt_key, int32_t value, bool create)
 {
     ConfigOption *opt = this->option_throw(opt_key, create);
     switch (opt->type()) {
@@ -930,7 +930,7 @@ bool DynamicConfig::read_cli(int argc, const char* const argv[], t_config_option
             opts[t] = oit.first;
     
     bool parse_options = true;
-    for (int i = 1; i < argc; ++ i) {
+    for (size_t i = 1; i < argc; ++ i) {
         std::string token = argv[i];
         // Store non-option arguments in the provided vector.
         if (! parse_options || ! boost::starts_with(token, "-")) {
@@ -1058,14 +1058,14 @@ t_config_option_keys StaticConfig::keys() const
 #include <cereal/types/polymorphic.hpp>
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOption)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<double>)
-CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<int>)
+CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<int32_t>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<std::string>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<Slic3r::Vec2d>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<Slic3r::Vec3d>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionSingle<bool>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVectorBase)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<double>)
-CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<int>)
+CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<int32_t>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<std::string>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<Slic3r::Vec2d>)
 CEREAL_REGISTER_TYPE(Slic3r::ConfigOptionVector<unsigned char>)
@@ -1094,23 +1094,23 @@ CEREAL_REGISTER_TYPE(Slic3r::ConfigBase)
 CEREAL_REGISTER_TYPE(Slic3r::DynamicConfig)
 
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<double>) 
-CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<int>) 
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<int32_t>) 
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<std::string>) 
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<Slic3r::Vec2d>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<Slic3r::Vec3d>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionSingle<bool>) 
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOption, Slic3r::ConfigOptionVectorBase) 
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<double>)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<int>)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<int32_t>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<std::string>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<Slic3r::Vec2d>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVectorBase, Slic3r::ConfigOptionVector<unsigned char>)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionSingle<double>, Slic3r::ConfigOptionFloat)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<double>, Slic3r::ConfigOptionFloats)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<double>, Slic3r::ConfigOptionFloatsNullable)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionSingle<int>, Slic3r::ConfigOptionInt)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<int>, Slic3r::ConfigOptionInts)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<int>, Slic3r::ConfigOptionIntsNullable)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionSingle<int32_t>, Slic3r::ConfigOptionInt)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<int32_t>, Slic3r::ConfigOptionInts)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<int32_t>, Slic3r::ConfigOptionIntsNullable)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionSingle<std::string>, Slic3r::ConfigOptionString)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionVector<std::string>, Slic3r::ConfigOptionStrings)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Slic3r::ConfigOptionFloat, Slic3r::ConfigOptionPercent)

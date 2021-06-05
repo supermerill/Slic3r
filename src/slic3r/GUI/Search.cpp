@@ -175,6 +175,26 @@ static bool fuzzy_match(const std::wstring &search_pattern, const std::wstring &
 		return false;
 }
 
+static bool strong_match(const std::wstring& search_pattern, const std::wstring& label, int& out_score, std::vector<uint16_t>& out_matches) {
+    std::wregex pattern(search_pattern, std::regex_constants::icase);
+    std::wsmatch sm;
+    out_matches.clear();
+    out_score = 0;
+    std::wstring str_search = label;
+    size_t pos = 0;
+    while(std::regex_search(str_search, sm, pattern)){
+        pos += sm.position();
+        for (size_t j = 0; j < sm.length(); ++j)
+            out_matches.push_back(pos + j);
+        out_score += std::max(1, int(30 - pos));
+        pos += sm.length();
+        str_search = sm.suffix().str();
+    }
+    if (out_score <= 0)
+        out_score = std::numeric_limits<int>::min();
+    return out_score > 0;
+}
+
 bool OptionsSearcher::search(const std::string& search, bool force/* = false*/)
 {
     if (search_line == search && !force)
@@ -243,15 +263,19 @@ bool OptionsSearcher::search(const std::string& search, bool force/* = false*/)
         int score = std::numeric_limits<int>::min();
         int score2;
         matches.clear();
-        fuzzy_match(wsearch, label, score, matches);
-        if (fuzzy_match(wsearch, opt.opt_key, score2, matches2) && score2 > score) {
+        if(view_params.exact)
+            strong_match(wsearch, label, score, matches);
+        else
+            fuzzy_match(wsearch, label, score, matches);
+
+        if ( (view_params.exact ? strong_match(wsearch, opt.opt_key, score2, matches2):fuzzy_match(wsearch, opt.opt_key, score2, matches2)) && (view_params.exact || score2 > score) ) {
         	for (fts::pos_type &pos : matches2)
         		pos += label.size() + 1;
         	label += L"(" + opt.opt_key + L")";
         	append(matches, matches2);
-        	score = score2;
+        	score = std::max(score, score2);
         }
-        if (view_params.english && fuzzy_match(wsearch, label_english, score2, matches2) && score2 > score) {
+        if (view_params.english && (view_params.exact ? strong_match(wsearch, label_english, score2, matches2) : fuzzy_match(wsearch, label_english, score2, matches2)) && score2 > score) {
         	label   = std::move(label_english);
         	matches = std::move(matches2);
         	score   = score2;
@@ -387,13 +411,15 @@ SearchDialog::SearchDialog(OptionsSearcher* searcher)
     check_category  = new wxCheckBox(this, wxID_ANY, _L("Category"));
     if (GUI::wxGetApp().is_localized())
         check_english   = new wxCheckBox(this, wxID_ANY, _L("Search in English"));
+    check_exact = new wxCheckBox(this, wxID_ANY, _L("Exact pattern"));
 
     wxStdDialogButtonSizer* cancel_btn = this->CreateStdDialogButtonSizer(wxCANCEL);
 
     check_sizer->Add(new wxStaticText(this, wxID_ANY, _L("Use for search") + ":"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, border);
     check_sizer->Add(check_category, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, border);
     if (check_english)
-        check_sizer->Add(check_english,  0, wxALIGN_CENTER_VERTICAL | wxRIGHT, border);
+        check_sizer->Add(check_english, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, border);
+    check_sizer->Add(check_exact, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, border);
     check_sizer->AddStretchSpacer(border);
     check_sizer->Add(cancel_btn,     0, wxALIGN_CENTER_VERTICAL);
 
@@ -424,7 +450,8 @@ SearchDialog::SearchDialog(OptionsSearcher* searcher)
 
     check_category->Bind(wxEVT_CHECKBOX, &SearchDialog::OnCheck, this);
     if (check_english)
-        check_english ->Bind(wxEVT_CHECKBOX, &SearchDialog::OnCheck, this);
+        check_english->Bind(wxEVT_CHECKBOX, &SearchDialog::OnCheck, this);
+    check_exact->Bind(wxEVT_CHECKBOX, &SearchDialog::OnCheck, this);
 
 //    Bind(wxEVT_MOTION, &SearchDialog::OnMotion, this);
     Bind(wxEVT_LEFT_DOWN, &SearchDialog::OnLeftDown, this);
@@ -446,6 +473,7 @@ void SearchDialog::Popup(wxPoint position /*= wxDefaultPosition*/)
     check_category->SetValue(params.category);
     if (check_english)
         check_english->SetValue(params.english);
+    check_exact->SetValue(params.exact);
 
     this->SetPosition(position);
     this->ShowModal();
@@ -560,6 +588,7 @@ void SearchDialog::OnCheck(wxCommandEvent& event)
     if (check_english)
         params.english  = check_english->GetValue();
     params.category = check_category->GetValue();
+    params.exact = check_exact->GetValue();
 
     searcher->search();
     update_list();

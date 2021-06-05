@@ -81,21 +81,55 @@ void Bed_2D::repaint(const std::vector<Vec2d>& shape)
 	// draw grid
 	auto step = 10;  // 1cm grid
 	Polylines polylines;
-	for (auto x = bb.min(0) - fmod(bb.min(0), step) + step; x < bb.max(0); x += step) {
-		polylines.push_back(Polyline::new_scale({ Vec2d(x, bb.min(1)), Vec2d(x, bb.max(1)) }));
+	Polylines polylines_big;
+	Polylines polylines_small;
+	int idx = 1;
+	for (double x = bb.min(0) - fmod(bb.min(0), step) + step; x < bb.max(0); x += step, ++idx) {
+		if (idx % 10 == 0)
+			polylines_big.push_back(Polyline::new_scale({ Vec2d(x, bb.min(1)), Vec2d(x, bb.max(1)) }));
+		else if (idx % 2 == 1)
+			polylines_small.push_back(Polyline::new_scale({ Vec2d(x, bb.min(1)), Vec2d(x, bb.max(1)) }));
+		else
+			polylines.push_back(Polyline::new_scale({ Vec2d(x, bb.min(1)), Vec2d(x, bb.max(1)) }));
 	}
-	for (auto y = bb.min(1) - fmod(bb.min(1), step) + step; y < bb.max(1); y += step) {
-		polylines.push_back(Polyline::new_scale({ Vec2d(bb.min(0), y), Vec2d(bb.max(0), y) }));
+	idx = 1;
+	for (double y = bb.min(1) - fmod(bb.min(1), step) + step; y < bb.max(1); y += step, ++idx) {
+		if (idx % 10 == 0)
+			polylines_big.push_back(Polyline::new_scale({ Vec2d(bb.min(0), y), Vec2d(bb.max(0), y) }));
+		else if (idx % 2 == 1)
+			polylines_small.push_back(Polyline::new_scale({ Vec2d(bb.min(0), y), Vec2d(bb.max(0), y) }));
+		else
+			polylines.push_back(Polyline::new_scale({ Vec2d(bb.min(0), y), Vec2d(bb.max(0), y) }));
 	}
 	polylines = intersection_pl(polylines, (Polygons)bed_polygon);
+	polylines_big = intersection_pl(polylines_big, (Polygons)bed_polygon);
+	polylines_small = intersection_pl(polylines_small, (Polygons)bed_polygon);
 
-    dc.SetPen(wxPen(wxColour(230, 230, 230), 1, wxPENSTYLE_SOLID));
+	dc.SetPen(wxPen(wxColour(230, 230, 230), 1, wxPENSTYLE_SOLID));
+	for (auto pl : polylines_small)
+	{
+		for (size_t i = 0; i < pl.points.size() - 1; i++) {
+			Point pt1 = to_pixels(unscale(pl.points[i]), ch);
+			Point pt2 = to_pixels(unscale(pl.points[i + 1]), ch);
+			dc.DrawLine(pt1(0), pt1(1), pt2(0), pt2(1));
+		}
+	}
+	dc.SetPen(wxPen(wxColour(230, 230, 230), 2, wxPENSTYLE_SOLID));
 	for (auto pl : polylines)
 	{
-		for (size_t i = 0; i < pl.points.size()-1; i++) {
-            Point pt1 = to_pixels(unscale(pl.points[i]), ch);
-            Point pt2 = to_pixels(unscale(pl.points[i + 1]), ch);
-            dc.DrawLine(pt1(0), pt1(1), pt2(0), pt2(1));
+		for (size_t i = 0; i < pl.points.size() - 1; i++) {
+			Point pt1 = to_pixels(unscale(pl.points[i]), ch);
+			Point pt2 = to_pixels(unscale(pl.points[i + 1]), ch);
+			dc.DrawLine(pt1(0), pt1(1), pt2(0), pt2(1));
+		}
+	}
+	dc.SetPen(wxPen(wxColour(230, 230, 230), 3, wxPENSTYLE_SOLID));
+	for (auto pl : polylines_big)
+	{
+		for (size_t i = 0; i < pl.points.size() - 1; i++) {
+			Point pt1 = to_pixels(unscale(pl.points[i]), ch);
+			Point pt2 = to_pixels(unscale(pl.points[i + 1]), ch);
+			dc.DrawLine(pt1(0), pt1(1), pt2(0), pt2(1));
 		}
 	}
 

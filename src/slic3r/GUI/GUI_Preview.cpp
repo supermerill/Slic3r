@@ -264,7 +264,7 @@ bool Preview::init(wxWindow* parent, Model* model)
         wxSize((m_width_screen == large ? 35: (m_width_screen == medium ?20:15)) * wxGetApp().em_unit(), -1), wxCB_READONLY);
     std::string feature_items = GUI::into_u8(
         _L("Unknown") + "|1|" +
-        _L("Perimeter") + "|1|" +
+        _L("Internal perimeter") + "|1|" +
         _L("External perimeter") + "|1|" +
         _L("Overhang perimeter") + "|1|" +
         _L("Internal infill") + "|1|" +

@@ -395,7 +395,15 @@ def parse_ui_file(file_path):
 	while line_idx < len(lines):
 		items = lines[line_idx].strip().split(":");
 		if len(items) > 1:
-			if items[0]=="page" or items[0]=="group" or items[0]=="line":
+			if items[0]=="page:
+				current_line = TranslationLine();
+				current_line.header_comment = "\n#: "+file_path;#+":"+str(line_idx);
+				current_line.raw_msgid = "msgid \""+items[1]+"\"";
+				current_line.msgid = items[1];
+				current_line.raw_msgstr = "msgstr \"\"";
+				current_line.msgstr = "";
+				read_data_lines.append(current_line);
+			if items[0]=="group" or items[0]=="line":
 				current_line = TranslationLine();
 				current_line.header_comment = "\n#: "+file_path;#+":"+str(line_idx);
 				current_line.raw_msgid = "msgid \""+items[-1]+"\"";

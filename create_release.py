@@ -32,7 +32,7 @@ def get_version():
 date_str = date.today().strftime('%y%m%d');
 version = get_version();
 print("create release for: " + str(version));
-release_path = "./release_"+str(version);
+release_path = "./build/release_"+str(version);
 if(os.path.isdir(release_path)):
 	rmtree(release_path);
 	print("deleting old directory");
@@ -46,7 +46,7 @@ with urlopen("https://api.github.com/repos/"+repo+"/actions/artifacts") as f:
 	found_macos = False; 
 	print("there is "+ str(artifacts["total_count"])+ " artifacts in the repo");
 	for entry in artifacts["artifacts"]:
-		if entry["name"] == "nightly_win64" and not found_win:
+		if entry["name"] == "rc_win64" and not found_win:
 			found_win = True;
 			print("ask for: "+entry["archive_download_url"]);
 			resp = requests.get(entry["archive_download_url"], headers={'Authorization': 'token ' + github_auth_token,}, allow_redirects=True);
@@ -58,7 +58,7 @@ with urlopen("https://api.github.com/repos/"+repo+"/actions/artifacts") as f:
 				ret = subprocess.check_output([path_7zip, "a", "-tzip", base_name+".zip", base_name]);
 			except:
 				print("Failed to zip the win directory, do it yourself");
-		if entry["name"] == "nightly_macos.dmg" and not found_macos:
+		if entry["name"] == "rc_macos.dmg" and not found_macos:
 			found_macos = True;
 			print("ask for: "+entry["archive_download_url"]);
 			resp = requests.get(entry["archive_download_url"], headers={'Authorization': 'token ' + github_auth_token,}, allow_redirects=True);
@@ -66,7 +66,7 @@ with urlopen("https://api.github.com/repos/"+repo+"/actions/artifacts") as f:
 			z = zipfile.ZipFile(io.BytesIO(resp.content));
 			z.extractall(release_path);
 			os.rename(release_path+"/"+program_name+".dmg", release_path+"/"+program_name+"_"+version+"_macos_"+date_str+".dmg");
-		if entry["name"] == program_name+"-AppImage.tar" and not found_linux_appimage:
+		if entry["name"] == "rc-"+program_name+"-AppImage.tar" and not found_linux_appimage:
 			found_linux_appimage = True;
 			print("ask for: "+entry["archive_download_url"]);
 			resp = requests.get(entry["archive_download_url"], headers={'Authorization': 'token ' + github_auth_token,}, allow_redirects=True);
@@ -77,7 +77,7 @@ with urlopen("https://api.github.com/repos/"+repo+"/actions/artifacts") as f:
 			my_tar.extractall(release_path);
 			my_tar.close();
 			os.rename(release_path+"/"+program_name+"_ubu64.AppImage", release_path+"/"+program_name+"-ubuntu_18.04-" + version + ".AppImage");
-		if entry["name"] == "nightly_linux.tar" and not found_linux:
+		if entry["name"] == "rc_linux.tar" and not found_linux:
 			found_linux = True;
 			print("ask for: "+entry["archive_download_url"]);
 			resp = requests.get(entry["archive_download_url"], headers={'Authorization': 'token ' + github_auth_token,}, allow_redirects=True);

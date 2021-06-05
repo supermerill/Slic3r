@@ -1,9 +1,9 @@
-name: C/C++ debug windows x64
+name: C/C++ Nigthly windows x64
 
 on:
   push:
     branches:
-      - debug_win
+      - rc
 
 jobs:
   build_dep:
@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: 'debug_win'
+        ref: 'Nigthly'
     - uses: ilammy/msvc-dev-cmd@v1
     - name: mkdir in deps
       run: mkdir deps/build
@@ -39,7 +39,7 @@ jobs:
       run: git submodule update --init
     - name: change date in version
       shell: powershell
-      run: (Get-Content version.inc) | Foreach-Object {$_ -replace "\+UNKNOWN", ("_" + [datetime]::Today.ToString("yyyy-MM-dd"))} | Set-Content version.inc
+      run: (Get-Content version.inc) | Foreach-Object {$_ -replace "\+UNKNOWN", ("")} | Set-Content version.inc
     - name: mkdir in deps directory
       run: mkdir deps/destdir
     - name: download deps
@@ -58,10 +58,10 @@ jobs:
       run: cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_PREFIX_PATH="d:\a\SuperSlicer\SuperSlicer\deps\destdir\usr\local"
     - name: make
       working-directory: ./build
-      run: msbuild /m /P:Configuration=Debug INSTALL.vcxproj
+      run: msbuild /m /P:Configuration=Release INSTALL.vcxproj
     - name: make .mo
       working-directory: ./build
-      run: msbuild /m /P:Configuration=Debug gettext_po_to_mo.vcxproj
+      run: msbuild /m /P:Configuration=Release gettext_po_to_mo.vcxproj
     - name: create directory and copy into it
       working-directory: ./build
       run: ls
@@ -104,5 +104,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: nightly_win64_debug
+        name: rc_win64
         path: build/package/

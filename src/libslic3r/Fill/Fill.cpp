@@ -377,8 +377,10 @@ void export_group_fills_to_svg(const char *path, const std::vector<SurfaceFill> 
 // friend to Layer
 void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive::Octree* support_fill_octree)
 {
-    for (LayerRegion *layerm : m_regions)
+    for (LayerRegion* layerm : m_regions) {
         layerm->fills.clear();
+        layerm->ironings.clear();
+    }
 
 
 #ifdef SLIC3R_DEBUG_SLICE_PROCESSING

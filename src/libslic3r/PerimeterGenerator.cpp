@@ -70,6 +70,8 @@ void PerimeterGenerator::process()
     // infill gap to add vs perimeter (useful if using perimeter bonding)
     coord_t infill_gap = 0;
 
+    bool round_peri = this->config->perimeter_round_corners.value;
+    coord_t min_round_spacing = perimeter_width / 10;
 
     // nozzle diameter
     const double nozzle_diameter = this->print_config->nozzle_diameter.get_at(this->config->perimeter_extruder - 1);
@@ -432,13 +434,15 @@ void PerimeterGenerator::process()
                         next_onion = offset_ex(
                             last,
                             -(float)(ext_perimeter_width / 2),
-                            (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter));
+                            (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                            (round_peri ? min_round_spacing : 3));
                     else
                         next_onion = offset2_ex(
                             last,
                             -(float)(ext_perimeter_width / 2 + ext_min_spacing / 2 - 1),
                             +(float)(ext_min_spacing / 2 - 1),
-                            (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter));
+                            (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                            (round_peri ? min_round_spacing : 3));
 
                     // look for thin walls
                      if (this->config->thin_walls) {
@@ -513,12 +517,14 @@ void PerimeterGenerator::process()
                             if (thin_perimeter)
                                 next_onion = union_ex(next_onion, offset_ex(diff_ex(last, thins, true),
                                     -(float)(ext_perimeter_width / 2),
-                                    (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter)));
+                                    (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                                    (round_peri ? min_round_spacing : 3)));
                             else
                                 next_onion = union_ex(next_onion, offset2_ex(diff_ex(last, thins, true),
                                     -(float)((ext_perimeter_width / 2) + (ext_min_spacing / 4)), 
                                     (float)(ext_min_spacing / 4),
-                                    (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter)));
+                                    (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                                    (round_peri ? min_round_spacing : 3)));
                         }
                     }
                     if (m_spiral_vase && next_onion.size() > 1) {
@@ -539,7 +545,8 @@ void PerimeterGenerator::process()
                         next_onion = offset2_ex(last,
                             -(float)(good_spacing + min_spacing / 2 - 1),
                             +(float)(min_spacing / 2 - 1),
-                            (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter));
+                            (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                            (round_peri ? min_round_spacing : 3));
 
                         ExPolygons no_thin_onion = offset_ex(last, double(-good_spacing));
                         std::vector<float> divs { 1.8f, 1.6f }; //don't over-extrude, so don't use divider >2
@@ -561,7 +568,8 @@ void PerimeterGenerator::process()
                         // If "overlapping_perimeters" is enabled, this paths will be entered, which 
                         // leads to overflows, as in prusa3d/Slic3r GH #32
                         next_onion = offset_ex(last, double( - good_spacing),
-                            (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter));
+                            (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                            (round_peri ? min_round_spacing : 3));
                     }
                     // look for gaps
                     if (this->config->gap_fill 
@@ -573,7 +581,8 @@ void PerimeterGenerator::process()
                         append(gaps, diff_ex(
                             offset(last, -0.5f * gap_fill_spacing),
                             offset(next_onion, 0.5f * good_spacing + 10,
-                                (config->perimeter_round_corners.value ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter))));  // safety offset
+                                (round_peri ? ClipperLib::JoinType::jtRound : ClipperLib::JoinType::jtMiter),
+                                (round_peri ? min_round_spacing : 3))));  // safety offset
                 }
 
                 if (next_onion.empty()) {

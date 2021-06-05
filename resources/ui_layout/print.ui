@@ -240,7 +240,10 @@ group:label_width$8:sidetext_width$7:Speed for print moves
 	end_line
 	setting:label$Ironing post-process speed:label_width$30:width$4:ironing_speed
 group:Speed for non-print moves
-	setting:travel_speed
+	line:Travel speed
+		setting:label$xy:travel_speed
+		setting:label$z:travel_speed_z
+	end_line
 group:sidetext_width$7:Modifiers
 	line:First layer speed
 		setting:label_width$8:width$4:first_layer_speed

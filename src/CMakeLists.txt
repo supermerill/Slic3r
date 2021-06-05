@@ -93,10 +93,19 @@ endif()
 
 # Create a Slic3r executable
 # Process mainfests for various platforms.
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/Slic3r.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}.rc @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/gcodeviewer.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}-gcodeviewer.rc @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/PrusaSlicer.manifest.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}.manifest @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/osx/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist @ONLY)
+if (WIN32)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/Slic3r.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}.rc @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/gcodeviewer.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}-gcodeviewer.rc @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/msw/PrusaSlicer.manifest.in ${CMAKE_CURRENT_BINARY_DIR}/${SLIC3R_APP_KEY}.manifest @ONLY)
+endif ()
+if (APPLE)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/osx/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/osx/BuildMacOSImage.sh.in ${CMAKE_CURRENT_BINARY_DIR}/BuildMacOSImage.sh @ONLY)
+endif ()
+if (NOT WIN32 AND NOT APPLE)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/BuildLinuxImage.sh.in ${CMAKE_CURRENT_BINARY_DIR}/BuildLinuxImage.sh @ONLY)
+endif ()
+
 if (WIN32)
     add_library(Slic3r SHARED PrusaSlicer.cpp PrusaSlicer.hpp)
 else ()

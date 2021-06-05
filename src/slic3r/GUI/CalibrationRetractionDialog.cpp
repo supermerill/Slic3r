@@ -26,8 +26,8 @@ namespace Slic3r {
 namespace GUI {
 
 void CalibrationRetractionDialog::create_buttons(wxStdDialogButtonSizer* buttons){
-    wxString choices_steps[] = { "0.1","0.2","0.5","1" };
-    steps = new wxComboBox(this, wxID_ANY, wxString{ "0.2" }, wxDefaultPosition, wxDefaultSize, 4, choices_steps);
+    wxString choices_steps[] = { "0.1","0.2","0.5","1","2" };
+    steps = new wxComboBox(this, wxID_ANY, wxString{ "0.2" }, wxDefaultPosition, wxDefaultSize, 5, choices_steps);
     steps->SetToolTip(_L("Each militer add this value to the retraction value. "));
     steps->SetSelection(1);
     wxString choices_nb[] = { "2","4","6","8","10","15","20","25" };
@@ -47,6 +47,7 @@ void CalibrationRetractionDialog::create_buttons(wxStdDialogButtonSizer* buttons
     decr_temp = new wxComboBox(this, wxID_ANY, wxString{ "current" }, wxDefaultPosition, wxDefaultSize, 6, choices_decr);
     decr_temp->SetToolTip(_L("Select the number tower to print, and by how many degrees C to decrease each time."));
     decr_temp->SetSelection(0);
+    decr_temp->SetEditable(false);
 
     buttons->Add(new wxStaticText(this, wxID_ANY, wxString{ "step:" }));
     buttons->Add(steps);
@@ -109,7 +110,10 @@ void CalibrationRetractionDialog::create_geometry(wxCommandEvent& event_args) {
         gui_app->app_config->set("autocenter", "0");
     }
 
-    size_t nb_retract = nb_steps->GetSelection() < 4 ? ((int(nb_steps->GetSelection()) + 1) * 2) : ((int(nb_steps->GetSelection()) - 2) * 5);
+    long nb_retract = 1;
+    if (!nb_steps->GetValue().ToLong(&nb_retract)) {
+        nb_retract = 15;
+    }
     size_t nb_items = 1;
     if (decr_temp->GetSelection() == 1) {
         nb_items = 2;
@@ -141,16 +145,9 @@ void CalibrationRetractionDialog::create_geometry(wxCommandEvent& event_args) {
         temp = std::atoi(str.c_str());
 
     double retraction_steps = 0.01;
-    if (steps->GetSelection() == 0)
+    if (!steps->GetValue().ToDouble(&retraction_steps)) {
         retraction_steps = 0.1;
-    if (steps->GetSelection() == 1)
-        retraction_steps = 0.2;
-    if (steps->GetSelection() == 2)
-        retraction_steps = 0.5;
-    if (steps->GetSelection() == 3)
-        retraction_steps = 1;
-    if (steps->GetSelection() == 4)
-        retraction_steps = 2;
+    }
 
     /// --- scale ---
     // model is created for a 0.4 nozzle, scale xy with nozzle size.

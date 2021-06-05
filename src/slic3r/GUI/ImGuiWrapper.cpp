@@ -837,6 +837,7 @@ void ImGuiWrapper::search_list(const ImVec2& size_, bool (*items_getter)(int, co
     check_box(_L("Category"),   view_params.category);
     if (is_localized)
         check_box(_L("Search in English"), view_params.english);
+    check_box(_L("Exact pattern"), view_params.exact);
 }
 
 void ImGuiWrapper::title(const std::string& str)

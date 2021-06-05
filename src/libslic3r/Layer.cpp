@@ -127,6 +127,7 @@ void Layer::make_perimeters()
       if ((*layerm)->slices().empty()) {
           (*layerm)->perimeters.clear();
           (*layerm)->fills.clear();
+          (*layerm)->ironings.clear();
           (*layerm)->thin_fills.clear();
       } else {
         size_t region_id = layerm - m_regions.begin();
@@ -206,6 +207,10 @@ void Layer::make_perimeters()
                         slices[surface.extra_perimeters].emplace_back(surface);
                     if (layerm->region()->config().fill_density > layerm_config->region()->config().fill_density)
                     	layerm_config = layerm;
+                    //clean list as only the layerm_config will have these ones recomputed
+                    layerm->perimeters.clear();
+                    layerm->thin_fills.clear();
+                    layerm->fill_no_overlap_expolygons.clear();
                 }
                 // merge the surfaces assigned to each group
                 for (std::pair<const unsigned short,Surfaces> &surfaces_with_extra_perimeters : slices)

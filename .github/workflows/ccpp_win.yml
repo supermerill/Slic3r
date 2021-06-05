@@ -76,34 +76,30 @@ jobs:
     - name: copy from release
       working-directory: ./build
       shell: powershell
-      run: '(new-object System.Net.WebClient).DownloadFile("https://github.com/supermerill/SuperSlicer/releases/download/2.2.53.3/SuperSlicer_2.2.53.3_win64_20201005.zip", "SuperSlicer_2.2.53.3_win64_20201005.zip")'
+      run: '(new-object System.Net.WebClient).DownloadFile("https://github.com/supermerill/SuperSlicer/releases/download/2.3.56.1/SuperSlicer_2.3.56.1_win64_210527.zip", "SuperSlicer_2.3.56.1_win64_210527.zip")'
     - name: unzip
       working-directory: ./build
       shell: cmd
-      run: '"C:/Program Files/7-Zip/7z.exe" x SuperSlicer_2.2.53.3_win64_20201005.zip'
+      run: '"C:/Program Files/7-Zip/7z.exe" x SuperSlicer_2.3.56.1_win64_210527.zip'
     - name: copy missing dll content from old release
       working-directory: ./build
       shell: cmd
       run: |
-        xcopy /RCYIE SuperSlicer_2.2.53.3_win64_20201005\*.dll package\
-        xcopy /RCYIE SuperSlicer_2.2.53.3_win64_20201005\*.bat package\
-        xcopy /RCYIE SuperSlicer_2.2.53.3_win64_20201005\mesa package\
+        xcopy /RCYIE SuperSlicer_2.3.56.1_win64_210527\*.dll package\
+        xcopy /RCYIE SuperSlicer_2.3.56.1_win64_210527\*.bat package\
+        xcopy /RCYIE SuperSlicer_2.3.56.1_win64_210527\mesa package\
     - name: copy new resources
       working-directory: ./build
       shell: cmd
       run: xcopy /RCYIE ..\resources package\resources
-    - name: copy dll
+    - name: copy dll & exe
       working-directory: ./build
       shell: cmd
-      run: xcopy /RCYIE src\release\*.dll package\
-    - name: copy exe
-      working-directory: ./build
-      shell: cmd
-      run: xcopy /RCYIE src\release\*.exe package\
-    - name: copy ms runtime
-      working-directory: ./build
-      shell: cmd
-      run: xcopy /RCYIE c:\windows\system32\VCRUNTIME140* package\
+      run: |
+        xcopy /RCYIE src\release\*.dll package\
+        xcopy /RCYIE src\release\*.exe package\
+        xcopy /RCYIE c:\windows\system32\VCRUNTIME140* package\
+        del package\opengl32.dll
 #    - name: create zip
 #      working-directory: ./build
 #      shell: cmd
