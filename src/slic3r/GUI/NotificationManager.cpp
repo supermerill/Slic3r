@@ -420,22 +420,23 @@ void NotificationManager::PopNotification::init()
 						next_space = next_space_candidate;
 						next_space_candidate = text.find_first_of(' ', next_space + 1);
 					}
-					// when one word longer than line.
-					if (ImGui::CalcTextSize(text.substr(last_end, next_space - last_end).c_str()).x > m_window_width - m_window_width_offset) {
-						float width_of_a = ImGui::CalcTextSize("a").x;
-						int letter_count = (int)((m_window_width - m_window_width_offset) / width_of_a);
-						while (last_end + letter_count < text.size() && ImGui::CalcTextSize(text.substr(last_end, letter_count).c_str()).x < m_window_width - m_window_width_offset) {
-							letter_count++;
-						}
-						m_endlines.push_back(last_end + letter_count);
-						last_end += letter_count;
-					} else {
-						m_endlines.push_back(next_space);
-						last_end = next_space + 1;
-					}
+				} else {
+					next_space = text.length();
 				}
-			}
-			else {
+				// when one word longer than line.
+				if (ImGui::CalcTextSize(text.substr(last_end, next_space - last_end).c_str()).x > m_window_width - m_window_width_offset) {
+					float width_of_a = ImGui::CalcTextSize("a").x;
+					int letter_count = (int)((m_window_width - m_window_width_offset) / width_of_a);
+					while (last_end + letter_count < text.size() && ImGui::CalcTextSize(text.substr(last_end, letter_count).c_str()).x < m_window_width - m_window_width_offset) {
+						letter_count++;
+					}
+					m_endlines.push_back(last_end + letter_count);
+					last_end += letter_count;
+				} else {
+					m_endlines.push_back(next_space);
+					last_end = next_space + 1;
+				}
+			} else {
 				m_endlines.push_back(text.length());
 				last_end = text.length();
 			}

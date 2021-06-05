@@ -1797,7 +1797,7 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
 #if ENABLE_VOLUMETRIC_EXTRUSION_PROCESSING
     float filament_diameter = (static_cast<size_t>(m_extruder_id) < m_filament_diameters.size()) ? m_filament_diameters[m_extruder_id] : m_filament_diameters.back();
     float filament_radius = 0.5f * filament_diameter;
-    float area_filament_cross_section = static_cast<float>(M_PI) * sqr(filament_radius);
+    double area_filament_cross_section = M_PI * sqr(filament_radius);
     auto absolute_position = [this, area_filament_cross_section](Axis axis, const GCodeReader::GCodeLine& lineG1) {
 #else
     auto absolute_position = [this](Axis axis, const GCodeReader::GCodeLine& lineG1) {
@@ -1853,7 +1853,7 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
         m_feedrate = line.f() * MMMIN_TO_MMSEC;
 
     // calculates movement deltas
-    float max_abs_delta = 0.0f;
+    double max_abs_delta = 0.0f;
     AxisCoords delta_pos;
     for (unsigned char a = X; a <= E; ++a) {
         delta_pos[a] = m_end_position[a] - m_start_position[a];
@@ -1869,14 +1869,14 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
         type = EMoveType::Travel;
 
     if (type == EMoveType::Extrude) {
-        float delta_xyz = std::sqrt(sqr(delta_pos[X]) + sqr(delta_pos[Y]) + sqr(delta_pos[Z]));
+        double delta_xyz = std::sqrt(sqr(delta_pos[X]) + sqr(delta_pos[Y]) + sqr(delta_pos[Z]));
 #if !ENABLE_VOLUMETRIC_EXTRUSION_PROCESSING
         float filament_diameter = (static_cast<size_t>(m_extruder_id) < m_filament_diameters.size()) ? m_filament_diameters[m_extruder_id] : m_filament_diameters.back();
         float filament_radius = 0.5f * filament_diameter;
-        float area_filament_cross_section = static_cast<float>(M_PI) * sqr(filament_radius);
+        double area_filament_cross_section = static_cast<float>(M_PI) * sqr(filament_radius);
 #endif // !ENABLE_VOLUMETRIC_EXTRUSION_PROCESSING
-        float volume_extruded_filament = area_filament_cross_section * delta_pos[E];
-        float area_toolpath_cross_section = volume_extruded_filament / delta_xyz;
+        double volume_extruded_filament = area_filament_cross_section * delta_pos[E];
+        double area_toolpath_cross_section = volume_extruded_filament / delta_xyz;
 
         // volume extruded filament / tool displacement = area toolpath cross section
         m_mm3_per_mm = area_toolpath_cross_section;
@@ -1977,7 +1977,7 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
         block.layer_id = m_layer_id;
 
         // calculates block cruise feedrate
-        float min_feedrate_factor = 1.0f;
+        double min_feedrate_factor = 1.0f;
         for (unsigned char a = X; a <= E; ++a) {
             curr.axis_feedrate[a] = curr.feedrate * delta_pos[a] * inv_distance;
             if (a == E)
@@ -1985,7 +1985,7 @@ void GCodeProcessor::process_G1(const GCodeReader::GCodeLine& line)
 
             curr.abs_axis_feedrate[a] = std::abs(curr.axis_feedrate[a]);
             if (curr.abs_axis_feedrate[a] != 0.0f) {
-                float axis_max_feedrate = get_axis_max_feedrate(static_cast<PrintEstimatedTimeStatistics::ETimeMode>(i), static_cast<Axis>(a));
+                double axis_max_feedrate = get_axis_max_feedrate(static_cast<PrintEstimatedTimeStatistics::ETimeMode>(i), static_cast<Axis>(a));
                 if (axis_max_feedrate != 0.0f)
                     min_feedrate_factor = std::min(min_feedrate_factor, axis_max_feedrate / curr.abs_axis_feedrate[a]);
             }
