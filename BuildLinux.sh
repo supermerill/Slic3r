@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export ROOT=`pwd`
-export NCORES=`sysctl -n hw.ncpu`
+export NCORES=`nproc --all`
 
 while getopts ":ih" opt; do
   case ${opt} in
@@ -42,7 +42,7 @@ echo -n "[1/9] Updating submodules..."
     git submodule update --init
     popd
 } > $ROOT/build/Build.log # Capture all command output
-
+echo "done"
 
 echo -n "[2/9] Changing date in version..."
 {
@@ -120,3 +120,4 @@ echo -n "[9/9] Generating Linux app..."
         $ROOT/build/src/BuildLinuxImage.sh
     fi
 } &> $ROOT/build/Build.log # Capture all command output
+echo "done"
