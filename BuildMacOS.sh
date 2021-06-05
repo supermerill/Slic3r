@@ -2,6 +2,14 @@
 
 export ROOT=`pwd`
 export NCORES=`sysctl -n hw.ncpu`
+export CMAKE_INSTALLED=`which cmake`
+
+# Check if CMake is installed
+if [[ -z "$CMAKE_INSTALLED" ]]
+then
+    echo "Can't find CMake. Either is not installed or not in the PATH. Aborting!"
+    exit -1
+fi
 
 while getopts ":ih" opt; do
   case ${opt} in
