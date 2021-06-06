@@ -2980,7 +2980,7 @@ msgid "Everywhere"
 msgstr "Partout"
 
 msgid "Exact last layer height"
-msgstr "Mettre la dernière tranche à la heuteur exacte"
+msgstr "Mettre la dernière couche à la hauteur exacte"
 
 msgid "except for the first %1% layers where the fan is disabled"
 msgstr "sauf pour les premières couches %1% où le ventilateur est désactivé"
@@ -4167,7 +4167,7 @@ msgid "Hilbert Curve"
 msgstr "Hilbert (Fractal)"
 
 msgid "Hold Shift to Slice & Export G-code"
-msgstr "Maintenez la touche Majuscule pour Trancher et Exporter le G-Code"
+msgstr "Maintenez la touche Majuscule pour Découper et Exporter le G-Code"
 
 msgid "Hole depth"
 msgstr "Profondeur du trou"
@@ -5734,7 +5734,7 @@ msgid ""
 msgstr "Le fait de fusionner des ponts ou des piliers avec d'autres piliers peut augmenter le rayon. Zéro signifie aucune augmentation, un signifie augmentation totale."
 
 msgid "Merging slices and calculating statistics"
-msgstr "Fusion des tranches et calcul des statistiques"
+msgstr "Fusion des couches et calcul des statistiques"
 
 msgid "Merging with perimeters"
 msgstr "Fusion avec les périmètres"
@@ -6048,7 +6048,7 @@ msgid "Modifiers"
 msgstr "Modificateurs"
 
 msgid "Modifying slices"
-msgstr "Modification des tranches"
+msgstr "Modification des couches"
 
 msgid "money/bottle"
 msgstr "prix/bouteille"
@@ -9459,7 +9459,7 @@ msgid "Switch code to Color change (%1%) for:"
 msgstr "Code de changement pour Changer de couleur (%1%) pour :"
 
 msgid "Switch from 3D view to Preview when sliced"
-msgstr "Passage de la vue 3D à la prévisualisation lors du découpage en tranches"
+msgstr "Passage de la vue 3D à la prévisualisation lors du découpage en couches"
 
 msgid "Switch to editing mode"
 msgstr "Basculer vers le mode édition"
@@ -11762,8 +11762,8 @@ msgid ""
 "When an object is sliced, it will switch your view from the 3D view to the "
 "previewx (and then gcode-preview) automatically."
 msgstr ""
-"Lorsqu'un objet est découpé en tranches, cela fera passer votre vue de la vue 3D à la "
-"previewx (et ensuite gcode-preview) automatiquement."
+"Lorsqu'un objet est découpé en couches, cela fera passer votre vue de la vue 3D à la "
+"pré-visualisation (et ensuite prévisualisation G-Code) automatiquement."
 
 msgid ""
 "When checked, the print and filament presets are shown in the preset editor "
