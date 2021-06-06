@@ -8299,8 +8299,7 @@ msgid "Sequential printing"
 msgstr "Impression séquentielle"
 
 msgid "Sequential slider applied only to top layer"
-msgstr ""
-"Barre de défilement séquentielle appliquée uniquement à la couche supérieure"
+msgstr "Barre de défilement séquentielle appliquée uniquement à la couche supérieure"
 
 msgid "Serial port:"
 msgstr "Port série :"
@@ -8567,9 +8566,7 @@ msgid "Shall I switch to rectilinear fill pattern?"
 msgstr "Dois-je passer au motif de remplissage rectiligne?"
 
 msgid "Shall I synchronize support layers in order to enable the Wipe Tower?"
-msgstr ""
-"Dois-je synchroniser les couches de support afin d'activer la Tour de "
-"Nettoyage ?"
+msgstr "Dois-je synchroniser les couches de support afin d'activer la Tour de nettoyage ?"
 
 msgid "Shape"
 msgstr "Forme"
@@ -8587,7 +8584,7 @@ msgid "Shift + Right mouse button:"
 msgstr "Maj + Clic droit souris :"
 
 msgid "Short layer time - began to increase base fan speed"
-msgstr "Temps de couche court - a commencé à augmenter la vitesse du ventilateur de base"
+msgstr "Temps de couche court - commence à augmenter la vitesse du ventilateur de base"
 
 msgid "Should we open this hyperlink in your default browser?"
 msgstr "Devons-nous ouvrir cet hyperlien dans votre navigateur par défaut ?"
@@ -8698,13 +8695,10 @@ msgid "Show user configuration folder (datadir)"
 msgstr "Afficher le répertoire de configuration utilisateur (datadir)"
 
 msgid "Show/Hide 3Dconnexion devices settings dialog"
-msgstr ""
-"Afficher/Masquer le dialogue des paramètres des périphériques 3Dconnexion"
+msgstr "Afficher/Masquer le dialogue des paramètres des périphériques 3Dconnexion"
 
 msgid "Show/Hide 3Dconnexion devices settings dialog, if enabled"
-msgstr ""
-"Afficher/Cacher la boite de dialogue des réglages des appareils 3Dconnexion, "
-"si activé"
+msgstr "Afficher/Cacher la boite de dialogue des réglages des appareils 3Dconnexion, si activé"
 
 msgid "Show/Hide Legend & Estimated printing time"
 msgstr "Afficher/Masquer la légende et le temps d'impression estimé"
@@ -8757,7 +8751,7 @@ msgid "Size and coordinates"
 msgstr "Taille et coordonnées"
 
 msgid "Size for Gcode"
-msgstr "Taille pour le Gcode"
+msgstr "Taille pour le G-Code"
 
 msgid "Size in X and Y of the rectangular plate."
 msgstr "Taille en X et Y du plateau rectangulaire."
@@ -8777,7 +8771,7 @@ msgid "skirt"
 msgstr "jupe"
 
 msgid "Skirt & Brim"
-msgstr "Jupe et bordure"
+msgstr "Jupe et Bordure"
 
 msgid "Skirt height"
 msgstr "Hauteur de la bordure"
@@ -9150,7 +9144,7 @@ msgid ""
 "Speed for thin wall (external extrusion that are alone because the obect is "
 "too thin at these places)."
 msgstr ""
-"Vitesse pour paroi mince (extrusion externe qui sont seules car l'obect est "
+"Vitesse pour paroi mince (extrusion externe qui sont seules car l'object est "
 "trop mince à ces endroits)."
 
 msgid "Speed for travel moves (jumps between distant extrusion points)."
@@ -9163,7 +9157,7 @@ msgid "Speed of the last cooling move"
 msgstr "Vitesse du dernier mouvement de refroidissement"
 
 msgid "Speed to extract from melt zone"
-msgstr "Vitesse to sortir de la zone de fusion"
+msgstr "Vitesse pour sortir de la zone de fusion"
 
 msgid "Speed to move into melt zone"
 msgstr "Vitesse pour entrer dans la zone de fusion"
@@ -11581,7 +11575,7 @@ msgid "User presets"
 msgstr "Préréglages utilisateur"
 
 msgid "usually not necessary to change this"
-msgstr "ce n'est généralement pas nécessaire de cahnger ceci"
+msgstr "ce n'est généralement pas nécessaire de changer ceci"
 
 msgid "validation failed"
 msgstr "échec de la validation"
@@ -11674,7 +11668,7 @@ msgid "Very light gui color"
 msgstr "Couleur gui très légère"
 
 msgid "Very short layer time - began to decrease extrusion rate"
-msgstr "Temps de couche très court - a commencé à diminuer le taux d'extrusion"
+msgstr "Temps de couche très court - commence à diminuer le taux d'extrusion"
 
 msgid "View"
 msgstr "Vue"
