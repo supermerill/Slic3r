@@ -332,13 +332,13 @@ def outputUntranslated(data_to_translate, file_path_out):
 def translate(data_to_translate, file_path_out):
 	# try:
 	file_out_stream = open(file_path_out, mode="w", encoding="utf-8")
-	file_out_stream.write("# Translation file for ???\n");
+	file_out_stream.write("# Translation file for french\n");
 	file_out_stream.write("# Copyright (C) 2021\n");
-	file_out_stream.write("# This file is distributed under the same license as Slic3r.\n");
+	file_out_stream.write("# This file is distributed under the same license as SuperSlicer.\n");
 	file_out_stream.write("#\n");
 	file_out_stream.write("msgid \"\"\n");
 	file_out_stream.write("msgstr \"\"\n");
-	file_out_stream.write("\"Project-Id-Version: Slic3r\\n\"\n");
+	file_out_stream.write("\"Project-Id-Version: SuperSlicer\\n\"\n");
 	file_out_stream.write("\"POT-Creation-Date: "+date.today().strftime('%Y-%m-%d %H:%M%z')+"\\n\"\n");
 	file_out_stream.write("\"PO-Revision-Date: "+date.today().strftime('%Y-%m-%d %H:%M%z')+"\\n\"\n");
 	file_out_stream.write("\"Last-Translator:\\n\"\n");
@@ -395,7 +395,7 @@ def parse_ui_file(file_path):
 	while line_idx < len(lines):
 		items = lines[line_idx].strip().split(":");
 		if len(items) > 1:
-			if items[0]=="page:
+			if items[0]=="page":
 				current_line = TranslationLine();
 				current_line.header_comment = "\n#: "+file_path;#+":"+str(line_idx);
 				current_line.raw_msgid = "msgid \""+items[1]+"\"";
