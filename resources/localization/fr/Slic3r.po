@@ -224,7 +224,7 @@ msgid "&View"
 msgstr "&Vue"
 
 msgid "&Window"
-msgstr "&Window"
+msgstr "&Onglet"
 
 msgid "'As bridge' flow threshold"
 msgstr "Seuil de débit 'en tant que pont'."
@@ -3260,8 +3260,8 @@ msgstr "périmètre extérieur"
 msgid "External perimeter fan speed"
 msgstr "Vitesse du ventilateur du périmètre externe"
 
-msgid " External perimeter first"
-msgstr " Périmètre extérieur en premier"
+msgid "External perimeter first"
+msgstr "Périmètre extérieur en premier"
 
 msgid "external perimeter overlap"
 msgstr "chevauchement du périmètre extérieur"
@@ -8992,7 +8992,7 @@ msgid "Snapshot name"
 msgstr "Nom du snapshot"
 
 msgid "Solid"
-msgstr "Plein"
+msgstr "Couches pleines"
 
 msgid "Solid first layer"
 msgstr "Première couche pleine"
@@ -9085,7 +9085,7 @@ msgid "Spacing between support material lines."
 msgstr "Espacement entre les lignes des supports."
 
 msgid "Sparse"
-msgstr "Epars"
+msgstr "Remplissage"
 
 msgid "Speed"
 msgstr "Vitesse"
@@ -11210,7 +11210,7 @@ msgid "Toolchange temperature enabled"
 msgstr "Température de changement de filaments activé"
 
 msgid "Top"
-msgstr "Haut"
+msgstr "Dessus"
 
 msgid ""
 "Top / bottom shell thickness hint: Not available due to invalid layer height."
@@ -11234,7 +11234,7 @@ msgid "top infill"
 msgstr "Remplissage supérieur"
 
 msgid "Top is open."
-msgstr "Le haut est ouvert."
+msgstr "Le haut est ouverte"
 
 msgid "Top layers"
 msgstr "Couches du dessus"
