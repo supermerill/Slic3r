@@ -3788,7 +3788,7 @@ msgid ""
 "usually 30-32mm.  Start with a low value and gradually increase it until "
 "strings are gone.  If there are blobs on your wipe tower, your value is too "
 "high."
-msgstr "Pour les extrudeuses standard, généralement de 40 à 42 mm. Pour la mise à niveau par l'extrudeuse bondtech, généralement de 30 à 32 mm. Commencez avec une valeur faible et augmentez-la progressivement jusqu'à ce que les chaînes disparaissent. S'il y a des taches sur votre tour d'essuyage, votre valeur est trop élevée."
+msgstr "Pour les extrudeuses standard, généralement de 40 à 42 mm. Pour la mise à niveau par l'extrudeuse bondtech, généralement de 30 à 32 mm. Commencez avec une valeur faible et augmentez-la progressivement jusqu'à ce que les fils disparaissent. S'il y a des taches sur votre tour d'essuyage, votre valeur est trop élevée."
 
 msgid "For support enforcers only"
 msgstr "Seulement pour les supports personnalisés"
@@ -8809,7 +8809,7 @@ msgid "Skirt Loops"
 msgstr "Boucles de la jupe"
 
 msgid "Skirt width"
-msgstr "Largeur de la bordure"
+msgstr "Largeur de la jupe"
 
 msgid "SLA gizmo keyboard shortcuts"
 msgstr "Raccourcis clavier pour le gizmo SLA"
