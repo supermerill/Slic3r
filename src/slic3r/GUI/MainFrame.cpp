@@ -1337,7 +1337,7 @@ void MainFrame::init_menubar_as_editor()
         append_menu_item(editMenu, wxID_ANY, _L("&Select all") + "\t" + GUI::shortkey_ctrl_prefix() + "A",
             _L("Selects all objects"), [this](wxCommandEvent&) { m_plater->select_all(); },
             "", nullptr, [this](){return can_select(); }, this);
-        append_menu_item(editMenu, wxID_ANY, _L("D&eselect all") + sep + "Esc",
+        append_menu_item(editMenu, wxID_ANY, _L("D&eselect all") + "\t" + "Esc",
             _L("Deselects all objects"), [this](wxCommandEvent&) { m_plater->deselect_all(); },
             "", nullptr, [this](){return can_deselect(); }, this);
         editMenu->AppendSeparator();
@@ -1349,18 +1349,18 @@ void MainFrame::init_menubar_as_editor()
             "delete_all_menu", nullptr, [this](){return can_delete_all(); }, this);
 
         editMenu->AppendSeparator();
-        append_menu_item(editMenu, wxID_ANY, _L("&Undo") + "\t" + GUI::shortkey_ctrl_prefix() + "Z",
+        append_menu_item(editMenu, wxID_ANY, _L("&Undo") + "\t" + "Ctrl+" + "Z",
             _L("Undo"), [this](wxCommandEvent&) { m_plater->undo(); },
             "undo_menu", nullptr, [this](){return m_plater->can_undo(); }, this);
-        append_menu_item(editMenu, wxID_ANY, _L("&Redo") + "\t" + GUI::shortkey_ctrl_prefix() + "Y",
+        append_menu_item(editMenu, wxID_ANY, _L("&Redo") + sep + GUI::shortkey_ctrl_prefix() + "Y",
             _L("Redo"), [this](wxCommandEvent&) { m_plater->redo(); },
             "redo_menu", nullptr, [this](){return m_plater->can_redo(); }, this);
 
         editMenu->AppendSeparator();
-        append_menu_item(editMenu, wxID_ANY, _L("&Copy") + "\t" + GUI::shortkey_ctrl_prefix() + "C",
+        append_menu_item(editMenu, wxID_ANY, _L("&Copy") + "\t" + GUI::shortkey_ctrl_prefix()+ sep_space + "C",
             _L("Copy selection to clipboard"), [this](wxCommandEvent&) { m_plater->copy_selection_to_clipboard(); },
             "copy_menu", nullptr, [this](){return m_plater->can_copy_to_clipboard(); }, this);
-        append_menu_item(editMenu, wxID_ANY, _L("&Paste") + "\t" + GUI::shortkey_ctrl_prefix() + "V",
+        append_menu_item(editMenu, wxID_ANY, _L("&Paste") + sep + GUI::shortkey_ctrl_prefix()+ sep_space + "V",
             _L("Paste clipboard"), [this](wxCommandEvent&) { m_plater->paste_from_clipboard(); },
             "paste_menu", nullptr, [this](){return m_plater->can_paste_from_clipboard(); }, this);
         
