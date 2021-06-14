@@ -1,18 +1,18 @@
 # Translation file for french
 # Copyright (C) 2021
-# This file is distributed under the same license as Slic3r.
+# This file is distributed under the same license as SuperSlicer.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Slic3r\n"
-"POT-Creation-Date: 2021-06-09 00:00\n"
-"PO-Revision-Date: 2021-06-09 00:00\n"
-"Last-Translator:\n"
+"Project-Id-Version: SuperSlicer\n"
+"POT-Creation-Date: 2021-06-14 00:00\n"
+"PO-Revision-Date: 2021-06-14 00:00\n"
+"Last-Translator: 5axes\n"
 "Language-Team:\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language:fr\n"
+"Language: fr\n"
 
 msgid "!! Can be unstable in some os distribution !!"
 msgstr "!! peut être instable avec certaines distributions de système d'exploitation."
@@ -82,7 +82,8 @@ msgid ""
 "\n"
 "The application will now terminate."
 msgstr ""
-"%s a rencontré une erreur. Elle a apparemment été provoquée par un manque de mémoire. Si vous êtes certain d'avoir assez de RAM sur votre système, cela peut également être un bug et nous aimerions que vous le signaliez.\n"
+"%s a rencontré une erreur. Elle a apparemment été provoquée par un manque de mémoire. Si vous êtes certain d'avoir assez de RAM sur votre système,"
+" cela peut également être un bug et nous aimerions que vous le signaliez.\n"
 "\n"
 "L'application va maintenant fermer."
 
@@ -4566,6 +4567,15 @@ msgstr ""
 "coin supérieur droit de la scène 3D"
 
 msgid ""
+"If enabled, the command line arguments are sent to an existing instance of "
+"GUI Slic3r, or an existing Slic3r window is activated. Overrides the "
+"\"single_instance\" configuration value from application preferences."
+msgstr ""
+"Si elle est activée, les arguments de la ligne de commande sont envoyés à une instance existante de "
+"GUI Slic3r, ou une fenêtre Slic3r existante est activée. Remplace la valeur de configuration "
+"\"single_instance\" depuis les préférences de l'application."
+
+msgid ""
 "If enabled, the descriptions of configuration parameters in settings tabs "
 "wouldn't work as hyperlinks. If disabled, the descriptions of configuration "
 "parameters in settings tabs will work as hyperlinks."
@@ -5007,6 +5017,15 @@ msgstr "Remplissage interne"
 
 msgid "Internal perimeter"
 msgstr "Périmètres internes"
+
+msgid ""
+"Internal perimeters will go around sharp corners by turning around instead "
+"of making the same sharp corner. This can help when there is visible holes "
+"in sharp corners on perimeters"
+msgstr ""
+"Les périmètres internes contourneront les angles aigus en se retournant au lieu "
+"de faire le même angle aigu. Cela peut aider quand il y a des trous visibles "
+"dans les coins aigus des périmètres"
 
 msgid "Introduction"
 msgstr "Introduction"
@@ -5602,6 +5621,9 @@ msgstr "Hauteur maximale d'impression"
 msgid "Max print speed"
 msgstr "Vitesse d'impression maximale"
 
+msgid "Max small perimeters length"
+msgstr "Longueur maximale des petits périmètres"
+
 msgid "Max speed"
 msgstr "Vitesse maximale"
 
@@ -5862,6 +5884,9 @@ msgstr "Angle concave minimum"
 msgid "Min convex angle"
 msgstr "Angle convexe minimum"
 
+msgid "Min gap-fill surface"
+msgstr "Surface minimale de remplissage des espaces"
+
 msgid "Min layer height"
 msgstr "Hauteur de couche minimum"
 
@@ -5870,6 +5895,9 @@ msgstr "Longueur minimale"
 
 msgid "Min print speed"
 msgstr "Vitesse d'impression minimale"
+
+msgid "Min small perimeters length"
+msgstr "Longueur minimale des petits périmètres"
 
 msgid "Min surface"
 msgstr "Surface minimum"
@@ -6381,6 +6409,9 @@ msgstr "compensation du firmware non-marlin/lerdge"
 msgid "Note"
 msgstr "Remarque"
 
+msgid "Note that only Multiple of 5 can be engraved in the part"
+msgstr "Notez que seul un multiple de 5 peut être gravé dans la pièce"
+
 msgid ""
 "Note, that selected preset will be deleted from this/those printer(s) too."
 msgstr ""
@@ -6575,6 +6606,13 @@ msgstr "Décalage"
 msgid "Offsets (for multi-extruder printers)"
 msgstr "Décalages (pour les imprimantes multi-extrudeurs)"
 
+msgid ""
+"Old layout: all windows are in the application, settings are on the top tab "
+"bar and the plater choice in on the bottom of the plater view."
+msgstr ""
+"Ancienne disposition : toutes les fenêtres sont dans l'application, les paramètres sont sur l'onglet du haut "
+"et le choix du rendu des sections en bas de la vue 3D."
+
 msgid "Old PrusaSlicer layout"
 msgstr "Ancienne interface PrusaSlicer"
 
@@ -6622,6 +6660,9 @@ msgstr "Mode couche unique"
 msgid ""
 "One or more object were assigned an extruder that the printer does not have."
 msgstr "Un ou plusieurs objets ont été affectés à un extrudeur que l'imprimante ne possède pas."
+
+msgid "one test"
+msgstr "un essai"
 
 msgid "One-loop perimeters"
 msgstr "Périmètres à une boucle"
@@ -8286,6 +8327,20 @@ msgstr "Sélectionner les profils d'impression avec lesquels ce profil est compa
 msgid "Select the printers this profile is compatible with."
 msgstr "Sélectionner les imprimantes avec lesquelles ce profil est compatible."
 
+msgid ""
+"Select the step in % between two tests.\n"
+"Note that only multiple of 5 are engraved on the parts."
+msgstr ""
+"Sélectionnez le pas en % entre deux tests.\n"
+"Notez que seuls les multiples de 5 sont gravés sur les pièces."
+
+msgid ""
+"Select the step in celcius between two tests.\n"
+"Note that only multiple of 5 are engraved on the part."
+msgstr ""
+"Sélectionnez l'écart en degrés Celsius entre deux tests.\n"
+"Notez que seuls les multiples de 5 sont gravés sur la pièce."
+
 msgid "Select the STL file to repair:"
 msgstr "Sélectionner le fichier STL à réparer :"
 
@@ -8467,6 +8522,11 @@ msgid "Set the shape of your printer's bed."
 msgstr "Réglez la forme du plateau de votre imprimante."
 
 msgid ""
+"Set this if your printer uses control values from 0-100 instead of 0-255."
+msgstr ""
+"Définissez cette option si votre imprimante utilise des valeurs de contrôle de 0 à 100 au lieu de 0 à 255."
+
+msgid ""
 "Set this to a non-zero value to allow a manual extrusion width. If left to "
 "zero, Slic3r derives extrusion widths from the nozzle diameter (see the "
 "tooltips for perimeter extrusion width, infill extrusion width etc). If "
@@ -8618,11 +8678,25 @@ msgstr ""
 msgid "Settings"
 msgstr "Réglages"
 
+msgid ""
+"Settings button: all windows are in the application, no tabs: you have to "
+"clic on settings gears to switch to settings tabs."
+msgstr ""
+"Bouton paramètres : toutes les fenêtres sont dans l'application, pas d'onglets : vous devez "
+"cliquer sur les icones engrenages de réglages pour passer aux onglets de réglages."
+
 msgid "Settings for height range"
 msgstr "Réglages pour la zone de hauteur"
 
 msgid "Settings in non-modal window"
 msgstr "Réglages dans une fenêtre non modale"
+
+msgid ""
+"Settings window: settings are displayed in their own window. You have to "
+"clic on settings gears to show the settings window."
+msgstr ""
+"Fenêtre des paramètres : les paramètres sont affichés dans leur propre fenêtre. Vous devez "
+"cliquer sur les icones engrenages des paramètres pour afficher la fenêtre des paramètres."
 
 msgid "Shall I add the '%'?"
 msgstr "Dois-je ajouter le '%' ?"
@@ -9171,6 +9245,15 @@ msgstr ""
 msgid "Speed for milling tool."
 msgstr "Vitesse de l'outil de fraisage."
 
+msgid ""
+"Speed for movements along the Z axis.\n"
+"When set to zero, this value is ignored and regular travel speed is used "
+"instead."
+msgstr ""
+"Vitesse pour les déplacements le long de l'axe Z.\n"
+"Lorsqu'elle est définie sur zéro, cette valeur est ignorée et la vitesse de déplacement normale est utilisée "
+"à la place."
+
 msgid "Speed for non-print moves"
 msgstr "Vitesse pour les déplacements sans impression"
 
@@ -9353,6 +9436,9 @@ msgstr "Démarrer un nouveau processus de découpe"
 msgid "Start printing after upload"
 msgstr "Lancer l'impression après le téléchargement"
 
+msgid "Start temp:"
+msgstr "Température de départ :"
+
 msgid "Start the application"
 msgstr "Démarrer l'application"
 
@@ -9435,6 +9521,13 @@ msgstr ""
 "Démonté avec succès. Le périphérique %s(% s) peut maintenant être retiré en "
 "toute sécurité de l'ordinateur."
 
+msgid ""
+"SuperSlicer is a skinned version of Slic3r, based on PrusaSlicer by Prusa "
+"and the original Slic3r by Alessandro Ranellucci & the RepRap community."
+msgstr ""
+"SuperSlicer est une version modifiée de Slic3r, basée sur PrusaSlicer de Prusa "
+"et sur la version Slic3r originale d'Alessandro Ranellucci et de la communauté RepRap."
+
 msgid "support"
 msgstr "support"
 
@@ -9449,6 +9542,9 @@ msgstr "Distance de sécurité de la base du support"
 
 msgid "Support Blocker"
 msgstr "Bloqueur de Support"
+
+msgid "Support contact distance type"
+msgstr "Type de distance de contact de soutien"
 
 msgid "Support Cubic"
 msgstr "Support Cubique"
@@ -9571,6 +9667,9 @@ msgstr "Permuter les axes Y/Z"
 msgid "Switch between Editor/Preview"
 msgstr "Basculer entre l'éditeur/l'aperçu"
 
+msgid "Switch between Tab"
+msgstr "Passer d'un onglet à l'autre"
+
 msgid "Switch code to Change extruder"
 msgstr "Code de changement pour Changer l'extrudeur"
 
@@ -9644,6 +9743,9 @@ msgstr "Capturer un in&stantané de la configuration"
 
 msgid "Taking configuration snapshot"
 msgstr "Snapshot de la configuration  en cours"
+
+msgid "Temp decr:"
+msgstr "Dim. Température :"
 
 msgid "Temperature"
 msgstr "Température"
@@ -9982,6 +10084,15 @@ msgid ""
 msgstr ""
 "Le % de pigment pour ce filament (entre 0 et 1, 1=100%). 0 pour translucide/"
 "naturel, 0.2-0.5 pour le blanc et 1 pour le noir."
+
+msgid ""
+"The position of the model origin (point with coordinates x:0, y:0, z:0) "
+"needs to be in the middle of the print bed area. If you load a custom model "
+"and it appears misaligned, the origin is not set properly."
+msgstr ""
+"La position de l'origine du modèle (point de coordonnées x:0, y:0, z:0) "
+"doit être au milieu de la zone du lit d'impression. Si vous chargez un modèle personnalisé "
+"et qu'il apparaît mal aligné, l'origine n'est pas définie correctement."
 
 msgid "The preset(s) modifications are successfully saved"
 msgstr "Les modifications des préréglages sont enregistrées avec succès"
