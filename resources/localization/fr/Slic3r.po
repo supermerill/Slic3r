@@ -965,7 +965,7 @@ msgid "approximate seconds"
 msgstr "secondes approximatives"
 
 msgid "Archimedean Chords"
-msgstr "Accords archimédiens"
+msgstr "Spirale d’Archimède"
 
 msgid "archive is too large"
 msgstr "l'archive est trop volumineuse"
