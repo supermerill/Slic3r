@@ -7256,7 +7256,7 @@ msgid "Post-processing scripts"
 msgstr "Scripts de post-traitement"
 
 msgid "Precision"
-msgstr "Precision"
+msgstr "Précision"
 
 msgid "Preferences"
 msgstr "Préférences"
