@@ -1884,7 +1884,7 @@ msgid "Convert round holes to polyholes"
 msgstr "Trous rond changé en polyholes"
 
 msgid "Convert round vertical holes to polyholes"
-msgstr "Convertir les trous verticaux ronds en poly trous"
+msgstr "Convertir les trous verticaux ronds en polygones"
 
 msgid "Cooling"
 msgstr "Refroidissement"
@@ -5716,7 +5716,7 @@ msgid ""
 "After that, it will decraese down to 0 for four time this area. Set to 0 to "
 "let the hole_size_compensation apply fully for all detected holes"
 msgstr ""
-" Zone maximale pour le trou où la compensation de la taille du trou s'appliquera pleinement. "
+"Zone maximale pour le trou où la compensation de la taille du trou s'appliquera pleinement. "
 "Après cela, elle se réduira à 0 pour quatre fois cette surface. Réglez à 0 pour "
 "laisser la compensation de la taille du trou s'appliquer entièrement à tous les trous détectés"
 
