@@ -6072,13 +6072,13 @@ msgid "mm"
 msgstr "mm"
 
 msgid "mm (zero to disable)"
-msgstr "mm (zéro pour désactiver)"
+msgstr "mm"
 
 msgid "mm or %"
 msgstr "mm ou %"
 
 msgid "mm or % (zero to disable)"
-msgstr "mm ou % (zéro pour désactiver)"
+msgstr "mm ou %"
 
 msgid "mm/%"
 msgstr "mm/%"
