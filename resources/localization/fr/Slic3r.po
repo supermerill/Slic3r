@@ -1,10 +1,10 @@
 # Translation file for french
 # Copyright (C) 2021
-# This file is distributed under the same license as SuperSlicer.
+# This file is distributed under the same license as Slic3r.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: SuperSlicer\n"
+"Project-Id-Version: Slic3r\n"
 "POT-Creation-Date: 2021-06-14 00:00\n"
 "PO-Revision-Date: 2021-06-14 00:00\n"
 "Last-Translator: 5axes\n"
@@ -4589,7 +4589,7 @@ msgid ""
 "If enabled, the gui will be in expert mode even if the simple or advanced "
 "mode is selected (but not the setting tabs)."
 msgstr ""
-"Si activé, le gui sera en mode expert même si le mode simple ou avancé "
+"Si activé, l'interface sera en mode expert même si le mode simple ou avancé "
 "mode est sélectionné (mais pas les onglets de réglage)."
 
 msgid ""
@@ -6617,7 +6617,7 @@ msgid "Old PrusaSlicer layout"
 msgstr "Ancienne interface PrusaSlicer"
 
 msgid "Old Value"
-msgstr "Ancienne valeur"
+msgstr "Ancienne Valeur"
 
 msgid "Old value"
 msgstr "Ancienne valeur"
@@ -11826,13 +11826,13 @@ msgid "Very dark color, in the RGB hex format."
 msgstr "Couleur très sombre, au format hexagonal RGB."
 
 msgid "Very dark gui color"
-msgstr "Couleur du guide très sombre"
+msgstr "Couleur Interface très sombre"
 
 msgid "Very light color, in the RGB hex format."
 msgstr "Couleur très claire, au format hexagonal RVB."
 
 msgid "Very light gui color"
-msgstr "Couleur gui très légère"
+msgstr "Couleur Interface très légère"
 
 msgid "Very short layer time - began to decrease extrusion rate"
 msgstr "Temps de couche très court - commence à diminuer le taux d'extrusion"
