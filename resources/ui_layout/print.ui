@@ -92,7 +92,10 @@ group:Modifying slices
 	line:XY compensation
 		setting:width$6:xy_size_compensation
 		setting:width$6:xy_inner_size_compensation
+	end_line
+	line:XY First layer compensation
 		setting:width$6:first_layer_size_compensation
+		setting:width$6:first_layer_size_compensation_layers
 	end_line
 	line:Vertical Hole shrinking compensation
 		setting:width$6:hole_size_compensation

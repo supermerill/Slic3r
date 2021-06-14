@@ -623,6 +623,7 @@ public:
     ConfigOptionFloatOrPercent      first_layer_height;
     ConfigOptionFloatOrPercent      first_layer_extrusion_width;
     ConfigOptionFloat               first_layer_size_compensation;
+    ConfigOptionInt                 first_layer_size_compensation_layers;
     ConfigOptionFloat               hole_size_compensation;
     ConfigOptionFloat               hole_size_threshold;
     ConfigOptionBool                infill_only_where_needed;
@@ -693,6 +694,7 @@ protected:
         OPT_PTR(first_layer_height);
         OPT_PTR(first_layer_extrusion_width);
         OPT_PTR(first_layer_size_compensation);
+        OPT_PTR(first_layer_size_compensation_layers);
         OPT_PTR(infill_only_where_needed);
         OPT_PTR(interface_shells);
         OPT_PTR(layer_height);

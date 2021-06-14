@@ -562,6 +562,7 @@ const std::vector<std::string>& Preset::print_options()
         "first_layer_flow_ratio",
         "clip_multipart_objects", "enforce_full_fill_volume", "external_infill_margin", "bridged_infill_margin",
         "first_layer_size_compensation",
+        "first_layer_size_compensation_layers",
         "xy_size_compensation",
         "xy_inner_size_compensation",
         "hole_size_compensation",

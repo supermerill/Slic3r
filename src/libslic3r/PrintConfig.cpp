@@ -1703,6 +1703,19 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(0));
 
+    def = this->add("first_layer_size_compensation_layers", coInt);
+    def->label = L("height in layers");
+    def->full_label = L("XY First layer compensation height in layers");
+    def->category = OptionCategory::slicing;
+    def->tooltip = L("The number of layers on which the elephant foot compensation will be active. "
+        "The first layer will be shrunk by the elephant foot compensation value, then "
+        "the next layers will be gradually shrunk less, up to the layer indicated by this value.");
+    def->sidetext = L("layers");
+    def->min = 1;
+    def->max = 30;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionInt(1));
+
     def = this->add("fill_smooth_width", coFloatOrPercent);
     def->label = L("Width");
     def->full_label = L("Ironing width");
@@ -5516,6 +5529,7 @@ void PrintConfigDef::to_prusa(t_config_option_key& opt_key, std::string& value, 
 "start_gcode_manual",
 "perimeter_round_corners",
 "travel_speed_z",
+"first_layer_size_compensation_layers",
     };
     //looks if it's to be removed, or have to be transformed
     if (to_remove_keys.find(opt_key) != to_remove_keys.end()) {

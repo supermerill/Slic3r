@@ -707,6 +707,7 @@ namespace Slic3r {
                 || opt_key == "slice_closing_radius"
                 || opt_key == "clip_multipart_objects"
                 || opt_key == "first_layer_size_compensation"
+                || opt_key == "first_layer_size_compensation_layers"
                 || opt_key == "elephant_foot_min_width"
                 || opt_key == "support_material_contact_distance_type"
                 || opt_key == "support_material_contact_distance_top"
@@ -2491,9 +2492,13 @@ namespace Slic3r {
                     float hole_delta = inner_delta + float(scale_(m_config.hole_size_compensation.value));
                     //FIXME only apply the compensation if no raft is enabled.
                     float first_layer_compensation = 0.f;
-                    if (layer_id == 0 && m_config.raft_layers == 0 && m_config.first_layer_size_compensation.value != 0) {
+                    int first_layers = m_config.first_layer_size_compensation_layers.value;
+                    if (layer_id < first_layers && m_config.raft_layers == 0 && m_config.first_layer_size_compensation.value != 0) {
                         // Only enable Elephant foot compensation if printing directly on the print bed.
                         first_layer_compensation = float(scale_(m_config.first_layer_size_compensation.value));
+                        // reduce first_layer_compensation for every layer over the first one.
+                        first_layer_compensation = (first_layers - layer_id + 1) * first_layer_compensation / float(first_layers);
+                        // simplify compensations if possible
                         if (first_layer_compensation > 0) {
                             outter_delta += first_layer_compensation;
                             inner_delta += first_layer_compensation;
@@ -2528,7 +2533,7 @@ namespace Slic3r {
                             expolygons = _shrink_contour_holes(std::max(0.f, outter_delta), std::max(0.f, inner_delta), std::max(0.f, hole_delta), expolygons);
                         }
                         // Apply the elephant foot compensation.
-                        if (layer_id == 0 && first_layer_compensation != 0.f) {
+                        if (layer_id < first_layers && first_layer_compensation != 0.f) {
                             expolygons = union_ex(Slic3r::elephant_foot_compensation(expolygons, layerm->flow(frExternalPerimeter),
                                 unscale<double>(-first_layer_compensation)));
                         }
@@ -2582,7 +2587,7 @@ namespace Slic3r {
                             // Apply the negative XY compensation. (the ones that is <0)
                             ExPolygons trimming;
                             static const float eps = float(scale_(m_config.slice_closing_radius.value) * 1.5);
-                            if (layer_id == 0 && first_layer_compensation < 0.f) {
+                            if (layer_id < first_layers && first_layer_compensation < 0.f) {
                                 ExPolygons expolygons_first_layer = offset_ex(layer->merged(eps), -eps);
                                 trimming = Slic3r::elephant_foot_compensation(expolygons_first_layer,
                                     layer->regions().front()->flow(frExternalPerimeter), unscale<double>(-first_layer_compensation));
