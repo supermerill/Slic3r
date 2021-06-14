@@ -1,7 +1,8 @@
 
 # Building Slic3r on UNIX/Linux
 
-Slic3r uses the CMake build system and requires several dependencies.
+
+SuperSlicer uses the CMake build system and requires several dependencies.
 The dependencies can be listed in `deps/deps-linux.cmake` and `deps/deps-unix-common.cmake`, although they don't necessarily need to be as recent
 as the versions listed - generally versions available on conservative Linux distros such as Debian stable or CentOS should suffice.
 
@@ -21,7 +22,7 @@ Additional CMake flags may be applicable as explained below.
 
 You have to gitclone  the repository
 ```
-git clone https://github.com/slic3r/Slic3r.git
+git clone https://github.com/supermerill/SuperSlicer.git
 ```
 
 and then you have to clone the profiles submodules

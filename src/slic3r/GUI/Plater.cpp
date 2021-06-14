@@ -5962,7 +5962,15 @@ void Plater::on_config_change(const DynamicPrintConfig &config)
 {
     bool update_scheduled = false;
     bool bed_shape_changed = false;
+    auto diffs = p->config->diff(config);
     for (auto opt_key : p->config->diff(config)) {
+        if (opt_key == "nozzle_diameter") {
+            if (p->config->option<ConfigOptionFloats>(opt_key)->values.size() > config.option<ConfigOptionFloats>(opt_key)->values.size()) {
+                //lower number of extuders, please don't try to display the old gcode.
+                p->reset_gcode_toolpaths();
+                p->gcode_result.reset();
+            }
+        }
         if (opt_key == "filament_colour")
         {
             update_scheduled = true; // update should be scheduled (for update 3DScene) #2738

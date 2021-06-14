@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - Nigthly
+  pull_request:
+    branches:
+    - '*'
 
 jobs:
   build:
@@ -46,8 +49,8 @@ jobs:
       run: mkdir build
     - name: cmake
       working-directory: ./build
-      run: cmake .. -DCMAKE_PREFIX_PATH="/home/runner/work/Slic3r/Slic3r/deps/build/destdir/usr/local" -DSLIC3R_STATIC=1
-    - name: make Slic3r
+      run: cmake .. -DCMAKE_PREFIX_PATH="/home/runner/work/SuperSlicer/SuperSlicer/deps/build/destdir/usr/local" -DSLIC3R_STATIC=1
+    - name: make SuperSlicer
       working-directory: ./build
       run: make Slic3r
     - name: make .mo
@@ -66,18 +69,18 @@ jobs:
       run: cp -Rf ../resources package/resources
     - name: copy bin
       working-directory: ./build
-      run: cp -f src/Slic3r package/bin/Slic3r
+      run: cp -f src/superslicer package/bin/superslicer
     - name: create sh from echo
       working-directory: ./build/package
       run: |
-        echo -e '#!/bin/bash\nDIR=$(readlink -f "$0" | xargs dirname)\nexport LD_LIBRARY_PATH="$DIR/bin"\nexec "$DIR/bin/Slic3r" "$@"' >Slic3r
-        chmod u+x Slic3r
-        tar -cvf ../Slic3r.tar .
+        echo -e '#!/bin/bash\nDIR=$(readlink -f "$0" | xargs dirname)\nexport LD_LIBRARY_PATH="$DIR/bin"\nexec "$DIR/bin/superslicer" "$@"' >superslicer
+        chmod u+x superslicer
+        tar -cvf ../SuperSlicer.tar .
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: nightly_linux.tar
-        path: build/Slic3r.tar
+        path: build/SuperSlicer.tar
     - name: build appimage
       working-directory: ./build/package
       run: |
@@ -85,10 +88,10 @@ jobs:
         ../build_appimage.sh
     - name: 'Tar files'
       working-directory: ./build/package
-      run: tar -cvf Slic3r_ubu64.AppImage.tar Slic3r_ubu64.AppImage
+      run: tar -cvf SuperSlicer_ubu64.AppImage.tar SuperSlicer_ubu64.AppImage
     - name: Upload appimage
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Slic3r-AppImage.tar
-        path: build/package/Slic3r_ubu64.AppImage.tar
+        name: SuperSlicer-AppImage.tar
+        path: build/package/SuperSlicer_ubu64.AppImage.tar
         

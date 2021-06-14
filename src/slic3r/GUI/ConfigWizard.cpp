@@ -636,10 +636,10 @@ PageMaterials::PageMaterials(ConfigWizard *parent, Materials *materials, wxStrin
 		update_lists(evt.GetInt(), list_type->GetSelection(), list_vendor->GetSelection());
 		});
     list_type->Bind(wxEVT_LISTBOX, [this](wxCommandEvent &) {
-        update_lists(list_printer->GetSelection(), list_type->GetSelection(), list_vendor->GetSelection());
+        update_lists(-1, list_type->GetSelection(), list_vendor->GetSelection());
     });
     list_vendor->Bind(wxEVT_LISTBOX, [this](wxCommandEvent &) {
-        update_lists(list_printer->GetSelection(), list_type->GetSelection(), list_vendor->GetSelection());
+        update_lists(-1, list_type->GetSelection(), list_vendor->GetSelection());
     });
 
     list_profile->Bind(wxEVT_CHECKLISTBOX, [this](wxCommandEvent &evt) { select_material(evt.GetInt()); });

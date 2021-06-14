@@ -261,7 +261,7 @@ private:
             version = _L("Version") + " " + std::string(SLIC3R_VERSION_FULL);
 
             // credits infornation
-            credits = _L("Slic3r contains sizable contributions from Prusa Research. Original work by Alessandro Ranellucci and the RepRap community.") + "\n\n" +
+            credits = _L("SuperSlicer is a skinned version of Slic3r, based on PrusaSlicer by Prusa and the original Slic3r by Alessandro Ranellucci & the RepRap community.") + "\n\n" +
                         title + " " + _L("is licensed under the") + " " + _L("GNU Affero General Public License, version 3") + "\n\n" +
                         _L("Contributions by Vojtech Bubnik, Enrico Turri, Durand Remi, Oleksandra Iushchenko, Tamas Meszaros, Lukas Matena, Vojtech Kral, David Kocik and numerous others.");
 

@@ -109,7 +109,11 @@ void KBShortcutsDialog::fill_shortcuts()
             { "0-6", L("Camera view") },
             { "E", L("Show/Hide object/instance labels") },
             // Configuration
+#ifdef __APPLE__
+            { ctrl + ",", L("Preferences") },
+#else
             { ctrl + "P", L("Preferences") },
+#endif
             // Help
             { "?", L("Show keyboard shortcuts list") }
         };

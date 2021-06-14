@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: 'Nigthly'
+        ref: 'rc'
     - uses: ilammy/msvc-dev-cmd@v1
     - name: mkdir in deps
       run: mkdir deps/build
@@ -55,7 +55,7 @@ jobs:
       run: mkdir build
     - name: cmake
       working-directory: ./build
-      run: cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_PREFIX_PATH="d:\a\Slic3r\Slic3r\deps\destdir\usr\local"
+      run: cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_PREFIX_PATH="d:\a\SuperSlicer\SuperSlicer\deps\destdir\usr\local"
     - name: make
       working-directory: ./build
       run: msbuild /m /P:Configuration=Release INSTALL.vcxproj

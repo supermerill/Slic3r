@@ -13,3 +13,6 @@ xs/assertlib*
 local-lib
 build*
 deps/deps-*
+
+# MacOS Ignores
+.DS_Store

@@ -470,7 +470,7 @@ void PresetBundle::load_selections(AppConfig &config, const std::string &preferr
 void PresetBundle::export_selections(AppConfig &config)
 {
 	assert(this->printers.get_edited_preset().printer_technology() != ptFFF || filament_presets.size() >= 1);
-	assert(this->printers.get_edited_preset().printer_technology() != ptFFF || filament_presets.size() > 1 || filaments.get_selected_preset_name() == filament_presets.front());
+	//assert(this->printers.get_edited_preset().printer_technology() != ptFFF || filament_presets.size() > 1 || filaments.get_selected_preset_name() == filament_presets.front());
     config.clear_section("presets");
     config.set("presets", "print",        prints.get_selected_preset_name());
     config.set("presets", "filament",     filament_presets.front());

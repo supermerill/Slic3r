@@ -3013,7 +3013,9 @@ void GCodeViewer::refresh_render_paths(bool keep_sequential_current_first, bool 
 #if ENABLE_REDUCED_TOOLPATHS_SEGMENT_CAPS
     for (const auto& [tbuffer_id, ibuffer_id, path_id, sub_path_id] : paths) {
         TBuffer& buffer = const_cast<TBuffer&>(m_buffers[tbuffer_id]);
+        if (buffer.paths.size() <= path_id) return; // invalid data check
         const Path& path = buffer.paths[path_id];
+        if (m_tool_colors.size() <= path.extruder_id) return; // invalid data check
 #else
     for (const auto& [buffer, ibuffer_id, path_id, sub_path_id] : paths) {
         const Path& path = buffer->paths[path_id];
@@ -4192,7 +4194,8 @@ void GCodeViewer::render_legend() const
     {
         // shows only extruders actually used
         for (unsigned char i : m_extruder_ids) {
-            append_item(EItemType::Rect, m_tool_colors[i], _u8L("Extruder") + " " + std::to_string(i + 1));
+            if(m_tool_colors.size() > i)
+                append_item(EItemType::Rect, m_tool_colors[i], _u8L("Extruder") + " " + std::to_string(i + 1));
         }
         break;
     }
@@ -4200,7 +4203,8 @@ void GCodeViewer::render_legend() const
     {
         // shows only filament actually used
         for (unsigned char i : m_extruder_ids) {
-            append_item(EItemType::Rect, m_filament_colors[i], _u8L("Filament") + " " + std::to_string(i + 1));
+            if (m_filament_colors.size() > i)
+                append_item(EItemType::Rect, m_filament_colors[i], _u8L("Filament") + " " + std::to_string(i + 1));
         }
         break;
     }
@@ -4232,28 +4236,30 @@ void GCodeViewer::render_legend() const
         {
             // shows only extruders actually used
             for (unsigned char i : m_extruder_ids) {
-                std::vector<std::pair<Color, std::pair<double, double>>> cp_values = color_print_ranges(i, custom_gcode_per_print_z);
-                const int items_cnt = static_cast<int>(cp_values.size());
-                if (items_cnt == 0) { // There are no color changes, but there are some pause print or custom Gcode
-                    append_item(EItemType::Rect, m_tool_colors[i], _u8L("Extruder") + " " + std::to_string(i + 1) + " " + _u8L("default color"));
-                }
-                else {
-                    for (int j = items_cnt; j >= 0; --j) {
-                        // create label for color change item
-                        std::string label = _u8L("Extruder") + " " + std::to_string(i + 1);
-                        if (j == 0) {
-                            label += " " + upto_label(cp_values.front().second.first);
-                            append_item(EItemType::Rect, m_tool_colors[i], label);
-                            break;
-                        }
-                        else if (j == items_cnt) {
-                            label += " " + above_label(cp_values[j - 1].second.second);
-                            append_item(EItemType::Rect, cp_values[j - 1].first, label);
-                            continue;
-                        }
+                if (m_tool_colors.size() > i) {
+                    std::vector<std::pair<Color, std::pair<double, double>>> cp_values = color_print_ranges(i, custom_gcode_per_print_z);
+                    const int items_cnt = static_cast<int>(cp_values.size());
+                    if (items_cnt == 0) { // There are no color changes, but there are some pause print or custom Gcode
+                        append_item(EItemType::Rect, m_tool_colors[i], _u8L("Extruder") + " " + std::to_string(i + 1) + " " + _u8L("default color"));
+                    }
+                    else {
+                        for (int j = items_cnt; j >= 0; --j) {
+                            // create label for color change item
+                            std::string label = _u8L("Extruder") + " " + std::to_string(i + 1);
+                            if (j == 0) {
+                                label += " " + upto_label(cp_values.front().second.first);
+                                append_item(EItemType::Rect, m_tool_colors[i], label);
+                                break;
+                            }
+                            else if (j == items_cnt) {
+                                label += " " + above_label(cp_values[j - 1].second.second);
+                                append_item(EItemType::Rect, cp_values[j - 1].first, label);
+                                continue;
+                            }
 
-                        label += " " + fromto_label(cp_values[j - 1].second.second, cp_values[j].second.first);
-                        append_item(EItemType::Rect, cp_values[j - 1].first, label);
+                            label += " " + fromto_label(cp_values[j - 1].second.second, cp_values[j].second.first);
+                            append_item(EItemType::Rect, cp_values[j - 1].first, label);
+                        }
                     }
                 }
             }

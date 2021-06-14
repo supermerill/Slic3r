@@ -10,7 +10,7 @@ Building with [Visual Studio 2017 Community Edition](https://www.visualstudio.co
 
 You have to gitclone  the repository
 ```
-git clone https://github.com/slic3r/Slic3r.git
+git clone https://github.com/supermerill/SuperSlicer.git
 ```
 
 and then you have to clone the profiles submodules

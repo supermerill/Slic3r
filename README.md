@@ -1,93 +1,109 @@
-![](var/Slic3r_128px.png) Slic3r [![Build Status](https://travis-ci.org/slic3r/Slic3r.svg?branch=master)](https://travis-ci.org/slic3r/Slic3r) [![Build status](https://ci.appveyor.com/api/projects/status/8iqmeat6cj158vo6?svg=true)](https://ci.appveyor.com/project/lordofhyphens/slic3r) [![Build Status](http://osx-build.slic3r.org:8080/buildStatus/icon?job=Slic3r)](http://osx-build.slic3r.org:8080/job/Slic3r)![Coverity Status](https://scan.coverity.com/projects/17257/badge.svg)
-======
 
-We have automated builds for Windows (64-bit) and OSX (>= 10.7). [Get a fresh build now](http://dl.slic3r.org/dev/) and stay up-to-date with the development!
+[![you can get this shield at shields.io](https://img.shields.io/discord/771316156203270154?color=7289da&logo=discord&logoColor=white)](https://discord.gg/ygBBdRRwJY)
 
-The MacOS X build server is kindly sponsored by: <img width=150 src=https://cloud.githubusercontent.com/assets/31754/22719818/09998c92-ed6d-11e6-9fa0-09de638f3a36.png />
+# SuperSlicer
 
-### So, what's this Slic3r?
+**A PrusaSlicer fork (which is a slic3r fork)** (previously Slic3r++)
 
-Slic3r is mainly a **toolpath generator** for 3D printers: it reads 3D models (STL, OBJ, AMF, 3MF) and it converts them into **G-code** instructions for 3D printers. But it does much more than that, see the [features list](#features) below.
+Prebuilt Windows, Linux and macOS 64-bit releases are available through the [git releases page](https://github.com/supermerill/SuperSlicer/releases). The Linux & macOS builds aren't tested (by me), just compiled, so please report any bugs that may occur during use.
+Nightly builds are available through the [git actions page](https://github.com/supermerill/SuperSlicer/actions). Click on the build for your platform and then on 'Artifacts (1)' in the top right corner.
 
-Slic3r was born in **2011** within the RepRap community and thanks to its high configurability became the swiss-army knife for 3D printing. It served as a platform for implementing several **new (experimental) ideas that later became technology standards**, such as multiple extruders, brim, variable-height layers, per-object settings, modifiers, post-processing scripts, G-code macros and more. Despite being based on volunteer efforts, Slic3r is still pushing the boundaries of 3D printing.
+SuperSlicer takes 3D models (STL, OBJ, AMF) and converts them into G-code
+instructions for FFF printers or PNG layers for mSLA 3D printers. It's compatible with any modern printer based on the RepRap toolchain which is running a firmware based on Marlin, Prusa, Klipper, etc.
 
-Slic3r has been rebased from the active PrusaSlicer and SuperSlicer forks with an eye towards continuing pushing the boundaries of 3D printing and being an slicer for all printers.
+SuperSlicer is based on [PrusaSlicer](https://github.com/prusa3d/PrusaSlicer) by Prusa Research.
+PrusaSlicer is based on [Slic3r](https://github.com/Slic3r/Slic3r) by Alessandro Ranellucci and the RepRap community.
 
-Slic3r is:
+See the [wiki](https://github.com/supermerill/SuperSlicer/wiki) and
+the [documentation directory](doc/) for information about compilation.
 
-* **Open:** it is totally **open source** and it's **independent from any commercial company** or printer manufacturer. We want to keep 3D printing open and free.
-* **Compatible:** it supports all the known G-code dialects (Marlin, Repetier, Mach3, LinuxCNC, Machinekit, Smoothie, Makerware, Sailfish).
-* **Advanced:** many configuration options allow for fine-tuning and full control. While novice users often need just few options, Slic3r is mostly used by advanced users.
-* **Community-driven:** new features or issues are discussed in the [GitHub repository](https://github.com/slic3r/Slic3r/issues). Join our collaborative effort and help improve it!
-* **Robust:** the codebase includes more than 1,000 unit and regression tests, collected in 6 years of development.
-* **Modular:** the core of Slic3r is libslic3r, a C++ library that provides a granular API and reusable components.
-* **Embeddable:** a complete and powerful command line interface allows Slic3r to be used from the shell or integrated with server-side applications.
-* **Powerful:** see the list below!
+### What are SuperSlicer main features? main new features/differences?
 
-See the [project homepage](http://slic3r.org/) at slic3r.org for more information.
+* Custom-made generated calibration tests.
+* **Ironing** top surface & many new settings to fine-tune the top surface quality, like 'only one perimeter on top'.
+* A "denser infill" option for supporting the (solid) top layers.
+* Better **Thin walls** (anchored inside the print, no more random bits at the ends, embedded in perimeter loops).
+* Options to change holes dimensions and/or geometry, to print them at the right size.
+* Better overhangs (add perimeters if needed, slice them in opposite direction each layer).
+* Brim rework: many more options (inside, outside only, 'ears', per object)
+* Some new seam options, to help hide them.
+* Built-in calibration prints
+* Built-in object generation script
+* Can join perimeters into a big one to avoid travel moves.
+* Many other little options and corrections (like the filled concentric pattern).
+* It has also all the current slic3rPE/PrusaSlicer features.
 
-### <a name="features"></a>Features
+### Complete changelog [here](https://github.com/supermerill/SuperSlicer/wiki)
 
-(Most of these are also available in the command line interface.)
+See the wiki for examples.
 
-* **G-code generation** for FFF/FDM printers;
-* **conversion** between STL, OBJ, AMF, 3MF and POV formats;
-* **auto-repair** of non-manifold meshes (and ability to re-export them);
-* **SVG export** of slices;
-* built-in **USB/serial** host controller, supporting **multiple simultaneous printers** each one with a spool queue;
-* **OctoPrint integration** (send to printer);
-* built-in **projector and host for DLP printers**;
-* tool for **cutting meshes** in multiple solid parts with visual preview (also in batch using a grid);
-* tool for **extruding 2.5D TIN meshes**.
+### What are SuperSlicer / PrusaSlicer / Slic3r's main features?
+
+Key features are:
+
+* **Multi-platform** (Linux/Mac/Win) and packaged as standalone-app with no dependencies required
+* Complete **command-line interface** to use it without GUI
+* Multi-material **(multiple extruders)** object printing
+* Multiple G-code flavors supported (RepRap, Makerbot, Mach3, Machinekit, etc.)
+* Ability to plate **multiple objects having distinct print settings**
+* **Multithread** processing
+* **STL auto-repair** (tolerance for broken models)
+* Wide automated unit testing
+
+Other major features are:
+
+* Combine infill every 'n' perimeters layer & varying density to speed up printing
+* **3D preview** (including multi-material files)
+* **Multiple layer heights** in a single print
+* **Spiral vase** mode for bumpless vases
+* Fine adjustment of speed, acceleration, and extrusion width
+* Several infill patterns including honeycomb, spirals, Hilbert curves, gyroid
+* Support material, raft, brim, skirt
+* **Standby temperature** and automatic wiping for multi-extruder printing
+* [Customizable **G-code macros**](https://github.com/prusa3d/PrusaSlicer/wiki/Slic3r-Prusa-Edition-Macro-Language) and output filename with variable placeholders
+* Support for **post-processing scripts**
+* **Cooling logic** controlling fan speed and dynamic print speed
+
+[Command-Line Interface](https://github.com/prusa3d/PrusaSlicer/wiki/Command-Line-Interface) wiki page.
+
+## Development
 
 ### What language is it written in?
 
-The core parts of Slic3r are written in C++11, with multithreading. The graphical interface is in the process of being ported to C++14.
+Almost everything is written in C++.
 
-### How to install?
+The slicing core is the `libslic3r` library, which can be built and used in a standalone way.
+The command-line interface is a thin wrapper over `libslic3r`.
+You can download a precompiled package from the release page - it will run without the need for any dependency.
 
-You can download a precompiled package from [slic3r.org](http://slic3r.org/) (releases) or from [dl.slicr3r.org](http://dl.slic3r.org/dev/) (automated builds).
+### How to compile
 
-If you want to compile the source yourself follow the instructions on one of these wiki pages:
-* [Linux](https://github.com/slic3r/Slic3r/wiki/Running-Slic3r-from-git-on-GNU-Linux)
-* [Windows](https://github.com/slic3r/Slic3r/wiki/Running-Slic3r-from-git-on-Windows)
-* [Mac OSX](https://github.com/slic3r/Slic3r/wiki/Running-Slic3r-from-git-on-OS-X)
+If you want to compile the source yourself, follow the instructions on one of
+these documentation pages:
+* [Linux](doc/How%20to%20build%20-%20Linux%20et%20al.md)
+* [macOS](doc/How%20to%20build%20-%20Mac%20OS.md)
+* [Windows](doc/How%20to%20build%20-%20Windows.md)
+
+You can also look at the workflow YAML-files for [git actions](https://github.com/supermerill/Slic3r/tree/master/.github/workflows), as they describe how to build from source from a "virgin" dev computer.
 
 ### Can I help?
 
-Sure, but please read the
-[CONTRIBUTING](https://github.com/slic3r/Slic3r/blob/master/.github/CONTRIBUTING.md)
-document first!
+Sure! You can do the following to find things that are available to help with:
+* Add an issue to the GitHub tracker **if it isn't already present**.
 
-### Directory structure
+Before sending patches and pull requests contact me (preferably through opening a GitHub issue or commenting on an existing, related, issue) to discuss your proposed
+changes. This way we can ensure that nobody wastes their time and no conflicts arise in development.
 
-* `package/`: the scripts used for packaging the executables
-* `src/`: the C++ source of the `slic3r` executable and the CMake definition file for compiling it
-* `src/slic3r/GUI`: The C++ GUI.
-* `tests`: Test suite for Slic3r. Implemented with [Catch2](https://github.com/catchorg/Catch2)
-* `t/`: the really old test suite (deprecated)
-* `utils/`: various useful scripts
-* `src/libslic3r/`: C++ sources for libslic3r
-* `xs/xsp/`: bindings for calling libslic3r from Perl (XS) (deprecated)
+## License and attribution
 
-## Licensing and attribution
-
-Slic3r is licensed under the _GNU Affero General Public License, version 3_.
+SuperSlicer is licensed under the _GNU Affero General Public License, version 3_.
+SuperSlicer is based on PrusaSlicer by PrusaResearch.
 
 PrusaSlicer is licensed under the _GNU Affero General Public License, version 3_.
 PrusaSlicer is owned by Prusa Research.
 PrusaSlicer is originally based on Slic3r by Alessandro Ranellucci.
 
+Slic3r is licensed under the _GNU Affero General Public License, version 3_.
+Slic3r was created by Alessandro Ranellucci with the help of many other contributors.
+
 The _GNU Affero General Public License, version 3_ ensures that if you **use** any part of this software in any way (even behind a web server), your software must be released under the same license.
-
-### Acknowledgements
-
-The main author of Slic3r is Alessandro Ranellucci (@alranel, *Sound* in IRC, [@alranel](http://twitter.com/alranel) on Twitter), who started the project in 2011.
-
-Joseph Lenox (@lordofhyphens, *LoH* in IRC, [@LenoxPlay](http://twitter.com/LenoxPlay) on Twitter) is the current co-maintainer.
-
-Contributions by Henrik Brix Andersen, Vojtech Bubnik, Nicolas Dandrimont, Mark Hindess, Petr Ledvina, Y. Sapir, Mike Sheldrake, Kliment Yanev and numerous others. Original manual by Gary Hodgson. Slic3r logo designed by Corey Daniels, <a href="http://www.famfamfam.com/lab/icons/silk/">Silk Icon Set</a> designed by Mark James, stl and gcode file icons designed by Akira Yasuda.
-
-### How can I invoke Slic3r using the command line?
-
-The command line is documented in the relevant [manual page](https://manual.slic3r.org/advanced/command-line).

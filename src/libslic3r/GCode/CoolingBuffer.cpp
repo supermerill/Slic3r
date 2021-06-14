@@ -284,7 +284,7 @@ finished:
         float time_stretch_final = 0.f;
         for (auto it = it_begin; it != it_end; ++ it)
             time_stretch_final += (*it)->time_stretch_when_slowing_down_to_feedrate(new_feedrate);
-        assert(std::abs(time_stretch - time_stretch_final) < EPSILON);
+        //assert(std::abs(time_stretch - time_stretch_final) < EPSILON);
     }
 #endif /* NDEBUG */
 

@@ -193,7 +193,7 @@ template<> inline const t_config_enum_values& ConfigOptionEnum<WipeAlgo>::get_en
 
 template<> inline const t_config_enum_values& ConfigOptionEnum<GCodeFlavor>::get_enum_values() {
     static t_config_enum_values keys_map = {
-        {"reprap", gcfRepRap},
+        {"reprapfirmware", gcfRepRap},
         {"repetier", gcfRepetier},
         {"teacup", gcfTeacup},
         {"makerware", gcfMakerWare},

@@ -1,36 +1,23 @@
 # CONTRIBUTING
 
+* SuperSlicer and Slic3r are merging so you should be able to use the superslicer repository or the slic3r one. (when the switch will be completed)
+
 ## Bug Reports
 
-Did you encounter an issue with using Slic3r? Fear not! This guide will help you to write a good bug report in just a few, simple steps.
+Did you encounter an issue with using SuperSlicer? Fear not! This guide will help you to write a good bug report in just a few, simple steps.
 
-There is a good chance that the issue, you have encountered, is already reported. Please check the [list of reported issues](https://github.com/alexrj/Slic3r/issues) before creating a new issue report. If you find an existing issue report, feel free to add further information to that report.
+There is a good chance that the issue, you have encountered, is already reported. Please check the [list of reported issues](https://github.com/supermerill/SuperSlicer/issues) before creating a new issue report. If you find an existing issue report, feel free to add further information to that report.
 
-If you are reporting an issue relating to a release version of Slic3r, it would help a lot if you could also confirm that the behavior is still present in the newest build [(windows)](https://bintray.com/lordofhyphens/Slic3r/slic3r_dev/). Otherwise your issue will be closed as soon as someone else isn't able to reproduce it on current master.
+If you are reporting an issue relating to a release version of SuperSlicer, it would help a lot if you could also confirm that the behavior is still present in the [newest build](https://github.com/supermerill/SuperSlicer/actions).
 
-When possible, please include the following information when [reporting an issue](https://github.com/alexrj/Slic3r/issues/new):
-* Slic3r version (See the about dialog for the version number. If running from git, please include the git commit ID from `git rev-parse HEAD` also.)
-* Operating system type + version
-* Steps to reproduce the issue, including:
-    * Command line parameters used, if any
-    * Slic3r configuration file (Use ``Export Config...`` from the ``File`` menu - please don't export a bundle)
-    * Expected result
-    * Actual result
-    * Any error messages
-* If the issue is related to G-code generation, please include the following:
-    * STL, OBJ or AMF input file (please make sure the input file is not broken, e.g. non-manifold, before reporting a bug)
-    * a screenshot of the G-code layer with the issue (e.g. using [Pronterface](https://github.com/kliment/Printrun) or preferably the internal preview tab in Slic3r).
-* If the issue is a request for a new feature, be ready to explain why you think it's needed.
-    * Doing more preparatory work on your end makes it more likely it'll get done. This includes the "how" it can be done in addition to the "what". 
-    * Define the "What" as strictly as you can. Consider what might happen with different infills than simple rectilinear.
-
+Please include the needed information when [reporting an issue](https://github.com/supermerill/SuperSlicer/issues/new) (follow the template and add your project file!)
 Please make sure only to include one issue per report. If you encounter multiple, unrelated issues, please report them as such.
 
 Simon Tatham has written an excellent on article on [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) which is well worth reading, although it is not specific to Slic3r.
 
 ## Submitting a Patch
 
-Do you want to help fix issues in or add features to Slic3r? That's also very, very welcome :)
+Do you want to help fix issues in or add features to SuperSlicer/Slic3r? That's also very, very welcome :)
 
 Basically you can follow the [GitHub
 flow](https://guides.github.com/introduction/flow/) for submitting
@@ -57,6 +44,5 @@ contributing to the Slic3r project.
 
 ## Communication
 
+* [Superslicer discord invite link](https://discord.gg/ygBBdRRwJY)
 * #slic3r on [FreeNode](https://webchat.freenode.net): talk to _Sound_, _LoH_ or the other members of the Slic3r community.
-* Drop Alessandro a line at aar@cpan.org.
-* Drop Joseph a line at lenox.joseph@gmail.com

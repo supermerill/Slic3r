@@ -128,13 +128,16 @@ PresetComboBox::PresetComboBox(wxWindow* parent, Preset::Type preset_type, const
         // So, use GetSelection() from event parameter 
         auto selected_item = evt.GetSelection();
 
-        auto marker = reinterpret_cast<Marker>(this->GetClientData(selected_item));
-        if (marker >= LABEL_ITEM_DISABLED && marker < LABEL_ITEM_MAX)
-            this->SetSelection(this->m_last_selected);
-        else if (on_selection_changed && (m_last_selected != selected_item || m_collection->current_is_dirty())) {
-            m_last_selected = selected_item;
-            on_selection_changed(selected_item);
-            evt.StopPropagation();
+        //protected as selected_item is often at a weird value
+        if (selected_item < this->GetCount() && selected_item >= 0) {
+            auto marker = reinterpret_cast<Marker>(this->GetClientData(selected_item));
+            if (marker >= LABEL_ITEM_DISABLED && marker < LABEL_ITEM_MAX)
+                this->SetSelection(this->m_last_selected);
+            else if (on_selection_changed && (m_last_selected != selected_item || m_collection->current_is_dirty())) {
+                m_last_selected = selected_item;
+                on_selection_changed(selected_item);
+                evt.StopPropagation();
+            }
         }
         evt.Skip();
     });
@@ -451,6 +454,8 @@ wxBitmap* PresetComboBox::get_bmp(  std::string bitmap_key, const std::string& m
 bool PresetComboBox::is_selected_physical_printer()
 {
     auto selected_item = this->GetSelection();
+    if (selected_item >= this->GetCount() || selected_item < 0)
+        std::cout << "qfohadfh \n";
     auto marker = reinterpret_cast<Marker>(this->GetClientData(selected_item));
     return marker == LABEL_ITEM_PHYSICAL_PRINTER;
 }
@@ -572,6 +577,8 @@ PlaterPresetComboBox::PlaterPresetComboBox(wxWindow *parent, Preset::Type preset
     Bind(wxEVT_COMBOBOX, [this](wxCommandEvent &evt) {
         auto selected_item = evt.GetSelection();
 
+        if (selected_item >= this->GetCount() || selected_item < 0)
+            std::cout << "qfoshiofh \n";
         auto marker = reinterpret_cast<Marker>(this->GetClientData(selected_item));
         if (marker >= LABEL_ITEM_MARKER && marker < LABEL_ITEM_MAX) {
             this->SetSelection(this->m_last_selected);
@@ -696,7 +703,14 @@ bool PlaterPresetComboBox::switch_to_tab()
 
     wxGetApp().tab_panel()->SetSelection(page_id);
     // Switch to Settings NotePad
-    wxGetApp().mainframe->select_tab(MainFrame::ETabType::LastSettings);
+    if(m_type == Preset::Type::TYPE_PRINT || m_type == Preset::Type::TYPE_SLA_PRINT)
+        wxGetApp().mainframe->select_tab(MainFrame::ETabType::PrintSettings);
+    else if (m_type == Preset::Type::TYPE_FILAMENT || m_type == Preset::Type::TYPE_SLA_MATERIAL)
+        wxGetApp().mainframe->select_tab(MainFrame::ETabType::FilamentSettings);
+    else if (m_type == Preset::Type::TYPE_PRINTER)
+        wxGetApp().mainframe->select_tab(MainFrame::ETabType::PrinterSettings);
+    else
+        wxGetApp().mainframe->select_tab(MainFrame::ETabType::LastSettings);
     return true;
 }
 
@@ -912,7 +926,8 @@ TabPresetComboBox::TabPresetComboBox(wxWindow* parent, Preset::Type preset_type)
         // m_presets_choice->GetSelection() will return first item, because search in PopupListCtrl is case-insensitive.
         // So, use GetSelection() from event parameter 
         auto selected_item = evt.GetSelection();
-
+        if (selected_item >= this->GetCount() || selected_item < 0)
+            std::cout << "qfoazfhasuiofh \n";
         auto marker = reinterpret_cast<Marker>(this->GetClientData(selected_item));
         if (marker >= LABEL_ITEM_DISABLED && marker < LABEL_ITEM_MAX) {
             this->SetSelection(this->m_last_selected);
