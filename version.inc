@@ -8,10 +8,10 @@ set(SLIC3R_APP_KEY "SuperSlicer")
 # exe name of the slicer, should be lowercase and valid in all os
 set(SLIC3R_APP_CMD "superslicer")
 # versions
-set(SLIC3R_VERSION "2.3.56")
-set(SLIC3R_VERSION_FULL "2.3.56.5")
+set(SLIC3R_VERSION "2.3.57")
+set(SLIC3R_VERSION_FULL "2.3.57.0")
 set(SLIC3R_BUILD_ID "${SLIC3R_APP_KEY}_${SLIC3R_VERSION_FULL}+UNKNOWN")
-set(SLIC3R_RC_VERSION "2,3,56,5")
+set(SLIC3R_RC_VERSION "2,3,57,0")
 set(SLIC3R_RC_VERSION_DOTS "${SLIC3R_VERSION_FULL}")
 
 # Same as the slicer name but for gcodeviewer
