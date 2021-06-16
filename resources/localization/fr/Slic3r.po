@@ -1123,7 +1123,7 @@ msgid "Avoid crossing perimeters"
 msgstr "Éviter de traverser les périmètres"
 
 msgid "Avoid crossing perimeters - Max detour length"
-msgstr "Éviter de croiser les périmètres - Longueur de détour maximum"
+msgstr "Longueur de détour maximum"
 
 msgid "BACK ARROW"
 msgstr "FLÈCHE ARRIÈRE"
@@ -6693,10 +6693,10 @@ msgid "Only draw brim over the sharp edges of the model."
 msgstr "Ne mettre une bordure qu'autour des arrêtes saillantes du modèle."
 
 msgid "Only for inner side"
-msgstr "Seulement pour le côté intérieur"
+msgstr "le côté intérieur"
 
 msgid "Only for outer side"
-msgstr "Seulement pour le côté extérieur"
+msgstr "le côté extérieur"
 
 msgid "Only for overhangs"
 msgstr "Uniquement pour les surplombs"
@@ -9378,7 +9378,7 @@ msgid "Spiral Vase"
 msgstr "Vase Spirale"
 
 msgid "Spiral vase"
-msgstr "Vase spiral"
+msgstr "Vase spirale"
 
 msgid "Splashscreen image"
 msgstr "Image de l'écran d'accueil"
