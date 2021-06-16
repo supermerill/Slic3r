@@ -6630,7 +6630,7 @@ msgid "On overhangs"
 msgstr "Sur les surplombs"
 
 msgid "On surfaces"
-msgstr "On surfaces"
+msgstr "Sur surfaces"
 
 msgid ""
 "On this system, %s uses HTTPS certificates from the system Certificate Store "
