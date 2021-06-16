@@ -2360,7 +2360,7 @@ msgid "Dere."
 msgstr "Deretraction."
 
 msgid "Deretraction"
-msgstr "Dérétraction"
+msgstr "Dé rétraction"
 
 msgid "Deretraction Speed"
 msgstr "Vitesse de Réinsertion"
@@ -8333,10 +8333,10 @@ msgid "Select the STL file to repair:"
 msgstr "Sélectionner le fichier STL à réparer :"
 
 msgid "Select this option to enforce z-lift on the first layer."
-msgstr "Sélectionnez cette option pour appliquer le z-lift à la première couche."
+msgstr "Sélectionnez cette option pour appliquer le Décalage en Z à la première couche."
 
 msgid "Select this option to not use/enforce the z-lift on a top surface."
-msgstr "Sélectionnez cette option pour ne pas utiliser/renforcer le z-lift sur une surface supérieure."
+msgstr "Sélectionnez cette option pour ne pas utiliser/appliquer le Décalage en Z sur une surface supérieure."
 
 msgid "Select toolbar icon size in respect to the default one."
 msgstr "Sélectionner la taille de l'icône de la barre d'outil par rapport à la taille par défaut."
