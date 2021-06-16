@@ -9227,7 +9227,7 @@ msgid "Spacing"
 msgstr "Espacement"
 
 msgid "spacing"
-msgstr "spacing"
+msgstr "espacement"
 
 msgid "Spacing between interface lines. Set zero to get a solid interface."
 msgstr "Espacement entre les lignes d'interface. Mettez à zéro pour obtenir une interface pleine."
@@ -12138,7 +12138,7 @@ msgid "Width"
 msgstr "Largeur"
 
 msgid "width"
-msgstr "width"
+msgstr "largeur"
 
 msgid "Width & Flow"
 msgstr "Largeur & débit"
