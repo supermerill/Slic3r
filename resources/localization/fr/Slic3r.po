@@ -4314,7 +4314,7 @@ msgid "Hollowing parameter change"
 msgstr "Modification des paramètres d'évidement"
 
 msgid "Honeycomb"
-msgstr "Hexagones"
+msgstr "Nid d'abeille"
 
 msgid "horizontal"
 msgstr "horizontal"
@@ -4924,7 +4924,6 @@ msgid ""
 "to the system (or default) values."
 msgstr ""
 "indique que certains paramètres ont été modifiés et ne sont pas égaux aux valeurs du système (ou par défaut) pour le groupe d'options actuel.\n"
-"\n"
 "Cliquez sur l'icône CADENAS OUVERT pour régler tous les paramètres pour le groupe d'options actuel sur les valeurs du système (ou par défaut)."
 
 msgid ""
