@@ -12183,13 +12183,13 @@ msgid "will run at %1%%% by default"
 msgstr "s'exécutera à %1%%% par défaut"
 
 msgid "Wipe"
-msgstr "Nettoyer"
+msgstr "Essuyage"
 
 msgid "Wipe into this object"
-msgstr "Nettoyer dans cet objet"
+msgstr "Essuyer dans cet objet"
 
 msgid "Wipe into this object's infill"
-msgstr "Nettoyer dans le remplissage de cet objet"
+msgstr "Essuyer dans le remplissage de cet objet"
 
 msgid "Wipe Tower"
 msgstr "Tour de Purge"
@@ -12222,13 +12222,13 @@ msgid "Wipe tower Width"
 msgstr "Largeur de la tour de purge"
 
 msgid "Wipe tower X"
-msgstr "Tour de purge"
+msgstr "Tour de purge X"
 
 msgid "Wipe tower Y"
 msgstr "Tour de purge Y"
 
 msgid "Wipe while retracting"
-msgstr "Nettoyer lors des rétractions"
+msgstr "Essuyer lors des rétractions"
 
 msgid "with a volumetric rate"
 msgstr "avec un débit volumétrique"
