@@ -1345,7 +1345,7 @@ msgid "Brim offset"
 msgstr "Décalage de la bordure"
 
 msgid "Brim width"
-msgstr "Largeur de la Bordure"
+msgstr "Largeur de la bordure"
 
 msgid "Browse"
 msgstr "Parcourir"
@@ -1497,7 +1497,7 @@ msgid "Change \"%1%\" to \"%2%\" for this physical printer \"%3%\""
 msgstr "Changer \"%1%\" par \"%2%\" pour cette imprimante physique \"%3%\""
 
 msgid "Change camera type (perspective, orthographic)"
-msgstr "Changer le type de caméra (perspective, orthographique)"
+msgstr "Changer le type de vue (perspective, orthographique)"
 
 msgid "Change drainage hole diameter"
 msgstr "Changer le diamètre du trou de drainage"
@@ -1597,10 +1597,10 @@ msgstr ""
 " 'Ancrés' ne fait qu'agrandir un peu (par 'Marge de remplissage par défaut') les surfaces qui nécessitent un meilleur support."
 
 msgid "Chrono"
-msgstr "Chrono"
+msgstr "Temps"
 
 msgid "Chronology"
-msgstr "Chronologie"
+msgstr "Temps d'impression"
 
 msgid "Circle"
 msgstr "Cercle"
@@ -1673,7 +1673,7 @@ msgid "Color override"
 msgstr "Annulation de la couleur"
 
 msgid "Color Print"
-msgstr "Couleur d'Impression"
+msgstr "Couleur d'impression"
 
 msgid "Colorprint height"
 msgstr "Hauteur du Colorprint"
@@ -2823,7 +2823,7 @@ msgid "Enforce seam"
 msgstr "Forcer la jointure"
 
 msgid "Enforce support for the first"
-msgstr "Renforcer le support sur le(s) première(s)"
+msgstr "Renforcer le support sur les premières"
 
 msgid "Enforce support for the first n layers"
 msgstr "Renforcer le support pour les n premières couches"
@@ -5236,7 +5236,7 @@ msgid "Layer Time (log)"
 msgstr "Durée de la couche (log)"
 
 msgid "Layer time goal"
-msgstr "Durée de la couche (log)"
+msgstr "Durée de la couche objectif"
 
 msgid "layers"
 msgstr "couches"
