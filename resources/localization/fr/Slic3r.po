@@ -147,10 +147,10 @@ msgid "%s View Mode"
 msgstr "Mode de Vue de %s"
 
 msgid "%s website"
-msgstr "site web %s"
+msgstr "Site web %s"
 
 msgid "%s wiki"
-msgstr "wiki %s"
+msgstr "Wiki %s"
 
 msgid ""
 "%s will now start updates. Otherwise it won't be able to start.\n"
@@ -5124,7 +5124,7 @@ msgid "Ironing infill tuning"
 msgstr "Réglage de remplissage pour le lissage"
 
 msgid "Ironing pattern calibration"
-msgstr "Calibration du motif de lissage"
+msgstr "Calibration du débit de lissage"
 
 msgid "Ironing post-process (This will go on top of infills and perimeters)"
 msgstr "Lissage post-processus (il sera appliqué sur les remplissages et les périmètres)."
@@ -7027,7 +7027,7 @@ msgstr ""
 "modificateurs de hauteur."
 
 msgid "P&rint Settings Tab"
-msgstr "Onglet des Réglages d'Imp&ression"
+msgstr "Onglet des Réglages de l'Imp&ression"
 
 msgid "Pad"
 msgstr "Socle"
@@ -8343,10 +8343,10 @@ msgid "Select Filament Settings Tab"
 msgstr "Sélectionner l'Onglet des Réglages du Filament"
 
 msgid "Select Gcode preview Tab"
-msgstr "Sélectionnez l'onglet Aperçu du Gcode"
+msgstr "Sélectionnez l'onglet Aperçu du G-Code"
 
 msgid "Select Layer Preview Tab"
-msgstr "Sélectionnez l'onglet Aperçu du calque"
+msgstr "Sélectionnez l'onglet Aperçu découpes"
 
 msgid "Select Print Settings Tab"
 msgstr "Sélectionner l'Onglet des Réglages de l'Impression"
@@ -8377,9 +8377,9 @@ msgstr "Sélectionnez le nombre de tests dont la température est inférieure à
 msgid ""
 "Select the number tower to print, and by how many degrees C to decrease each "
 "time."
-msgstr ""
-"Sélectionnez le nombre de tours à imprimer, et de combien de degrés C il faut diminuer à chaque "
-"temps."
+msgstr ""	
+"Sélectionnez le nombre de tours à imprimer, et de combien de degrés °C il faut diminuer à chaque "
+"fois."
 
 msgid "Select the output format for this printer."
 msgstr "Sélectionnez le format de sortie pour cette imprimante."
