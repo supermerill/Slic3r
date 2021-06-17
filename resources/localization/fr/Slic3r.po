@@ -4917,7 +4917,7 @@ msgid "Increase/decrease edit area"
 msgstr "Augmenter/diminuer la zone d'édition"
 
 msgid "increment"
-msgstr "increment"
+msgstr "Increment"
 
 msgid ""
 "indicates that some settings were changed and are not equal to the system "
@@ -6153,7 +6153,7 @@ msgid "mm or % (zero to disable)"
 msgstr "mm ou %"
 
 msgid "mm/%"
-msgstr "mm/%"
+msgstr "mm ou %"
 
 msgid "mm/s"
 msgstr "mm/s"
