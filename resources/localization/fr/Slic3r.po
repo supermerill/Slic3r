@@ -1229,7 +1229,7 @@ msgid "Bed Temperature:"
 msgstr "Température du Plateau :"
 
 msgid "Bed/Extruder levelling"
-msgstr "Nivellement du plateau/de l'extrudeuse"
+msgstr "Réglage du plateau/l'extrudeuse"
 
 msgid "Before layer change G-code"
 msgstr "G-Code avant changement de couche"
@@ -1317,7 +1317,7 @@ msgid "Bridge flow calibration"
 msgstr "Calibration du débit du pont"
 
 msgid "Bridge flow ratio"
-msgstr "Débit lors de ponts"
+msgstr "Ratio de débit des ponts"
 
 msgid "Bridge infill"
 msgstr "Remplissage du pont"
@@ -3844,7 +3844,7 @@ msgid ""
 "provide a smooth surface due to a lack of plastic. You can increase it "
 "slightly to pull the top layer at the correct height. Recommended maximum: "
 "120%."
-msgstr "Ratio de débit pour compenser les écarts dans la surface au-dessus de ponts. Utilisé pour prévenir le fait que dans certaines régions le passage à faible débit ne permet pas de fournit pas une surface lisse en raison du manque de plastique (en particulier lors de l'utilisatoin du motif lissé). Vous pouvez l'augmenter légèrement pour réhausser la couche supérieure à la bonne hauteur. Maximum recommandé: 120%."
+msgstr "Ratio de débit pour compenser les écarts dans la surface au-dessus de ponts. Utilisé pour prévenir le fait que dans certaines régions le passage à faible débit ne permet pas de fournit pas une surface lisse en raison du manque de plastique (en particulier lors de l'utilisation du motif lissé). Vous pouvez l'augmenter légèrement pour réhausser la couche supérieure à la bonne hauteur. Maximum recommandé: 120%."
 
 msgid ""
 "Following printer preset(s) is duplicated:%1%The above preset for printer "
@@ -5592,14 +5592,14 @@ msgid "Machine limits are disabled. They are not used for anything."
 msgstr "Les limites de la machine sont désactivées. Elles ne sont pas utilisées pour quoi que ce soit."
 
 msgid "Machine limits are used as safegard when generating gcode"
-msgstr "Les limites de la machine sont utilisées comme garde-fou lors de la génération du gcode."
+msgstr "Les limites de la machine sont utilisées comme garde-fou lors de la génération du G-Code."
 
 msgid ""
 "Machine limits will be emitted to G-code and used to estimate print time. "
 "They are also used as safegard when generating gcode"
 msgstr ""
 "Les limites de la machine seront émises en code G et utilisées pour estimer le temps d'impression. "
-"Elles sont aussi utilisées comme garde-fou lors de la génération du gcode"
+"Elles sont aussi utilisées comme garde-fou lors de la génération du G-Code"
 
 msgid ""
 "Machine limits will NOT be emitted to G-code, however they will be used to "
