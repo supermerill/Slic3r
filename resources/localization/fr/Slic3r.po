@@ -6180,7 +6180,7 @@ msgid "mm³"
 msgstr "mm³"
 
 msgid "mm³/s"
-msgstr "mm³ / s"
+msgstr "mm³/s"
 
 msgid "mm³/s²"
 msgstr "mm³/s²"
@@ -6364,7 +6364,7 @@ msgid "Multiply copies by this factor."
 msgstr "Multiplier les copies par ce facteur."
 
 msgid "N/A"
-msgstr "N / A"
+msgstr "N/A"
 
 msgid "Name"
 msgstr "Nom"
@@ -6388,7 +6388,7 @@ msgid "Name of the profile, from which this profile inherits."
 msgstr "Nom du profil, duquel hérite ce profil."
 
 msgid "Nb down:"
-msgstr "Nb plus frais:"
+msgstr "Nb plus froid:"
 
 msgid "Nb tests:"
 msgstr "Nb de tests:"
