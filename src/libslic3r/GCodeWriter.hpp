@@ -44,24 +44,24 @@ public:
     const Tool* get_tool(uint16_t id) const;
     std::string preamble();
     std::string postamble() const;
-    std::string set_temperature(unsigned int temperature, bool wait = false, int tool = -1);
-    std::string set_bed_temperature(unsigned int temperature, bool wait = false);
-    unsigned int get_fan() { return m_last_fan_speed; }
+    std::string set_temperature(int16_t temperature, bool wait = false, int tool = -1);
+    std::string set_bed_temperature(uint32_t temperature, bool wait = false);
+    uint8_t get_fan() { return m_last_fan_speed; }
     /// set fan at speed. Save it as current fan speed if !dont_save, and use tool default_tool if the internal m_tool is null (no toolchange done yet).
-    std::string set_fan(unsigned int speed, bool dont_save = false, uint16_t default_tool = 0);
-    void        set_acceleration(unsigned int acceleration);
+    std::string set_fan(uint8_t speed, bool dont_save = false, uint16_t default_tool = 0);
+    void        set_acceleration(uint32_t acceleration);
     std::string write_acceleration();
     std::string reset_e(bool force = false);
-    std::string update_progress(unsigned int num, unsigned int tot, bool allow_100 = false) const;
+    std::string update_progress(uint32_t num, uint32_t tot, bool allow_100 = false) const;
     // return false if this extruder was already selected
-    bool        need_toolchange(unsigned int tool_id) const 
+    bool        need_toolchange(uint16_t tool_id) const 
         { return m_tool == nullptr || m_tool->id() != tool_id; }
-    std::string set_tool(unsigned int tool_id)
+    std::string set_tool(uint16_t tool_id)
         { return this->need_toolchange(tool_id) ? this->toolchange(tool_id) : ""; }
     // Prefix of the toolchange G-code line, to be used by the CoolingBuffer to separate sections of the G-code
     // printed with the same extruder.
     std::string toolchange_prefix() const;
-    std::string toolchange(unsigned int tool_id);
+    std::string toolchange(uint16_t tool_id);
     std::string set_speed(double F, const std::string &comment = std::string(), const std::string &cooling_marker = std::string()) const;
     std::string travel_to_xy(const Vec2d &point, const std::string &comment = std::string());
     std::string travel_to_xyz(const Vec3d &point, const std::string &comment = std::string());
@@ -84,16 +84,16 @@ private:
     std::string     m_extrusion_axis;
     bool            m_single_extruder_multi_material;
     Tool*           m_tool;
-    unsigned int    m_last_acceleration;
-    unsigned int    m_current_acceleration;
+    uint32_t        m_last_acceleration;
+    uint32_t        m_current_acceleration;
     // Limit for setting the acceleration, to respect the machine limits set for the Marlin firmware.
     // If set to zero, the limit is not in action.
-    unsigned int    m_max_acceleration;
-    unsigned int    m_last_fan_speed;
-    unsigned int    m_last_fan_speed_with_offset;
-    unsigned int    m_last_temperature;
-    unsigned int    m_last_temperature_with_offset;
-    unsigned int    m_last_bed_temperature;
+    uint32_t        m_max_acceleration;
+    uint8_t         m_last_fan_speed;
+    uint8_t         m_last_fan_speed_with_offset;
+    int16_t         m_last_temperature;
+    int16_t         m_last_temperature_with_offset;
+    int16_t         m_last_bed_temperature;
     bool            m_last_bed_temperature_reached;
     double          m_lifted;
     Vec3d           m_pos = Vec3d::Zero();

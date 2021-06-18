@@ -48,8 +48,8 @@ public:
     virtual double retract_restart_extra() const;
     virtual double retract_length_toolchange() const;
     virtual double retract_restart_extra_toolchange() const;
-    virtual int    temp_offset() const;
-    virtual int    fan_offset() const;
+    virtual int16_t temp_offset() const;
+    virtual int8_t fan_offset() const;
 
 protected:
     // Private constructor to create a key for a search in std::set.
@@ -104,8 +104,8 @@ public:
     double retract_restart_extra() const override;
     double retract_length_toolchange() const override;
     double retract_restart_extra_toolchange() const override;
-    int    temp_offset() const override;
-    int    fan_offset() const override;
+    int16_t temp_offset() const override;
+    int8_t fan_offset() const override;
 
 protected:
     // Private constructor to create a key for a search in std::set.

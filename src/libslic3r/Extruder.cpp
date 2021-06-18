@@ -147,12 +147,12 @@ double Tool::retract_restart_extra_toolchange() const
     return 0;
 }
 
-int Tool::temp_offset() const
+int16_t Tool::temp_offset() const
 {
     return 0;
 }
 
-int Tool::fan_offset() const
+int8_t Tool::fan_offset() const
 {
     return 0;
 }
@@ -219,12 +219,12 @@ double Extruder::retract_restart_extra_toolchange() const
     return m_config->retract_restart_extra_toolchange.get_at(m_id);
 }
 
-int Extruder::temp_offset() const
+int16_t Extruder::temp_offset() const
 {
     return m_config->extruder_temperature_offset.get_at(m_id);
 }
 
-int Extruder::fan_offset() const
+int8_t Extruder::fan_offset() const
 {
     return m_config->extruder_fan_offset.get_at(m_id);
 }

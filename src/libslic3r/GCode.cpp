@@ -1411,7 +1411,7 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
 
     // Disable fan.
     if ((initial_extruder_id != (uint16_t)-1) && !this->config().start_gcode_manual && print.config().disable_fan_first_layers.get_at(initial_extruder_id))
-        _write(file, m_writer.set_fan(0, true, initial_extruder_id));
+        _write(file, m_writer.set_fan(uint8_t(0), true, initial_extruder_id));
     //ensure fan is at the right speed
 
     print.throw_if_canceled();
@@ -1613,7 +1613,7 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
         _add_object_change_labels(gcode);
         _write(file, gcode);
     }
-    _write(file, m_writer.set_fan(false));
+    _write(file, m_writer.set_fan(uint8_t(0)));
 
     // adds tag for processor
     _write_format(file, ";%s%s\n", GCodeProcessor::Extrusion_Role_Tag.c_str(), ExtrusionEntity::role_to_string(erCustom).c_str());
@@ -3767,7 +3767,7 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
             acceleration = m_config.infill_acceleration.get_abs_value(acceleration);
         }
         //travel acceleration should be already set at startup via special gcode, and so it's automatically used by G0.
-        m_writer.set_acceleration((uint16_t)floor(acceleration + 0.5));
+        m_writer.set_acceleration((uint32_t)floor(acceleration + 0.5));
     }
 
 
