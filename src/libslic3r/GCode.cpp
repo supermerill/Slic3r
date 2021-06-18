@@ -273,10 +273,11 @@ static inline void set_extra_lift(const Layer& layer, const Print& print, GCodeW
         // Retract for a tool change, using the toolchange retract value and setting the priming extra length.
         gcode += gcodegen.retract(true);
         gcodegen.m_avoid_crossing_perimeters.use_external_mp_once();
-        gcode += gcodegen.travel_to(
+        Polyline polyline = gcodegen.travel_to(
+            gcode,
             wipe_tower_point_to_object_point(gcodegen, start_pos),
-            erMixed,
-            "Travel to a Wipe Tower");
+            erMixed);
+        gcodegen.write_travel_to(gcode, polyline, "Travel to a Wipe Tower");
         gcode += gcodegen.unretract();
     }
 
@@ -1505,7 +1506,10 @@ void GCode::_do_export(Print& print, FILE* file, ThumbnailsGeneratorCallback thu
                     m_enable_cooling_markers = false; // we're not filtering these moves through CoolingBuffer
                     m_avoid_crossing_perimeters.use_external_mp_once();
                     _write(file, this->retract());
-                    _write(file, this->travel_to(Point(0, 0), erNone, "move to origin position for next object"));
+                    std::string gcode;
+                    Polyline polyline = this->travel_to(gcode, Point(0, 0), erNone);
+                    this->write_travel_to(gcode, polyline, "move to origin position for next object");
+                    _write(file, gcode);
                     m_enable_cooling_markers = true;
                     // Disable motion planner when traveling to first object point.
                     m_avoid_crossing_perimeters.disable_once();
@@ -3737,13 +3741,69 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
     std::string gcode;
     std::string description{ description_in };
 
-    // go to first point of extrusion path
-    if (!m_last_pos_defined || m_last_pos != path.first_point()) {
-        gcode += this->travel_to(
-            path.first_point(),
-            path.role(),
-            "move to first " + description + " point"
-        );
+
+    // adjust acceleration, inside the travel to set the deceleration
+    double acceleration = get_default_acceleration(m_config);
+    double travel_acceleration = m_writer.get_acceleration();
+    {
+        if (this->on_first_layer() && m_config.first_layer_acceleration.value > 0) {
+            acceleration = m_config.first_layer_acceleration.get_abs_value(acceleration);
+        } else if (m_config.perimeter_acceleration.value > 0 && is_perimeter(path.role())) {
+            acceleration = m_config.perimeter_acceleration.get_abs_value(acceleration);
+        } else if (m_config.bridge_acceleration.value > 0 && is_bridge(path.role())
+            && path.role() != erOverhangPerimeter) {
+            acceleration = m_config.bridge_acceleration.get_abs_value(acceleration);
+        } else if (m_config.infill_acceleration.value > 0 && is_infill(path.role())) {
+            acceleration = m_config.infill_acceleration.get_abs_value(acceleration);
+        }
+        if (m_config.travel_acceleration.value > 0)
+            travel_acceleration = m_config.travel_acceleration.get_abs_value(acceleration);
+    }
+
+    if (travel_acceleration == acceleration) {
+        m_writer.set_acceleration((uint32_t)floor(acceleration + 0.5));
+        // go to first point of extrusion path (stop at midpoint to let us set the decel speed)
+        if (!m_last_pos_defined || m_last_pos != path.first_point()) {
+             Polyline polyline = this->travel_to(gcode, path.first_point(), path.role());
+             this->write_travel_to(gcode, polyline, "move to first " + description + " point (" + std::to_string(acceleration) +" == "+ std::to_string(travel_acceleration)+")");
+        }
+    } else {
+        // go to midpoint to let us set the decel speed)
+        if (!m_last_pos_defined || m_last_pos != path.first_point()) {
+            Polyline poly_start = this->travel_to(gcode, path.first_point(), path.role());
+            coordf_t length = poly_start.length();
+            if (length > SCALED_EPSILON) {
+                Polyline poly_end;
+                coordf_t min_length = scale_(EXTRUDER_CONFIG_WITH_DEFAULT(nozzle_diameter, 0.5)) * 20;
+                if (poly_start.size() > 2 && length > min_length * 3) {
+                    //if complex travel, try to deccelerate only at the end, unless it's less than ~ 20 nozzle
+                    if (poly_start.lines().back().length() < min_length) {
+                        poly_end = poly_start;
+                        poly_start.clip_end(min_length);
+                        poly_end.clip_start(length - min_length);
+                    } else {
+                        poly_end.points.push_back(poly_start.points.back());
+                        poly_start.points.pop_back();
+                        poly_end.points.push_back(poly_start.points.back());
+                        poly_end.reverse();
+                    }
+                } else {
+                    poly_end = poly_start;
+                    poly_start.clip_end(length / 2);
+                    poly_end.clip_start(length / 2);
+                }
+                m_writer.set_acceleration((uint32_t)floor(travel_acceleration + 0.5));
+                this->write_travel_to(gcode, poly_start, "move to first " + description + " point (acceleration)");
+                //travel acceleration should be already set at startup via special gcode, and so it's automatically used by G0.
+                m_writer.set_acceleration((uint32_t)floor(acceleration + 0.5));
+                this->write_travel_to(gcode, poly_end, "move to first " + description + " point (deceleration)");
+            } else {
+                m_writer.set_acceleration((uint32_t)floor(travel_acceleration + 0.5));
+                this->write_travel_to(gcode, poly_start, "move to first " + description + " point (acceleration)");
+            }
+        } else {
+            m_writer.set_acceleration((uint32_t)floor(acceleration + 0.5));
+        }
     }
 
     //if needed, write the gcode_label_objects_end then gcode_label_objects_start
@@ -3752,24 +3812,6 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
 
     // compensate retraction
     gcode += this->unretract();
-
-    // adjust acceleration
-    {
-        double acceleration = get_default_acceleration(m_config);
-        if (this->on_first_layer() && m_config.first_layer_acceleration.value > 0) {
-            acceleration = m_config.first_layer_acceleration.get_abs_value(acceleration);
-        } else if (m_config.perimeter_acceleration.value > 0 && is_perimeter(path.role())) {
-            acceleration = m_config.perimeter_acceleration.get_abs_value(acceleration);
-        } else if (m_config.bridge_acceleration.value > 0 && is_bridge(path.role()) 
-                && path.role() != erOverhangPerimeter ) {
-            acceleration = m_config.bridge_acceleration.get_abs_value(acceleration);
-        } else if (m_config.infill_acceleration.value > 0 && is_infill(path.role())) {
-            acceleration = m_config.infill_acceleration.get_abs_value(acceleration);
-        }
-        //travel acceleration should be already set at startup via special gcode, and so it's automatically used by G0.
-        m_writer.set_acceleration((uint32_t)floor(acceleration + 0.5));
-    }
-
 
     // set speed
     if (speed < 0) {
@@ -3969,7 +4011,7 @@ void GCode::_add_object_change_labels(std::string& gcode) {
 }
 
 // This method accepts &point in print coordinates.
-std::string GCode::travel_to(const Point &point, ExtrusionRole role, std::string comment)
+Polyline GCode::travel_to(std::string &gcode, const Point &point, ExtrusionRole role)
 {
     /*  Define the travel move as a line between current position and the taget point.
         This is expressed in print coordinates, so it will need to be translated by
@@ -3998,7 +4040,6 @@ std::string GCode::travel_to(const Point &point, ExtrusionRole role, std::string
     m_avoid_crossing_perimeters.reset_once_modifiers();
 
     // generate G-code for the travel move
-    std::string gcode;
     if (needs_retraction) {
         if (m_config.avoid_crossing_perimeters && could_be_wipe_disabled)
             m_wipe.reset_path();
@@ -4019,15 +4060,19 @@ std::string GCode::travel_to(const Point &point, ExtrusionRole role, std::string
     //if needed, write the gcode_label_objects_end then gcode_label_objects_start
     _add_object_change_labels(gcode);
 
+    return travel;
+}
+
+
+void GCode::write_travel_to(std::string &gcode, const Polyline& travel, std::string comment)
+{
     // use G1 because we rely on paths being straight (G0 may make round paths)
     if (travel.size() >= 2) {
-        for (size_t i = 1; i < travel.size(); ++ i)
+        for (size_t i = 1; i < travel.size(); ++i)
             gcode += m_writer.travel_to_xy(this->point_to_gcode(travel.points[i]), comment);
         this->set_last_pos(travel.points.back());
     }
-    return gcode;
 }
-
 bool GCode::needs_retraction(const Polyline &travel, ExtrusionRole role)
 {
     if (travel.length() < scale_(EXTRUDER_CONFIG_WITH_DEFAULT(retract_before_travel, 0))) {

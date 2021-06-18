@@ -50,6 +50,7 @@ public:
     /// set fan at speed. Save it as current fan speed if !dont_save, and use tool default_tool if the internal m_tool is null (no toolchange done yet).
     std::string set_fan(uint8_t speed, bool dont_save = false, uint16_t default_tool = 0);
     void        set_acceleration(uint32_t acceleration);
+    uint32_t    get_acceleration() const;
     std::string write_acceleration();
     std::string reset_e(bool force = false);
     std::string update_progress(uint32_t num, uint32_t tot, bool allow_100 = false) const;

@@ -172,6 +172,7 @@ bool Print::invalidate_state_by_config_options(const std::vector<t_config_option
         "toolchange_gcode",
         "top_fan_speed",
         "threads",
+        "travel_acceleration",
         "travel_speed",
         "travel_speed_z",
         "use_firmware_retraction",

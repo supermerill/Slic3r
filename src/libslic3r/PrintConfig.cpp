@@ -4099,6 +4099,18 @@ void PrintConfigDef::init_fff_params()
     def->min = 0;
     def->set_default_value(new ConfigOptionFloat(0.));
 
+    def = this->add("travel_acceleration", coFloatOrPercent);
+    def->label = L("Travel");
+    def->full_label = L("Travel acceleration");
+    def->category = OptionCategory::speed;
+    def->tooltip = L("Acceleration for travel moves (jumps between distant extrusion points)."
+            "\nNote that the deceleration of a travel will use the acceleration value of the extrusion that will be printed after it (if any)");
+    def->sidetext = L("mm/s² or %");
+    def->ratio_over = "default_acceleration";
+    def->min = 0;
+    def->mode = comExpert;
+    def->set_default_value(new ConfigOptionFloatOrPercent(1500, false));
+
     def = this->add("travel_speed", coFloat);
     def->label = L("Travel");
     def->full_label = L("Travel speed");
@@ -5540,6 +5552,7 @@ void PrintConfigDef::to_prusa(t_config_option_key& opt_key, std::string& value, 
 "perimeter_round_corners",
 "travel_speed_z",
 "first_layer_size_compensation_layers",
+"travel_acceleration",
     };
     //looks if it's to be removed, or have to be transformed
     if (to_remove_keys.find(opt_key) != to_remove_keys.end()) {

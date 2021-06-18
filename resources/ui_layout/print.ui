@@ -259,11 +259,12 @@ group:sidetext_width$7:Modifiers
 		setting:label_width$8:width$4:small_perimeter_max_length
 		setting:label_width$8:width$4:small_perimeter_speed
 group:Acceleration control (advanced)
+	setting:default_acceleration
 	setting:perimeter_acceleration
 	setting:infill_acceleration
 	setting:bridge_acceleration
 	setting:first_layer_acceleration
-	setting:default_acceleration
+	setting:travel_acceleration
 group:Autospeed (advanced)
 	setting:label$Volumetric speed for Autospeed:max_volumetric_speed
 	setting:max_print_speed

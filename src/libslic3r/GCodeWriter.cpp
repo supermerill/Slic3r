@@ -281,6 +281,11 @@ void GCodeWriter::set_acceleration(uint32_t acceleration)
     m_current_acceleration = acceleration;
 }
 
+uint32_t GCodeWriter::get_acceleration() const
+{
+    return m_current_acceleration;
+}
+
 std::string GCodeWriter::write_acceleration(){
     if (m_current_acceleration == m_last_acceleration || m_current_acceleration == 0)
         return "";
@@ -292,9 +297,12 @@ std::string GCodeWriter::write_acceleration(){
     if (FLAVOR_IS(gcfRepetier)) {
         // M201: Set max printing acceleration
         gcode << "M201 X" << m_current_acceleration << " Y" << m_current_acceleration;
-    } else if(FLAVOR_IS(gcfMarlin) || FLAVOR_IS(gcfLerdge) || FLAVOR_IS(gcfRepRap) || FLAVOR_IS(gcfSprinter)){
+    } else if(FLAVOR_IS(gcfMarlin) || FLAVOR_IS(gcfLerdge) || FLAVOR_IS(gcfSprinter)){
         // M204: Set printing acceleration
         gcode << "M204 P" << m_current_acceleration;
+    } else  if (FLAVOR_IS(gcfRepRap)) {
+        // M204: Set printing & travel acceleration
+        gcode << "M204 P" << m_current_acceleration <<" T" << m_current_acceleration;
     } else {
         // M204: Set default acceleration
         gcode << "M204 S" << m_current_acceleration;

@@ -1331,6 +1331,7 @@ public:
     ConfigOptionBool                thumbnails_with_bed;
     ConfigOptionPercent             time_estimation_compensation;
     ConfigOptionInts                top_fan_speed;
+    ConfigOptionFloatOrPercent      travel_acceleration;
     ConfigOptionBools               wipe;
     ConfigOptionBool                wipe_tower;
     ConfigOptionFloatOrPercent      wipe_tower_brim;
@@ -1427,6 +1428,7 @@ protected:
         OPT_PTR(thumbnails_with_bed);
         OPT_PTR(time_estimation_compensation);
         OPT_PTR(top_fan_speed);
+        OPT_PTR(travel_acceleration);
         OPT_PTR(wipe);
         OPT_PTR(wipe_tower);
         OPT_PTR(wipe_tower_brim);
