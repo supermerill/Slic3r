@@ -17,7 +17,7 @@ import subprocess
 repo = "supermerill/SuperSlicer"
 program_name = "SuperSlicer"
 path_7zip = r"C:\Program Files\7-Zip\7z.exe"
-github_auth_token = "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"
+github_auth_token = "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"
 
 def get_version():
 	settings_stream = open("./version.inc", mode="r", encoding="utf-8");

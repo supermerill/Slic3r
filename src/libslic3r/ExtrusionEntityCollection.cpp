@@ -170,15 +170,4 @@ FlatenEntities::flatten(const ExtrusionEntityCollection &to_flatten) && {
     return std::move(to_fill);
 }
 
-
-double
-ExtrusionEntityCollection::min_mm3_per_mm() const
-{
-    double min_mm3_per_mm = std::numeric_limits<double>::max();
-    for (const ExtrusionEntity *entity : this->entities)
-        if(entity->role() != erGapFill && entity->role() != erThinWall && entity->role() != erMilling)
-            min_mm3_per_mm = std::min(min_mm3_per_mm, entity->min_mm3_per_mm());
-    return min_mm3_per_mm;
-}
-
 }

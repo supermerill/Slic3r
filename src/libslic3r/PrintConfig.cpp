@@ -310,6 +310,7 @@ void PrintConfigDef::init_fff_params()
                 "\nSet zero to disable acceleration control for bridges."
                 "\nNote that it won't be applied to overhangs, they still use the perimeter acceleration.");
     def->sidetext = L("mm/s² or %");
+    def->ratio_over = "default_acceleration";
     def->min = 0;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloatOrPercent(0,false));
@@ -635,6 +636,7 @@ void PrintConfigDef::init_fff_params()
                    "\nYou can set it as a % of the max of the X/Y machine acceleration limit."
                    "\nSet zero to prevent resetting acceleration at all.");
     def->sidetext = L("mm/s² or %");
+    def->ratio_over = "machine_max_acceleration_X";
     def->min = 0;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloatOrPercent(0,false));
@@ -1751,6 +1753,7 @@ void PrintConfigDef::init_fff_params()
                 "\nCan be a % of the default acceleration"
                 "\nSet zero to disable acceleration control for first layer.");
     def->sidetext = L("mm/s² or %");
+    def->ratio_over = "default_acceleration";
     def->min = 0;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloatOrPercent(0, false));
@@ -1901,7 +1904,8 @@ void PrintConfigDef::init_fff_params()
     def->full_label = L("Gap fill speed");
     def->category = OptionCategory::speed;
     def->tooltip = L("Speed for filling small gaps using short zigzag moves. Keep this reasonably low "
-        "to avoid too much shaking and resonance issues.");
+        "to avoid too much shaking and resonance issues."
+        "\nGap fill extrusions are ignored from the automatic volumetric speed computation, unless you set it to 0.");
     def->sidetext = L("mm/s");
     def->min = 0;
     def->mode = comAdvanced;
@@ -1993,6 +1997,7 @@ void PrintConfigDef::init_fff_params()
                 "\nCan be a % of the default acceleration"
                 "\nSet zero to disable acceleration control for infill.");
     def->sidetext = L("mm/s² or %");
+    def->ratio_over = "default_acceleration";
     def->min = 0;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloatOrPercent(0,false));
@@ -2307,14 +2312,17 @@ void PrintConfigDef::init_fff_params()
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloat(0.1));
 
-    def = this->add("ironing_speed", coFloat);
+    def = this->add("ironing_speed", coFloatOrPercent);
     def->label = L("Ironing");
     def->category = OptionCategory::ironing;
-    def->tooltip = L("Ironing");
+    def->tooltip = L("Ironing speed. Used for the ironing pass of the ironing infill pattern, and the post-process infill."
+        " Can be defined as mm.s, or a % of the top solid infill speed."
+        "\nIroning extrusions are ignored from the automatic volumetric speed computation.");
     def->sidetext = L("mm/s");
-    def->min = 0;
+    def->ratio_over = "top_solid_infill_speed";
+    def->min = 0.1;
     def->mode = comAdvanced;
-    def->set_default_value(new ConfigOptionFloat(15));
+    def->set_default_value(new ConfigOptionFloatOrPercent(15, false));
 
     def = this->add("layer_gcode", coString);
     def->label = L("After layer change G-code");
@@ -2884,6 +2892,8 @@ void PrintConfigDef::init_fff_params()
                 "\nCan be a % of the default acceleration"
                 "\nSet zero to disable acceleration control for perimeters.");
     def->sidetext = L("mm/s² or %");
+    def->ratio_over = "default_acceleration";
+    def->min = 0;
     def->mode = comExpert;
     def->set_default_value(new ConfigOptionFloatOrPercent(0,false));
 
@@ -5556,9 +5566,12 @@ void PrintConfigDef::to_prusa(t_config_option_key& opt_key, std::string& value, 
         }
     } else if ("elefant_foot_min_width" == opt_key) {
         opt_key = "elephant_foot_min_width";
-    } else if("first_layer_acceleration" == opt_key || "infill_acceleration" == opt_key || "bridge_acceleration" == opt_key || "default_acceleration" == opt_key || "overhangs_speed" == opt_key || "perimeter_acceleration" == opt_key){
-        if (value.find("%") != std::string::npos)
-            value = "0";
+    } else if("first_layer_acceleration" == opt_key || "infill_acceleration" == opt_key || "bridge_acceleration" == opt_key || "default_acceleration" == opt_key || "perimeter_acceleration" == opt_key
+        || "overhangs_speed" == opt_key || "ironing_speed" == opt_key){
+        // remove '%'
+        if (value.find("%") != std::string::npos) {
+            value = std::to_string(all_conf.get_abs_value(opt_key));
+        }
     } else if ("gap_fill_speed" == opt_key && all_conf.has("gap_fill") && !all_conf.option<ConfigOptionBool>("gap_fill")->value) {
         value = "0";
     } else if ("bridge_flow_ratio" == opt_key && all_conf.has("bridge_flow_ratio")) {

@@ -36,6 +36,9 @@ namespace Slic3r {
         if (params.config != NULL && idx > 0) params_modifided.flow_mult *= (float)params.config->fill_smooth_distribution.get_abs_value(1);
         else if (params.config != NULL && idx == 0) params_modifided.flow_mult *= (1.f - (float)params.config->fill_smooth_distribution.get_abs_value(1));
         else params_modifided.flow_mult *= (float)percentFlow[idx];
+        //set role
+        if (rolePass[idx] != erNone)
+            params_modifided.role = rolePass[idx];
 
         //choose if we are going to extrude with or without overlap
         if ((params.flow.bridge && idx == 0) || has_overlap[idx] || this->no_overlap_expolygons.empty()){
@@ -115,8 +118,8 @@ namespace Slic3r {
 
         // first infill
         FillParams first_pass_params = params;
-        if(first_pass_params.role != ExtrusionRole::erSupportMaterial && first_pass_params.role != ExtrusionRole::erSupportMaterialInterface)
-            first_pass_params.role = ExtrusionRole::erSolidInfill;
+        //if(first_pass_params.role != ExtrusionRole::erSupportMaterial && first_pass_params.role != ExtrusionRole::erSupportMaterialInterface)
+        //s    first_pass_params.role = ExtrusionRole::erSolidInfill;
         perform_single_fill(0, *eecroot, *surface, first_pass_params, volume_to_occupy);
 
         //use monotonic for ironing pass

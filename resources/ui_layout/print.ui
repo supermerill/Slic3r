@@ -228,6 +228,9 @@ group:label_width$8:sidetext_width$7:Speed for print moves
 		setting:width$4:solid_infill_speed
 		setting:width$4:top_solid_infill_speed
 	end_line
+	line:Ironing speed
+		setting:label$_:width$4:ironing_speed
+	end_line
 	line:Support speed
 		setting:width$4:support_material_speed
 		setting:width$4:support_material_interface_speed
@@ -241,7 +244,6 @@ group:label_width$8:sidetext_width$7:Speed for print moves
 		setting:width$4:gap_fill_speed
 		setting:width$4:thin_walls_speed
 	end_line
-	setting:label$Ironing post-process speed:label_width$30:width$4:ironing_speed
 group:Speed for non-print moves
 	line:Travel speed
 		setting:label$xy:travel_speed

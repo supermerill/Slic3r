@@ -255,15 +255,6 @@ void ExtrusionLoop::polygons_covered_by_spacing(Polygons &out, const float scale
         path.polygons_covered_by_spacing(out, scaled_epsilon);
 }
 
-double ExtrusionLoop::min_mm3_per_mm() const
-{
-    double min_mm3_per_mm = std::numeric_limits<double>::max();
-    for (const ExtrusionPath &path : this->paths)
-        if (path.role() != erGapFill && path.role() != erThinWall && path.role() != erMilling)
-            min_mm3_per_mm = std::min(min_mm3_per_mm, path.mm3_per_mm);
-    return min_mm3_per_mm;
-}
-
 std::string ExtrusionEntity::role_to_string(ExtrusionRole role)
 {
     switch (role) {

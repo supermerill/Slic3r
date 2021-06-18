@@ -805,7 +805,7 @@ public:
     ConfigOptionEnum<IroningType>   ironing_type;
     ConfigOptionPercent             ironing_flowrate;
     ConfigOptionFloat               ironing_spacing;
-    ConfigOptionFloat               ironing_speed;
+    ConfigOptionFloatOrPercent      ironing_speed;
     // milling options
     ConfigOptionFloatOrPercent      milling_after_z;
     ConfigOptionFloatOrPercent      milling_extra_size;
