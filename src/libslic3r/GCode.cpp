@@ -3747,7 +3747,7 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
         }
         //don't modify bridge speed
         if (factor < 1 && !(is_bridge(path.role()))) {
-            float small_speed = m_config.small_perimeter_speed.get_abs_value(m_config.perimeter_speed);
+            double small_speed = m_config.small_perimeter_speed.get_abs_value(m_config.perimeter_speed);
             //apply factor between feature speed and small speed
             speed = speed * factor + (1.f - factor) * small_speed;
     }
@@ -3784,7 +3784,7 @@ std::string GCode::_before_extrude(const ExtrusionPath &path, const std::string 
             speed,
             EXTRUDER_CONFIG_WITH_DEFAULT(filament_max_speed, speed));
     }
-    double F = speed * 60;  // convert mm/sec to mm/min
+    double F = speed;// *60;  // convert mm/sec to mm/min
 
     // extrude arc or line
     if (path.role() != m_last_extrusion_role && !m_config.feature_gcode.value.empty()) {

@@ -12,7 +12,7 @@
 #define PRECISION(val, precision) std::fixed << std::setprecision(precision) << (val)
 #define XYZ_NUM(val) PRECISION(val, this->config.gcode_precision_xyz.value)
 #define FLOAT_PRECISION(val, precision) std::defaultfloat << std::setprecision(precision) << (val)
-#define F_NUM(val) FLOAT_PRECISION(val, 8)
+#define F_NUM(val) FLOAT_PRECISION(val, 12)
 #define E_NUM(val) PRECISION(val, this->config.gcode_precision_e.get_at(m_tool->id()))
 
 namespace Slic3r {
@@ -409,6 +409,7 @@ std::string GCodeWriter::set_speed(double F, const std::string &comment, const s
 {
     assert(F > 0.);
     assert(F < 100000.);
+    //assert(F == (((int)(F * 100)) / 100.));
     std::ostringstream gcode;
     gcode << "G1 F" << F_NUM(F);
     COMMENT(comment);
@@ -614,7 +615,7 @@ std::string GCodeWriter::_retract(double length, double restart_extra, const std
                 gcode << "G10 ; retract\n";
         } else {
             gcode << "G1 " << m_extrusion_axis << E_NUM(m_tool->E())
-                           << " F" << F_NUM(m_tool->retract_speed() * 60.);
+                           << " F" << (m_tool->retract_speed() * 60);
             COMMENT(comment);
             gcode << "\n";
         }
@@ -646,7 +647,7 @@ std::string GCodeWriter::unretract()
         } else {
             // use G1 instead of G0 because G0 will blend the restart with the previous travel move
             gcode << "G1 " << m_extrusion_axis << E_NUM(m_tool->E())
-                           << " F" << F_NUM(m_tool->deretract_speed() * 60.);
+                           << " F" << (m_tool->deretract_speed() * 60);
             if (this->config.gcode_comments) gcode << " ; unretract";
             gcode << "\n";
         }
