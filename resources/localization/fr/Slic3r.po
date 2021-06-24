@@ -866,8 +866,7 @@ msgid ""
 "Allow to create a brim over an island when it's inside a hole (or surrounded "
 "by an object)."
 msgstr ""
-"Permet de créer un bord sur une île lorsqu'elle est à l'intérieur d'un trou (ou entourée "
-"par un objet)."
+"Permet de créer une bordure sur un ilot lorsqu'il est à l'intérieur d'un trou (ou entourée par un objet)."
 
 msgid "Along X axis"
 msgstr "Le long de l'axe X"
@@ -4350,7 +4349,8 @@ msgstr "Largeur horizontale de la bordure qui sera imprimée autour de chaque ob
 msgid ""
 "Horizontal width of the brim that will be printed inside each object on the "
 "first layer."
-msgstr "Longueur de la bordure de trou, qui sera imprimée à l'intérieur des trous d'un objet sur la première couche."
+msgstr ""
+"Largeur de la bordure intérieure, qui sera imprimée à l'intérieur des trous d'un objet sur la première couche."
 
 msgid ""
 "Horizontal width of the skirt that will be printed around each object. If "
@@ -5052,7 +5052,7 @@ msgid "Interface shells"
 msgstr "Création d'interface entre coques"
 
 msgid "Interior Brim width"
-msgstr "Largeur de bordure intérieur"
+msgstr "Largeur de bordure intérieure"
 
 msgid "Internal bridge infill"
 msgstr "Remplissage des ponts intérieurs"
