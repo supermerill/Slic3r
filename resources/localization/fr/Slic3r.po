@@ -1250,7 +1250,7 @@ msgid "Better bonding"
 msgstr "Une meilleure liaison"
 
 msgid "Between extrusion role change G-code"
-msgstr "Entre changement de rôle d'extrusion G-Code"
+msgstr "Entre changement G-Code de type d'extrusion"
 
 msgid "Between objects G-code"
 msgstr "Entre le G-Code des objets"
@@ -10573,7 +10573,7 @@ msgstr ""
 " Vous pouvez utiliser des variables de substitution pour tous les paramètres Slic3r,"
 " ainsi que pour [previous_extruder] et [next_extruder], par exemple."
 " La commande standard toolchange peut être écrite sous la forme T [next_extruder]."
-" !! Attention !! Si un quelconque caractère est écrit ici, Slic3r n'écrira aucun G-code de changment de buse par lui-même."
+" !! Attention !! Si un quelconque caractère est écrit ici, Slic3r n'écrira aucun G-code de changement de buse par lui-même."
 
 msgid ""
 "This custom code is inserted at every extrusion type change.Note that you "
