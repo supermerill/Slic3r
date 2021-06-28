@@ -5,14 +5,14 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Slic3r\n"
-"POT-Creation-Date: 2021-06-25 00:00\n"
-"PO-Revision-Date: 2021-06-25 00:00\n"
+"POT-Creation-Date: 2021-06-26 00:00\n"
+"PO-Revision-Date: 2021-06-26 00:00\n"
 "Last-Translator: 5axes\n"
 "Language-Team:5axes, supermerill\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fr\n"
+"Language:fr\n"
 
 msgid "!! Can be unstable in some os distribution !!"
 msgstr "!! peut être instable avec certaines distributions de système d'exploitation."
@@ -109,6 +109,9 @@ msgstr "%s n'a aucunes mises à jour de configuration disponibles."
 msgid "%s incompatibility"
 msgstr "Incompatibilité de %s"
 
+msgid "%s is closing: Unsaved Changes"
+msgstr "%s se ferme : Modifications non sauvegardées"
+
 msgid ""
 "%s now uses an updated configuration structure.\n"
 "\n"
@@ -168,6 +171,9 @@ msgstr ""
 "version.\n"
 "\n"
 "Lots de configuration mis à jour :"
+
+msgid "%s will remember your action."
+msgstr "%s se souviendra de votre action. "
 
 msgid "%s will remember your choice."
 msgstr "%s se souviendra de votre choix."
@@ -368,9 +374,6 @@ msgstr "4x10°"
 
 msgid "5x5°"
 msgstr "5x5°"
-
-msgid ": Don't ask me again"
-msgstr ": Ne me le redemande pas"
 
 msgid ": Open hyperlink"
 msgstr "Ouvrir un lien hypertexte"
@@ -880,7 +883,7 @@ msgid "Along Z axis"
 msgstr "Le long de l'axe Z"
 
 msgid "Also emit limits to G-code"
-msgstr "Émettre également des limites au G-Code"
+msgstr "Émettre également les limites dans le G-Code"
 
 msgid "Also for all perimeters"
 msgstr "Également pour tous les périmètres"
@@ -1003,6 +1006,9 @@ msgstr "Voulez-vous vraiment supprimer l'imprimante \"%1%\" ?"
 
 msgid "Are you sure you want to do it?"
 msgstr "Êtes-vous certain de vouloir le faire ?"
+
+msgid "Are you sure?"
+msgstr "Etes-vous sûr?"
 
 msgid "Area fill"
 msgstr "Remplissage de zone"
@@ -2641,6 +2647,9 @@ msgstr "Ne plus afficher"
 msgid "Don't support bridges"
 msgstr "Ne pas supporter les ponts"
 
+msgid "Don't switch"
+msgstr "Ne pas changer"
+
 msgid "Downgrade"
 msgstr "Rétrograder"
 
@@ -2748,7 +2757,9 @@ msgid ""
 "intervals into the G-code to let the firmware show accurate remaining time. "
 "As of now only the Prusa i3 MK3 firmware recognizes M73. Also the i3 MK3 "
 "firmware supports M73 Qxx Sxx for the silent mode."
-msgstr "Émet M73 P[pourcentage imprimé] R[temps restant en minutes] à 1 minute d'intervalle dans le G-Code afin que le firmware puisse indiquer précisément le temps restant. Jusqu'à présent seul le firmware Prusa i3 MK3 reconnait M73. Par ailleurs le firmware i3 MK3 supporte M73 Qxx Sxx pour le mode silencieux."
+msgstr ""
+"Émet M73 P[pourcentage imprimé] R[temps restant en minutes] à 1 minute d'intervalle dans le G-Code afin que le firmware puisse indiquer précisément le temps restant."
+" Jusqu'à présent seul le firmware Prusa i3 MK3 reconnait M73. Par ailleurs le firmware i3 MK3 supporte M73 Qxx Sxx pour le mode silencieux."
 
 msgid "Empty layers detected, the output would not be printable."
 msgstr "Couches vides détectées, la sortie ne serait pas imprimable."
@@ -2877,8 +2888,8 @@ msgid ""
 "complete start_gcode, as no checks are made anymore."
 msgstr ""
 "Assurez-vous que le slicer n'ajoutera pas de commandes de chauffage, de ventilateur, d'extrudeuse... avant "
-"ou juste après votre G-Code de début. Si vous mettez à Vraie, vous devrez écrire un bon et "
-"complet G-Code de début, car aucune vérification n'est faite."
+"ou juste après votre G-Code de début. Si vous mettez à Vraie, vous devrez écrire un"
+" G-Code de début complet et correct, car aucune vérification ne sera faite."
 
 msgid "Ensure vertical shell thickness"
 msgstr "S'assurer de l'épaisseur de la coque verticale"
@@ -3885,7 +3896,7 @@ msgid ""
 "For the Wipe Tower to work with the soluble supports, the support layers "
 "need to be synchronized with the object layers."
 msgstr ""
-"Pour que la Tour de Nettoyage fonctionne avec des supports solubles, les couches de support\n"
+"Pour que la Tour de Purge fonctionne avec des supports solubles, les couches de support\n"
 "doivent être synchronisées avec les couches de l'objet."
 
 msgid ""
@@ -4416,16 +4427,14 @@ msgid ""
 "custom gcode section."
 msgstr ""
 "Comment appliquer les limites de la machine.\n"
-"* Dans tous les cas, elles seront utilisées comme sauvegarde : Même si vous utilisez un profil d'impression "
-"profil d'impression qui définit une accélération de 5000, si votre machine limite l'"
-"accélération est de 4000, le gcode sorti utilisera la limite de 4000.\n"
-"* Vous pouvez également l'utiliser comme sauvegarde et pour avoir une meilleure estimation du temps d'impression "
-"d'impression.\n"
-"* Vous pouvez également l'utiliser comme sauvegarde, pour avoir une meilleure estimation du temps d'impression "
-"et émettre les limites en début de fichier gcode, avec M201 M202 M203 "
-"M204 et M205. Si vous voulez seulement écrire un sous-ensemble, choisissez l'option 'for " 
-"time estimate' et écrivez vous-même les limites."
-"l'option 'time estimate' et écrivez vous-même les gcodes dans la section custom gcode."
+"Attention même si vous utilisez un profil d'impression qui définit une accélération de 5000, si pour votre machine la limite d'accélération est de 4000,"
+" le G-Code sorti utilisera la limite de 4000.\n"
+"* Vous pouvez également l'utiliser comme sauvegarde et pour avoir une meilleure estimation du temps d'impression, option ‘Utiliser pour l'estimation du temps’.\n"
+"* Option ‘Émettre également les limites dans le G-Code’. Les valeurs seront sauvegardées dans le G-Code,"
+" elles permettront une meilleure estimation du temps d'impression et seront écrites en début de fichier G-Code, avec M201, M202 M203, M204 et M205.\n"
+"* Si vous voulez seulement sauvegarder les valeurs, choisissez l'option ‘Utiliser aussi pour l'estimation du temps’ et écrivez vous-même les limites dans la section G-Code personnalisé.\n"
+"* L’option ‘Utiliser uniquement pour sauvegarde’ ne fera d’écrire les données dans les paramètres sauvegardés du G-Code."
+
 
 msgid ""
 "How to compute the vertical z-distance.\n"
@@ -5149,9 +5158,6 @@ msgstr "Type de lissage"
 msgid "Ironing width"
 msgstr "Largeur du lissage"
 
-msgid " is closing: Unsaved Changes"
-msgstr " se ferme : Modifications non sauvegardées"
-
 msgid "is licensed under the"
 msgstr "est sous licence"
 
@@ -5743,7 +5749,7 @@ msgid "Maximal distance between supports on sparse infill sections. "
 msgstr "Distance maximale entre les supports sur les sections de remplissage épars. "
 
 msgid "Maximum acceleration E"
-msgstr "Accélérations maximum E"
+msgstr "Accélération maximum E"
 
 msgid "Maximum acceleration of the E axis"
 msgstr "Accélération maximum de l'axe E"
@@ -5776,16 +5782,16 @@ msgid "Maximum acceleration when travelling (M204 T)"
 msgstr "Accélération maximale en déplacement (M204 T)"
 
 msgid "Maximum acceleration X"
-msgstr "Accélérations maximum X"
+msgstr "Accélération maximum X"
 
 msgid "Maximum acceleration Y"
-msgstr "Accélérations maximum Y"
+msgstr "Accélération maximum Y"
 
 msgid "Maximum acceleration Z"
-msgstr "Accélérations maximum Z"
+msgstr "Accélération maximum Z"
 
 msgid "Maximum accelerations"
-msgstr "Accélérations maximum"
+msgstr "Accélérations maximums"
 
 msgid ""
 "Maximum angle to let a brim ear appear. \n"
@@ -5827,31 +5833,31 @@ msgid "Maximum exposure time"
 msgstr "Temps d'exposition maximum"
 
 msgid "Maximum feedrate E"
-msgstr "Alimentation maximum E"
+msgstr "Vitesse maximum E"
 
 msgid "Maximum feedrate of the E axis"
-msgstr "Alimentation maximum de l'axe E"
+msgstr "Vitesse maximum de l'axe E"
 
 msgid "Maximum feedrate of the X axis"
-msgstr "Alimentation maximum de l'axe X"
+msgstr "Vitesse maximum de l'axe X"
 
 msgid "Maximum feedrate of the Y axis"
-msgstr "Alimentation maximum de l'axe Y"
+msgstr "Vitesse maximum de l'axe Y"
 
 msgid "Maximum feedrate of the Z axis"
-msgstr "Alimentation maximum de l'axe Z"
+msgstr "Vitesse maximum de l'axe Z"
 
 msgid "Maximum feedrate X"
-msgstr "Alimentation maximum X"
+msgstr "Vitesse maximum X"
 
 msgid "Maximum feedrate Y"
-msgstr "Alimentation maximum Y"
+msgstr "Vitesse maximum Y"
 
 msgid "Maximum feedrate Z"
-msgstr "Alimentation maximum Z"
+msgstr "Vitesse maximum Z"
 
 msgid "Maximum feedrates"
-msgstr "Alimentations maximum"
+msgstr "Vitesses maximums"
 
 msgid "Maximum initial exposure time"
 msgstr "Temps d'exposition initiale Maximum"
@@ -6045,13 +6051,13 @@ msgid "Minimum extrusion length"
 msgstr "Longueur minimale d'extrusion"
 
 msgid "Minimum feedrate when extruding"
-msgstr "Alimentation minimum lors de l'extrusion"
+msgstr "Vitesse minimum lors de l'extrusion"
 
 msgid "Minimum feedrate when extruding (M205 S)"
-msgstr "Alimentation minimum lors de l'extrusion (M205 S)"
+msgstr "Vitesse minimum lors de l'extrusion (M205 S)"
 
 msgid "Minimum feedrates"
-msgstr "Alimentations minimum"
+msgstr "Vitesses minimums"
 
 msgid "Minimum initial exposure time"
 msgstr "Temps d'exposition initiale minimum"
@@ -6075,10 +6081,10 @@ msgid "Minimum travel after retraction"
 msgstr "Trajet minimal après une rétraction"
 
 msgid "Minimum travel feedrate"
-msgstr "Alimentation minimum en déplacement"
+msgstr "Vitesse minimum en déplacement"
 
 msgid "Minimum travel feedrate (M205 T)"
-msgstr "Alimentation minimum en déplacement (M205 T)"
+msgstr "Vitesse minimum en déplacement (M205 T)"
 
 msgid ""
 "Minimum unsupported width for an extrusion to apply the bridge fan & "
@@ -6809,6 +6815,9 @@ msgstr "le côté extérieur"
 msgid "Only for overhangs"
 msgstr "Uniquement pour les surplombs"
 
+msgid "Only if on plater"
+msgstr "Si déjà sur le plateau"
+
 msgid "Only infill where needed"
 msgstr "Remplissage seulement où cela est nécessaire"
 
@@ -6843,6 +6852,9 @@ msgid ""
 msgstr ""
 "Utilisé uniquement pour klipper, où vous pouvez nommer l'extrudeuse. S'il n'est pas défini, ce sera "
 "'extruderX' avec 'X' remplacé par le numéro de l'extrudeuse."
+
+msgid "Only when GCode is ready"
+msgstr "Quand le GCode est prêt"
 
 msgid "Ooze prevention"
 msgstr "Prévention des coulures"
@@ -9114,11 +9126,6 @@ msgstr ""
 "le mot de passe dans l'URL en respectant le format suivant : "
 "https://username:password@your-octopi-address/"
 
-msgid ""
-"Slic3r contains sizable contributions from Prusa Research. Original work by "
-"Alessandro Ranellucci and the RepRap community."
-msgstr "Slic3r contient une important contribution de Prusa Research. Code orignalement crée par Alessandro Ranellucci and the RepRap community."
-
 msgid "Slic3r logo designed by Corey Daniels."
 msgstr "Logo Slic3r conçu par Corey Daniels."
 
@@ -9633,7 +9640,7 @@ msgid "STL file exported to %s"
 msgstr "Fichier STL exporté vers %s"
 
 msgid "Stop at height"
-msgstr "Hauteur d'arrêt"
+msgstr "Hauteur de Fin"
 
 msgid "Stop them and continue anyway?"
 msgstr "Les arrêter et continuer malgré tout ?"
@@ -9647,6 +9654,13 @@ msgid ""
 msgstr ""
 "Démonté avec succès. Le périphérique %s(% s) peut maintenant être retiré en "
 "toute sécurité de l'ordinateur."
+
+msgid ""
+"SuperSlicer is a skinned version of Slic3r, based on PrusaSlicer by Prusa "
+"and the original Slic3r by Alessandro Ranellucci & the RepRap community."
+msgstr ""
+"SuperSlicer est une version modifiée de Slic3r, basée sur PrusaSlicer de Prusa "
+"et sur la version Slic3r originale d'Alessandro Ranellucci et de la communauté RepRap."
 
 msgid "support"
 msgstr "support"
@@ -9796,17 +9810,20 @@ msgstr "Code de changement pour Changer l'extrudeuse"
 msgid "Switch code to Color change (%1%) for:"
 msgstr "Code de changement pour Changer de couleur (%1%) pour :"
 
-msgid "Switch from 3D view to Preview when sliced"
-msgstr "Passage de la vue 3D à la prévisualisation lors du découpage en couches"
-
 msgid "Switch to editing mode"
 msgstr "Basculer vers le mode édition"
+
+msgid "Switch to Preview when sliced"
+msgstr "Changer l'onglet sur l'aperçu dès que possible"
 
 msgid "Switch to Settings"
 msgstr "Basculer dans le Réglages"
 
 msgid "Switch to the %s mode"
 msgstr "Basculer vers le mode %s"
+
+msgid "Switch when possible"
+msgstr "Dès que possible"
 
 msgid "Switching Presets: Unsaved Changes"
 msgstr "Changement de préréglages : modifications non enregistrées"
@@ -10359,14 +10376,14 @@ msgid ""
 "\n"
 "Shall I disable it in order to enable Firmware Retraction?"
 msgstr ""
-"L'option Nettoyage n'est pas disponible lorsque vous utilisez le mode Rétraction du Firmware.\n"
+"L'option Purge n'est pas disponible lorsque vous utilisez le mode Rétraction du Firmware.\n"
 "\n"
 "Voulez-vous que je la désactive pour permettre la Rétraction du Firmware ?"
 
 msgid ""
 "The Wipe Tower currently does not support volumetric E (use_volumetric_e=0)."
 msgstr ""
-"À l'heure actuelle, la Tour de Nettoyage ne prend pas en charge l'E "
+"À l'heure actuelle, la Tour de Purge ne prend pas en charge l'E "
 "volumétrique (use_volumetric_e-0)."
 
 msgid ""
@@ -10375,7 +10392,7 @@ msgid ""
 "support_material_extruder and support_material_interface_extruder need to be "
 "set to 0)."
 msgstr ""
-"A l'heure actuelle la Tour de Nettoyage ne tolère les supports non-solubles que s'ils sont imprimés avec l'extrudeuse en cours"
+"A l'heure actuelle la Tour de Purge ne tolère les supports non-solubles que s'ils sont imprimés avec l'extrudeuse en cours"
 " d'utilisation sans déclencher un changement de filament."
 " (support_material_extruder de même que support_material_interface_extruder doivent être réglés sur 0)."
 
@@ -10443,7 +10460,7 @@ msgid ""
 "The Wipe tower is only supported if all objects have the same variable layer "
 "height"
 msgstr ""
-"La tour de Nettoyage n'est prise en charge que si tous les objets ont la "
+"La tour de Purge n'est prise en charge que si tous les objets ont la "
 "même hauteur de couche variable"
 
 msgid "There are active warnings concerning sliced models:"
@@ -11766,7 +11783,7 @@ msgid ""
 msgstr "Dépose une couche pleine sur le plateau à la place d'un radeau."
 
 msgid "Use also for time estimate"
-msgstr "Utiliser également pour l'estimation du temps"
+msgstr "Utiliser aussi pour l'estimation du temps"
 
 msgid "Use another extruder"
 msgstr "Utiliser un autre extrudeuse"
@@ -11793,7 +11810,7 @@ msgid "Use inches"
 msgstr "Utiliser les pouces"
 
 msgid "Use only as safeguards"
-msgstr "Utiliser uniquement à titre de précaution"
+msgstr "Utiliser uniquement pour sauvegarde"
 
 msgid ""
 "Use only one perimeter on flat top surface, to give more space to the top "
@@ -12053,11 +12070,13 @@ msgstr ""
 "l'enregistrement ?"
 
 msgid ""
-"When an object is sliced, it will switch your view from the 3D view to the "
-"previewx (and then gcode-preview) automatically."
+"When an object is sliced, it will switch your view from the curent view to "
+"the preview (and then gcode-preview) automatically, depending on the option "
+"choosen."
 msgstr ""
-"Lorsqu'un objet est découpé en couches, cela fera passer votre vue de la vue 3D à la "
-"pré-visualisation (et ensuite prévisualisation G-Code) automatiquement."
+"Lorsqu'un objet est découpé en couches, cela fera passer votre vue de la vue "
+"3D à la pré-visualisation (et ensuite prévisualisation G-Code) automatiquement, "
+"selon l'option choisie."
 
 msgid ""
 "When checked, the print and filament presets are shown in the preset editor "
@@ -12281,9 +12300,6 @@ msgstr "Va augmenter ou diminuer les polygones 2D découpés en fonction du sign
 
 msgid "Will only take into account the delay for the cooling of overhangs."
 msgstr "Ne tiendra compte que du délai pour le refroidissement des surplombs."
-
-msgid " will remember your action."
-msgstr " se souviendra de votre action. "
 
 msgid "will run at %1%%% by default"
 msgstr "s'exécutera à %1%%% par défaut"
@@ -12539,8 +12555,8 @@ msgid "You will not be asked about it again on label hovering."
 msgstr "Vous ne serez plus interrogé sur ce sujet lors du survol de l'étiquette."
 
 msgid ""
-"You will not be asked about the unsaved changes the next time you close "
-msgstr "Vous ne serez pas interrogé sur les modifications non sauvegardées lors de la prochaine fermeture de l'application. "
+"You will not be asked about the unsaved changes the next time you close %s."
+msgstr "Vous ne serez pas interrogé sur les modifications non sauvegardées lors de la prochaine fermeture de %s."
 
 msgid ""
 "You will not be asked about the unsaved changes the next time you switch a "
