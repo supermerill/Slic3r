@@ -2039,7 +2039,9 @@ msgid ""
 "Cracks smaller than 2x gap closing radius are being filled during the "
 "triangle mesh slicing. The gap closing operation may reduce the final print "
 "resolution, therefore it is advisable to keep the value reasonably low."
-msgstr "Les fentes d'une taille inférieure à 2x le rayon de fermeture de l'espacement sont remplies au cours du tranchage par maillage triangulaire. L'opération de fermeture de l'espacement peut réduire la résolution de l'impression finale, aussi est-il conseillé de conserver une valeur relativement basse."
+msgstr ""
+"Les fentes d'une taille inférieure à 2x le rayon de fermeture de l'espacement sont remplies au cours du tranchage du maillage triangulaire."
+" L'opération de fermeture de l'espacement peut réduire la résolution de l'impression finale, aussi est-il conseillé de conserver une valeur relativement basse."
 
 msgid "CRC-32 check failed"
 msgstr "Échec du test CRC-32"
@@ -3615,12 +3617,12 @@ msgstr "Le filament est refroidi en étant déplacé d'avant en arrière dans le
 
 msgid "Filament load time"
 msgstr "Temps de chargement du filament"
-
+	
 msgid "Filament notes"
 msgstr "Notes du filament"
 
 msgid "Filament Overrides"
-msgstr "Annulations de Filament"
+msgstr "Rétractions de Filament"
 
 msgid "Filament parking position"
 msgstr "Position d'attente du filament"
@@ -5685,7 +5687,7 @@ msgid "Material Settings Tab"
 msgstr "Onglet de réglages du matériau"
 
 msgid "material_correction"
-msgstr "material_correction"
+msgstr "Correction matière"
 
 msgid "Materials"
 msgstr "Matériaux"
@@ -8508,7 +8510,7 @@ msgid "Sequential printing"
 msgstr "Impression séquentielle"
 
 msgid "Sequential slider applied only to top layer"
-msgstr "Barre de défilement séquentielle appliquée uniquement à la couche du dessus"
+msgstr "Barre de défilement séquentielle appliquée uniquement à la couche active"
 
 msgid "Serial port:"
 msgstr "Port série :"
@@ -9181,7 +9183,7 @@ msgid "Slice a file into a G-code, save as"
 msgstr "Découper un fichier en G-Code, enregistrer sous"
 
 msgid "Slice gap closing radius"
-msgstr "Découper le rayon de fermeture de l'espacement"
+msgstr "Distance de fermeture des faces disjointes"
 
 msgid "Slice now"
 msgstr "Découper maintenant"
