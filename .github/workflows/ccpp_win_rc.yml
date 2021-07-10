@@ -1,7 +1,9 @@
-name: C/C++ RC windows x64
+name: C/C++ Nigthly windows x64
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - rc
 
 jobs:
   build_dep:
