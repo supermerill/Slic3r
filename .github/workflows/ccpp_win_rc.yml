@@ -1,9 +1,7 @@
 name: C/C++ RC windows x64
 
 on:
-  push:
-    branches:
-      - rebranding/2.3.56.6b
+  workflow_dispatch:
 
 jobs:
   build_dep:
