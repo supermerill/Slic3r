@@ -1,9 +1,9 @@
-name: C/C++ Nigthly windows x64
+name: C/C++ RC windows x64
 
 on:
   push:
     branches:
-      - rc
+      - rebranding/2.3.56.6b
 
 jobs:
   build_dep:
