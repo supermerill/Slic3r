@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Slic3r\n"
-"POT-Creation-Date: 2021-06-26 00:00\n"
-"PO-Revision-Date: 2021-06-26 00:00\n"
+"POT-Creation-Date: 2021-07-10 00:00\n"
+"PO-Revision-Date: 2021-07-10 00:00\n"
 "Last-Translator: 5axes\n"
 "Language-Team:5axes, supermerill\n"
 "MIME-Version: 1.0\n"
@@ -1440,6 +1440,9 @@ msgstr ""
 "Peut être utile pour éviter que les engrenages bondtech ne déforment les pointes encore un peu chaudes,"
 " mais ce n'est généralement pas nécessaire."
 
+msgid "Can't process the repetier return message: missing field '%s'"
+msgstr "Impossible d'interpréter le message retourné par Repetier: champ '%s' manquant"
+
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -2449,7 +2452,7 @@ msgid "Detected advanced data"
 msgstr "Données avancées détectées"
 
 msgid "Detection radius"
-msgstr "Rayon de détection"
+msgstr "Longueur de détection"
 
 msgid "Determines whether toolchange temperatures will be applied"
 msgstr "Détermine si les températures de changement de filament seront appliquées"
@@ -3617,7 +3620,7 @@ msgstr "Le filament est refroidi en étant déplacé d'avant en arrière dans le
 
 msgid "Filament load time"
 msgstr "Temps de chargement du filament"
-	
+
 msgid "Filament notes"
 msgstr "Notes du filament"
 
@@ -4441,7 +4444,6 @@ msgstr ""
 " elles permettront une meilleure estimation du temps d'impression et seront écrites en début de fichier G-Code, avec M201, M202 M203, M204 et M205.\n"
 "* Si vous voulez seulement sauvegarder les valeurs, choisissez l'option ‘Utiliser aussi pour l'estimation du temps’ et écrivez vous-même les limites dans la section G-Code personnalisé.\n"
 "* L’option ‘Utiliser uniquement pour sauvegarde’ ne fera d’écrire les données dans les paramètres sauvegardés du G-Code."
-
 
 msgid ""
 "How to compute the vertical z-distance.\n"
@@ -6653,7 +6655,7 @@ msgid ""
 "time to the exposure time"
 msgstr ""
 "Nombre de couches nécessaires pour que le temps d'exposition passe du temps"
-" d'exposition initial au temps d'exposition normal"
+" d'exposition initial au temps d'exposition normal."
 
 msgid "Number of tool changes"
 msgstr "Nombre de changements de filament"
@@ -8619,7 +8621,7 @@ msgstr ""
 "tooltips pour la largeur d'extrusion du périmètre, la largeur d'extrusion du remplissage, etc). Si elle est "
 "exprimée en pourcentage (par exemple : 105%), elle sera calculée sur le " "diamètre de la buse.\n"
 "diamètre de la buse."
-"Vous pouvez définir soit 'Espacement', soit 'Largeur' ; l'autre sera calculée en utilisant le 'Chevauchement' du périmètre."
+"Vous pouvez définir soit 'Espacement', soit 'Largeur' ; l'autre sera calculée en utilisant le 'Chevauchement' du périmètre "
 "en utilisant les pourcentages de 'Chevauchement' du périmètre et la hauteur de couche par défaut."
 
 msgid ""
@@ -10074,7 +10076,10 @@ msgid ""
 "The geometry will be decimated before dectecting sharp angles. This "
 "parameter indicates the minimum length of the deviation for the decimation.\n"
 "0 to deactivate"
-msgstr "La géométrie sera décimée avant de détecter les angles aigus. Ce paramètre indique la longueur minimale de la déviation après décimation.\n0 pour désactiver"
+msgstr ""
+"La géométrie sera décimée avant de détecter les angles aigus."
+" Ce paramètre indique la longueur minimale de la déviation après décimation.\n"
+"0 pour désactiver"					
 
 msgid "The height of the pillar base cone"
 msgstr "La hauteur du cône de la base du pilier"
