@@ -1106,6 +1106,7 @@ MedialAxis::main_fusion(ThickPolylines& pp)
                     if (idx_point + 1 < best_candidate->points.size()) {
                         //create a new polyline
                         pp.emplace_back();
+                        best_candidate = &pp[best_idx]; // have to refresh the pointer, as the emplace_back() may have moved the array
                         pp.back().endpoints.first = true;
                         pp.back().endpoints.second = best_candidate->endpoints.second;
                         for (size_t idx_point_new_line = idx_point; idx_point_new_line < best_candidate->points.size(); ++idx_point_new_line) {
@@ -1318,46 +1319,47 @@ MedialAxis::remove_too_thin_points(ThickPolylines& pp)
 {
     //remove too thin polylines points (inside a polyline : split it)
     for (size_t i = 0; i < pp.size(); ++i) {
-        ThickPolyline& polyline = pp[i];
+        ThickPolyline* polyline = &pp[i];
 
         // remove bits with too small extrusion
         size_t idx_point = 0;
-        while (idx_point<polyline.points.size()) {
-            if (polyline.width[idx_point] < min_width) {
+        while (idx_point<polyline->points.size()) {
+            if (polyline->width[idx_point] < min_width) {
                 if (idx_point == 0) {
                     //too thin at start
-                    polyline.points.erase(polyline.points.begin());
-                    polyline.width.erase(polyline.width.begin());
+                    polyline->points.erase(polyline->points.begin());
+                    polyline->width.erase(polyline->width.begin());
                     idx_point = 0;
                 } else if (idx_point == 1) {
                     //too thin at start
-                    polyline.points.erase(polyline.points.begin());
-                    polyline.width.erase(polyline.width.begin());
-                    polyline.points.erase(polyline.points.begin());
-                    polyline.width.erase(polyline.width.begin());
+                    polyline->points.erase(polyline->points.begin());
+                    polyline->width.erase(polyline->width.begin());
+                    polyline->points.erase(polyline->points.begin());
+                    polyline->width.erase(polyline->width.begin());
                     idx_point = 0;
-                } else if (idx_point == polyline.points.size() - 2) {
+                } else if (idx_point == polyline->points.size() - 2) {
                     //too thin at (near) end
-                    polyline.points.erase(polyline.points.end() - 1);
-                    polyline.width.erase(polyline.width.end() - 1);
-                    polyline.points.erase(polyline.points.end() - 1);
-                    polyline.width.erase(polyline.width.end() - 1);
-                } else if (idx_point == polyline.points.size() - 1) {
+                    polyline->points.erase(polyline->points.end() - 1);
+                    polyline->width.erase(polyline->width.end() - 1);
+                    polyline->points.erase(polyline->points.end() - 1);
+                    polyline->width.erase(polyline->width.end() - 1);
+                } else if (idx_point == polyline->points.size() - 1) {
                     //too thin at end
-                    polyline.points.erase(polyline.points.end() - 1);
-                    polyline.width.erase(polyline.width.end() - 1);
+                    polyline->points.erase(polyline->points.end() - 1);
+                    polyline->width.erase(polyline->width.end() - 1);
                 } else {
                     //too thin in middle : split
                     pp.emplace_back();
+                    polyline = &pp[i]; // have to refresh the pointer, as the emplace_back() may have moved the array
                     ThickPolyline &newone = pp.back();
-                    newone.points.insert(newone.points.begin(), polyline.points.begin() + idx_point + 1, polyline.points.end());
-                    newone.width.insert(newone.width.begin(), polyline.width.begin() + idx_point + 1, polyline.width.end());
-                    polyline.points.erase(polyline.points.begin() + idx_point, polyline.points.end());
-                    polyline.width.erase(polyline.width.begin() + idx_point, polyline.width.end());
+                    newone.points.insert(newone.points.begin(), polyline->points.begin() + idx_point + 1, polyline->points.end());
+                    newone.width.insert(newone.width.begin(), polyline->width.begin() + idx_point + 1, polyline->width.end());
+                    polyline->points.erase(polyline->points.begin() + idx_point, polyline->points.end());
+                    polyline->width.erase(polyline->width.begin() + idx_point, polyline->width.end());
                 }
             } else idx_point++;
 
-            if (polyline.points.size() < 2) {
+            if (polyline->points.size() < 2) {
                 //remove self if too small
                 pp.erase(pp.begin() + i);
                 --i;
