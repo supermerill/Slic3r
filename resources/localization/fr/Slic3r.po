@@ -2780,7 +2780,7 @@ msgid "Enable auto cooling"
 msgstr "Activer le refroidissement automatique"
 
 msgid "Enable fan if layer print time is below"
-msgstr "Activer le ventilateur si le temps d'impression de la couche est inférieur à"
+msgstr "Activer le ventilateur si le temps d'impression de la couche inférieur à"
 
 msgid "Enable Gap fill"
 msgstr "Active le remplissage des lacunes/écarts"
