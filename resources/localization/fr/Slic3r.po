@@ -9021,7 +9021,7 @@ msgid "Shrinkage"
 msgstr "Retrait"
 
 msgid "Simple"
-msgstr "Facile"
+msgstr "Simple"
 
 msgid "Simple mode"
 msgstr "Mode simple"
